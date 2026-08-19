@@ -1,0 +1,45 @@
+\chapter{Revisão de Literatura}
+
+\section{Pix, pagamentos instantâneos e risco de fraude}
+
+O Pix é uma infraestrutura de pagamentos instantâneos operada no âmbito do Sistema de Pagamentos Brasileiro. Sua disponibilidade contínua e ampla adoção tornam relevantes mecanismos capazes de reconhecer sinais de risco com baixa latência. Em 2024, o instrumento apresentou crescimento de 52\% em quantidade de transações e respondeu por 47\% dos pagamentos sem uso de espécie no último trimestre do ano \cite{bcb_pagamentos_2024}. Esses números caracterizam escala e adoção, mas não devem ser interpretados como medida da incidência de fraude.
+
+O risco associado a uma transferência não decorre apenas do funcionamento técnico do instrumento. Manipulação do usuário, comprometimento de credenciais, abuso de conta e mudança de comportamento podem produzir operações aparentemente regulares na camada transacional. Consequentemente, um classificador não observa diretamente a intenção do agente nem substitui a apuração de uma instituição financeira. Sua saída deve ser apresentada como estimativa de risco sujeita a revisão.
+
+O Mecanismo Especial de Devolução foi introduzido no Regulamento do Pix pela Resolução BCB nº 103/2021 \cite{bcb_resolucao103_2021}. O mecanismo compõe um processo regulatório e operacional; não equivale a um rótulo de aprendizado de máquina, a uma garantia automática de devolução ou a uma conclusão jurídica de fraude. Como o Regulamento do Pix e o Guia do MED são atualizados, afirmações sobre procedimentos e prazos exigem versão e data de vigência \cite{bcb_resolucao1_2020,bcb_guia_med_v43}.
+
+A Pesquisa Febraban de Tecnologia Bancária 2024 registra a presença de detecção de fraude e lavagem de dinheiro entre casos de uso de inteligência artificial declarados pelos bancos participantes \cite{febraban2024}. Trata-se de evidência setorial de pertinência, não de uma taxa de fraude Pix nem de validação de um algoritmo específico. Essa distinção é necessária para evitar que estatísticas de investimento ou adoção sejam transformadas em evidência de desempenho.
+
+\section{Aprendizado de máquina para detecção de fraude}
+
+Detecção de fraude financeira é um problema de classificação rara, dinâmica e sensível ao protocolo de avaliação. Entre as dificuldades recorrentes estão desbalanceamento, grande volume, adaptação dos fraudadores, atraso na confirmação do rótulo e custos assimétricos de erro \cite{abdallah2016survey,dalpozzolo2018realistic}. A ordem e o histórico das transações também carregam informação, o que motiva atributos de recência, frequência e desvio calculados somente com eventos anteriores \cite{jurgovsky2018sequence}.
+
+Em conjuntos fortemente desbalanceados, a acurácia pode permanecer alta mesmo quando o classificador falha na classe positiva. Curvas e áreas de precisão--revocação são particularmente informativas nesse cenário \cite{saito2015precision}. Por isso, este trabalho prevê AUC-PR, AUC-ROC, precisão, revocação, F1 e matriz de confusão, acompanhadas do limiar usado. O limiar não deve ser escolhido no conjunto de teste.
+
+A regressão logística será usada como linha de base por oferecer um ponto de comparação simples e reproduzível. Random Forest representa uma alternativa não linear baseada na agregação de árvores \cite{breiman2001random}, enquanto XGBoost usa boosting de árvores com mecanismos de regularização e escalabilidade \cite{chen2016xgboost}. Comparar esses modelos permite verificar se ganhos de complexidade se traduzem em melhoria relevante para a classe rara.
+
+SMOTE cria amostras sintéticas da classe minoritária a partir de vizinhos no espaço de atributos \cite{chawla2002smote}. A técnica não deve ser aplicada antes da divisão dos dados: nesse caso, exemplos derivados da validação ou do teste podem contaminar o treino. A comparação adequada coloca reamostragem dentro do pipeline ajustado somente em treino e a contrasta com alternativas como ponderação de classe. Variáveis categóricas, valores ausentes e atributos de alta cardinalidade exigem tratamento compatível antes de qualquer interpolação.
+
+Mudança de conceito limita a interpretação de uma divisão aleatória como evidência operacional. Um modelo pode reconhecer padrões presentes simultaneamente em treino e teste sem manter desempenho em período posterior. Assim, uma separação temporal é metodologicamente preferível quando a ordem relativa está disponível, ainda que \texttt{TransactionDT} não revele a data civil real. O IEEE-CIS será usado como proxy técnico de comércio eletrônico/cartão \cite{ieee_cis_2019}; seus resultados não demonstram generalização para Pix.
+
+\section{Explicabilidade por SHAP}
+
+SHAP expressa uma previsão como valor de referência acrescido das contribuições atribuídas aos atributos \cite{lundberg2017unified}. A análise local ajuda a identificar quais entradas elevaram ou reduziram o escore em uma transação, enquanto agregações de valores absolutos apoiam uma visão global do comportamento do modelo.
+
+Essas contribuições não estabelecem causalidade, intenção criminosa ou significado semântico de uma variável anônima. No IEEE-CIS, grupos como \texttt{C*}, \texttt{D*}, \texttt{M*}, \texttt{V*} e \texttt{id\_*} possuem semântica individual parcial ou não publicada. Uma explicação correta pode informar que \texttt{V258} influenciou o modelo, mas não pode renomeá-la como conta, dispositivo ou destinatário Pix sem uma fonte que sustente essa equivalência.
+
+\section{Retrieval-Augmented Generation e modelos de linguagem}
+
+Modelos de linguagem organizam texto a partir de padrões aprendidos, mas não garantem atualização, rastreabilidade ou fidelidade factual. Retrieval-Augmented Generation combina recuperação de documentos com geração condicionada ao contexto recuperado \cite{lewis2020rag}. Em vez de depender apenas da memória paramétrica do modelo, o sistema consulta uma coleção externa e inclui trechos relevantes na entrada da geração.
+
+Um pipeline de recuperação textual contém documentos, segmentação em trechos, embeddings, índice e retriever. Sentence-BERT mostrou uma forma eficiente de produzir representações de sentenças adequadas à comparação semântica \cite{reimers2019sentencebert}, enquanto recuperação densa representa consultas e passagens em espaços vetoriais compatíveis \cite{karpukhin2020dense}. FAISS oferece algoritmos e estruturas para busca eficiente por similaridade vetorial \cite{johnson2021billion}.
+
+O retriever recebe uma consulta e devolve trechos candidatos; o modelo de linguagem recebe esses trechos e produz a resposta. O banco vetorial, contudo, não substitui o documento original como fonte de verdade. Cada trecho precisa preservar identificador, emissor, versão, vigência, página ou seção e URL. No domínio regulatório, misturar versões históricas e vigentes pode produzir uma resposta linguisticamente plausível e operacionalmente incorreta.
+
+RAG também não elimina alucinação. A recuperação pode retornar material irrelevante, e o gerador pode produzir afirmações não sustentadas pelo contexto. A avaliação deve separar qualidade da recuperação, fidelidade ao documento, coerência com a evidência SHAP e clareza humana. Métricas automatizadas, como as propostas pelo RAGAS, podem apoiar essa análise, mas não substituem um conjunto de referência e revisão humana \cite{es2024ragas}.
+
+\section{Síntese e lacuna investigada}
+
+A literatura fornece métodos para classificação rara, explicação local e recuperação documental, porém sua simples justaposição não garante uma explicação fiel. O classificador responde quanto o padrão se aproxima da classe aprendida; SHAP registra quais entradas influenciaram a previsão; o RAG recupera contexto verificável. A lacuna investigada é integrar essas evidências sem transformar correlação em causalidade, sem inventar semântica para atributos anonimizados e sem confundir risco estatístico com decisão regulatória.
+
+O protótipo adotará um registro versionado de atributos explicáveis. Apenas features explícitas ou derivadas com fórmula, janela, unidade e limitação aprovadas poderão fornecer conceitos ao retriever. Colunas anônimas podem permanecer úteis ao classificador, mas serão descritas como atributos anonimizados quando aparecerem na explicação.

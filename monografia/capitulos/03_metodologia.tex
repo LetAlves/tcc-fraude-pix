@@ -1,0 +1,43 @@
+\chapter{Metodologia}
+
+\section{Desenho da pesquisa}
+
+O estudo será conduzido como prova de conceito experimental de um pipeline híbrido para classificação e explicação de risco. O conjunto IEEE-CIS Fraud Detection será usado para desenvolvimento e avaliação técnica \cite{ieee_cis_2019}. Como os dados representam comércio eletrônico/cartão e contêm atributos anonimizados, o experimento não permite estimar desempenho operacional em transações Pix reais. A transferência ao contexto Pix será limitada a papéis analíticos explicitamente documentados.
+
+O fluxo possui três camadas: classificação por aprendizado de máquina, explicação local por SHAP e contextualização documental por RAG. Cada camada terá entrada, saída, versão e protocolo de avaliação próprios. Essa separação evita que uma narrativa produzida pelo modelo de linguagem seja confundida com a previsão do classificador ou com o conteúdo de uma norma.
+
+\section{Preparação dos dados e protocolo experimental}
+
+As tabelas de transação e identidade serão unidas por \texttt{TransactionID} por meio de junção à esquerda, preservando todas as transações. A análise local encontrou 590.540 transações, das quais 20.663 apresentam \texttt{isFraud=1}, correspondendo a 3,499\%. A tabela de identidade possui 144.233 linhas e cobre 24,424\% das transações do treino.
+
+As observações serão ordenadas por \texttt{TransactionDT}, que representa um delta temporal em segundos a partir de uma referência não publicada. O valor permite preservar ordem e intervalos relativos, mas não será convertido em data civil ou horário local. A divisão final entre treino, validação e teste será definida antes da execução dos modelos e privilegiará um corte temporal. Transformações, imputação, encoding, escalonamento, seleção e estatísticas históricas serão ajustados somente no treino.
+
+O registro \texttt{config/pix\_feature\_registry.json} documenta cada atributo derivado: fórmula, colunas-fonte, população, janela, tratamento de ausentes, controle de vazamento, tags semânticas e advertência. Em decisão registrada pela dupla em 16/08/2026, foram aprovados e implementados quatro conceitos: desvio robusto do valor no histórico proxy, frequência recente no identificador proxy, raridade de dispositivo nesse histórico e posição cíclica temporal relativa. \texttt{card1} é tratado como proxy mascarado do domínio original, nunca como conta ou chave Pix; a origem e o fuso de \texttt{TransactionDT} não são presumidos.
+
+A regressão logística será a linha de base. Ponderação de classe e SMOTE serão comparados em configurações separadas; qualquer reamostragem ocorrerá somente dentro da partição ou fold de treino \cite{chawla2002smote}. O limiar será selecionado na validação segundo critério registrado. A avaliação final reportará AUC-PR, AUC-ROC, precisão, revocação, F1 e matriz de confusão no teste preservado \cite{saito2015precision}.
+
+\section{Camada 1: classificação de risco}
+
+A primeira camada receberá os atributos preparados e produzirá um pacote com identificador da transação, probabilidade, limiar, classe, versão do modelo e versão do registro de features. XGBoost será o modelo principal previsto e Random Forest funcionará como comparador \cite{breiman2001random,chen2016xgboost}. Resultados de modelos não executados não serão antecipados no texto; métricas e análise de erros serão incluídas após os experimentos.
+
+\section{Camada 2: explicação local por SHAP}
+
+A segunda camada calculará contribuições SHAP para transações selecionadas \cite{lundberg2017unified}. O artefato explicativo preservará valor-base, valor observado, contribuição, direção, unidade, definição e versões do modelo e do explicador. As contribuições serão interpretadas como influência estatística na previsão, não como causalidade.
+
+Para conectar SHAP ao RAG, as principais contribuições serão convertidas em um pacote de evidências. Somente features com semântica aprovada no registro poderão gerar tags conceituais. Uma coluna anônima poderá ser exibida como atributo de alta influência, mas seu nome não será usado para recuperar uma explicação Pix por suposição.
+
+\section{Camada 3: recuperação documental e geração}
+
+A base documental reunirá normas e materiais oficiais do Banco Central, literatura científica e fontes setoriais selecionadas. Cada documento e trecho manterá identificador, título, emissor, tipo, publicação, vigência, coleta, URL, página ou seção e hash. O texto será segmentado e representado por embeddings; os vetores serão indexados em FAISS para a prova de conceito \cite{reimers2019sentencebert,johnson2021billion}.
+
+O retriever receberá uma consulta construída a partir de tags aprovadas e filtros de metadados. Os trechos recuperados, o pacote SHAP e instruções restritivas formarão a entrada do modelo de linguagem. A saída deverá separar síntese, evidência do modelo, contexto documental, fontes e limitações. Na ausência de suporte suficiente, o sistema deverá se abster de produzir uma afirmação conclusiva.
+
+\section{Avaliação integrada}
+
+A classificação será avaliada pelas métricas da classe rara. A explicação SHAP será verificada quanto à correspondência entre atributos, sinais e valores narrados. A recuperação será avaliada com um conjunto de perguntas e trechos relevantes anotados, usando medidas como precisão em $k$, recall em $k$ e posição do primeiro resultado relevante. A geração será revisada quanto ao suporte documental, coerência com SHAP, clareza e ausência de linguagem acusatória. Avaliações automáticas poderão apoiar, mas não substituir, a inspeção humana \cite{es2024ragas}.
+
+\section{Reprodutibilidade, segurança e limitações}
+
+O código, parâmetros, seeds, versões e decisões metodológicas serão versionados. CSVs brutos e chaves de API permanecerão fora do Git. Exemplos enviados a serviços externos serão sintéticos ou minimizados. Saídas do modelo de linguagem não executarão comandos nem produzirão decisão automática de bloqueio, acusação ou devolução.
+
+As principais ameaças à validade são diferença de domínio entre IEEE-CIS e Pix, anonimização de atributos, mudança de distribuição, confirmação imperfeita do rótulo e ausência de validação em uma instituição financeira. Portanto, os resultados serão apresentados como evidência de viabilidade técnica da integração, não como sistema pronto para produção.

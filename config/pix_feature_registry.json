@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "decision_status": "approved_and_implemented",
+  "approved_at": "2026-08-16",
+  "decision_evidence": "reports/reunioes/2026-08-16_mapeamento_ieee_cis_pix.md",
+  "implementation": "src/features/pix_features.py",
+  "dataset": "IEEE-CIS Fraud Detection",
+  "scope_note": "Proxies analíticos para uma prova de conceito; não representam campos de uma transação Pix real.",
+  "features": [
+    {
+      "feature_id": "valor_atipico_cartao_proxy",
+      "concept_label": "desvio robusto do valor no histórico proxy",
+      "source_columns": ["TransactionAmt", "card1", "TransactionDT"],
+      "definition": "(valor - mediana_anterior) / (MAD_anterior * 1.4826 + 1e-6), limitado ao intervalo [-30, 30]",
+      "population": "transações com card1 não nulo",
+      "window": "histórico expandido estritamente anterior do mesmo card1",
+      "null_handling": "NaN quando não existe histórico suficiente; tratamento posterior pertence ao pré-processador",
+      "leakage_control": "mediana e MAD são causais e não consultam eventos futuros nem o alvo",
+      "rag_tags": ["valor_atipico_proxy"],
+      "warning": "card1 é um identificador mascarado do domínio original, não uma conta ou chave Pix."
+    },
+    {
+      "feature_id": "frequencia_recente_cartao_proxy",
+      "concept_label": "frequência recente no identificador proxy",
+      "source_columns": ["card1", "TransactionDT"],
+      "definition": "contagem de transações do mesmo card1 no intervalo (t - janela_segundos, t)",
+      "population": "transações com card1 não nulo",
+      "window": "86400 segundos por padrão, com a linha corrente excluída",
+      "null_handling": "0 quando não há evento anterior na janela",
+      "leakage_control": "janela causal com closed='left', sem a própria linha ou eventos futuros",
+      "rag_tags": ["frequencia_recente_proxy"],
+      "warning": "A janela usa o relógio relativo do dataset e não representa necessariamente um dia civil Pix."
+    },
+    {
+      "feature_id": "dispositivo_raro_cartao_proxy",
+      "concept_label": "raridade do dispositivo no histórico proxy",
+      "source_columns": ["card1", "DeviceInfo", "TransactionDT"],
+      "definition": "1 / (contagem_anterior_do_par(card1, DeviceInfo) + 1)",
+      "population": "transações com card1 e DeviceInfo não nulos",
+      "window": "histórico expandido estritamente anterior do par card1 e DeviceInfo",
+      "null_handling": "NaN quando DeviceInfo está ausente; tratamento posterior pertence ao pré-processador",
+      "leakage_control": "cumcount é calculado após ordenação temporal e usa somente ocorrências anteriores",
+      "rag_tags": ["dispositivo_raro_proxy"],
+      "warning": "Raridade estatística não equivale a dispositivo comprometido, novo ou associado a fraude."
+    },
+    {
+      "feature_id": "posicao_ciclo_diario_relativa",
+      "concept_label": "posição cíclica temporal relativa",
+      "source_columns": ["TransactionDT"],
+      "output_columns": [
+        "posicao_ciclo_diario_relativa",
+        "posicao_ciclo_diario_sen",
+        "posicao_ciclo_diario_cos"
+      ],
+      "definition": "posição = (TransactionDT mod 86400) / 86400, acompanhada de seno e cosseno de 2*pi*posição",
+      "population": "todas as transações",
+      "window": "transformação da linha corrente, sem histórico",
+      "null_handling": "nenhum nulo esperado em TransactionDT; ausência deve permanecer explícita se ocorrer",
+      "leakage_control": "usa somente TransactionDT da própria linha e não consulta o alvo",
+      "rag_tags": ["padrao_temporal_relativo"],
+      "warning": "A origem e o fuso de TransactionDT não são publicados; a feature não representa horário local."
+    }
+  ]
+}

@@ -67,3 +67,33 @@ Contagem real confirmada no `train_transaction.csv`: **C1–C14** (14 colunas), 
 - Evidência completa em `reports/eda_summary.txt`, `reports/fig_distribuicao_alvo.png` e `reports/fig_top_correlacoes.png` (gerados por `notebooks/01_eda.ipynb`, execução de 16/08/2026).
 
 **Por que importa pro TCC**: esses três achados (desbalanceamento, padrão de nulos ligado à ausência de identidade, e concentração de sinal no grupo V) formam a ponte direta entre o Capítulo 3 (Metodologia — por que SMOTE, por que AUC-PR) e o Capítulo 4 (Resultados — de onde vêm as features mais fortes do modelo).
+
+---
+
+## Junho — Dataset proxy, baseline planejado e desenho das três camadas
+
+### Evidência reproduzida para a entrega parcial
+
+- `train_transaction.csv`: 590.540 linhas, 394 colunas e 20.663 fraudes marcadas (3,499%);
+- razão entre linhas legítimas e fraude: 27,6:1;
+- `train_identity.csv`: 144.233 linhas e cobertura de 24,424% das transações;
+- `TransactionDT`: aproximadamente 182 dias de extensão relativa, sem data civil publicada;
+- mediana de `TransactionAmt`: 68,50 nas linhas legítimas e 75,00 nas linhas marcadas como fraude; diferença descritiva, não causal.
+
+### Decisão metodológica e registro aprovado
+
+- usar corte temporal como avaliação principal e registrar qualquer análise estratificada aleatória apenas como complemento;
+- ajustar toda transformação e reamostragem somente no treino;
+- comparar ponderação de classe e SMOTE em pipelines separados;
+- escolher limiar na validação, nunca no teste;
+- usar somente features do registro versionado como ponte semântica SHAP→RAG;
+- manter somente as quatro features aprovadas pela dupla em 16/08/2026 como ponte semântica: valor atípico, frequência recente, dispositivo raro e ciclo diário relativo, todas explicitamente qualificadas como proxies do IEEE-CIS;
+- usar a implementação causal de `src/features/pix_features.py`, sem consultar alvo ou eventos futuros.
+
+### LangChain
+
+O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
+
+### Frase-chave para o Capítulo 3
+
+O protocolo separa três evidências: o classificador estima risco; SHAP registra influências locais; o RAG recupera contexto documental. A geração em linguagem natural deve permanecer subordinada às duas evidências e se abster quando o suporte for insuficiente.

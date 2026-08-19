@@ -6,6 +6,8 @@ Esta pasta atende à parte local e versionável da tarefa `m1_p2_2`. Ela pode se
 
 - `main.tex`: entrada do projeto;
 - `capitulos/01_introducao.tex`: rascunho do Capítulo 1;
+- `capitulos/02_revisao_bibliografica.tex`: rascunho do Capítulo 2;
+- `capitulos/03_metodologia.tex`: visão geral e protocolo planejado do Capítulo 3;
 - `referencias.bib`: 22 referências importáveis também pelo Zotero.
 
 ## Antes de publicar
