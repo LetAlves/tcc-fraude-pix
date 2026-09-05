@@ -110,6 +110,32 @@ Considerou-se excluir os 4 grupos anônimos por serem "muita coluna com dado que
 
 **Plano**: treinar o baseline com todas; em julho, usar a importância do SHAP para decidir se vale reduzir o conjunto (ex.: manter só as top-N mais influentes) — corte guiado por evidência do próprio modelo, não por desconforto com a quantidade de colunas.
 
+### Decisão: ponderação de classe como estratégia principal de desbalanceamento (m2_p1_3)
+
+Execução de 05/09/2026, `notebooks/02_preprocessing.ipynb`, **amostra de teste de 50.000 transações** (`N_LINHAS = 50_000`), split temporal 35.000 / 7.500 / 7.500, taxa de fraude de 2,81% na validação — cerca de 210 fraudes. Regressão logística, limiar padrão de 0,5. **Números provisórios**: servem para escolher a estratégia, não como resultado do trabalho. Os valores oficiais saem da execução com o dataset completo (m2_p1_6).
+
+| Métrica na validação | `class_weight='balanced'` | SMOTE |
+|---|---|---|
+| AUC-PR | **0,1395** | 0,1332 |
+| AUC-ROC | 0,7496 | 0,7489 |
+| Recall | 0,6209 | **0,6303** |
+| F1 | 0,1509 | **0,1539** |
+| Precisão (derivada de F1 e recall) | ~8,6% | ~8,8% |
+
+**As duas estratégias empataram.** Pelo critério registrado (maior AUC-PR na validação) vence a ponderação de classe, mas a diferença é de 0,006 em AUC-PR sobre ~210 fraudes — dentro da incerteza esperada para esse número de positivos. A redação do relatório e da monografia não deve afirmar superioridade de uma sobre a outra; o que a evidência sustenta é equivalência de desempenho, com a escolha decidida por critérios secundários.
+
+Os três critérios secundários apontam todos para a ponderação de classe:
+
+- **não fabrica dado**: a ponderação altera apenas o custo do erro na função de perda, enquanto o SMOTE cria transações de fraude sintéticas que nunca ocorreram;
+- **não distorce as categóricas**: o SMOTE roda depois do pré-processamento, quando as categóricas já viraram colunas one-hot, e interpola entre elas — produz linhas com `ProductCD_W = 0,37`, combinação que não existe no domínio. O `SMOTENC` trata dado misto, mas exigiria conhecer as colunas categóricas antes do encoding, invertendo a ordem das etapas do pipeline. Limitação declarada, não corrigida nesta etapa;
+- **custo de memória**: o SMOTE equilibra as classes duplicando o conjunto de treino em memória, o que inviabiliza a execução com o dataset completo na máquina usada (8 GB de RAM).
+
+Referência para leitura das métricas: com 2,81% de fraude na validação, um classificador aleatório teria AUC-PR ≈ 0,028. O baseline fica ~4,7× acima disso. A precisão de ~8,6% significa que, a cada 100 transações marcadas como fraude, cerca de 9 são fraude e 91 são alarme falso — com recall de 62%. Esse é o piso que XGBoost e Random Forest precisam superar em julho (m3_p1_1 / m3_p1_2), e a melhora esperada é em precisão sem perda de recall.
+
+**Validade da comparação**: `montar_pipeline_modelo` clona o pré-processador recebido. Sem o clone, os dois pipelines compartilhariam o mesmo objeto e o ajuste do segundo sobrescreveria o do primeiro — os dois números da tabela acima descreveriam um estado que só um dos modelos de fato usou. Correção registrada no commit `ddda837`.
+
+**Por que importa pro TCC**: dá ao Capítulo 3 uma justificativa de escolha que não depende de um decimal indefensável, e ao Capítulo 4 a leitura correta do baseline (alto recall, baixa precisão). Também é o registro de que o SMOTE foi de fato aplicado e avaliado, e não descartado por conveniência.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
