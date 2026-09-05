@@ -69,7 +69,7 @@ class CodificadorFrequencia(BaseEstimator, TransformerMixin):
         X = pd.DataFrame(X).copy()
         for coluna in X.columns:
             X[coluna] = X[coluna].map(self.mapas_[coluna]).fillna(0.0)
-        return X.to_numpy(dtype=float)
+        return X.to_numpy(dtype=np.float32)
 
     def get_feature_names_out(self, input_features=None):
         # Dentro de um Pipeline, este transformador recebe o array NumPy da etapa
@@ -80,6 +80,42 @@ class CodificadorFrequencia(BaseEstimator, TransformerMixin):
         if input_features is not None:
             return np.asarray(input_features, dtype=object)
         return np.asarray(list(self.mapas_.keys()))
+
+
+# ─── Redução de precisão numérica ───────────────────────────────────────────
+
+def reduzir_precisao(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Converte colunas numéricas para o menor tipo que as comporta sem perda útil.
+
+    O IEEE-CIS é lido em `float64`/`int64` por padrão, mas nenhuma das colunas
+    precisa dessa faixa: `TransactionAmt` não passa de dezenas de milhares e os
+    grupos anônimos são contagens e indicadores pequenos. `float32` guarda cerca
+    de sete algarismos significativos, muito acima da precisão dos dados.
+
+    Aplicar **depois** da engenharia de features: as janelas móveis de
+    `pix_features` acumulam somas ao longo de milhares de linhas e devem ser
+    calculadas na precisão cheia; a redução serve ao caminho da modelagem, onde
+    o custo de memória é o que limita o tamanho do experimento.
+
+    Reduz o DataFrame completo de ~2,2 GB para ~1,2 GB e faz a matriz
+    pré-processada de treino cair de ~1,5 GB para ~0,76 GB.
+    """
+    convertido = df.copy(deep=False)
+    for coluna in df.columns:
+        tipo = df[coluna].dtype
+        if pd.api.types.is_float_dtype(tipo) and tipo.itemsize > 4:
+            convertido[coluna] = df[coluna].astype("float32")
+        elif pd.api.types.is_integer_dtype(tipo):
+            convertido[coluna] = pd.to_numeric(df[coluna], downcast="integer")
+
+    antes = df.memory_usage(deep=True).sum() / 1e6
+    depois = convertido.memory_usage(deep=True).sum() / 1e6
+    logger.info(
+        "Precisão reduzida — %.0f MB para %.0f MB (%.0f%% do original)",
+        antes, depois, 100 * depois / antes,
+    )
+    return convertido
 
 
 # ─── Identificação de colunas ───────────────────────────────────────────────
@@ -180,7 +216,7 @@ def construir_preprocessador(numericas: list[str], categoricas_baixa: list[str],
     ])
     pipeline_categorica_baixa = Pipeline([
         ("imputar", SimpleImputer(strategy="constant", fill_value="ausente")),
-        ("codificar", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ("codificar", OneHotEncoder(handle_unknown="ignore", sparse_output=False, dtype=np.float32)),
     ])
     pipeline_categorica_alta = Pipeline([
         ("imputar", SimpleImputer(strategy="constant", fill_value="ausente")),
