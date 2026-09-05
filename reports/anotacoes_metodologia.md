@@ -158,6 +158,59 @@ O cronograma descreve esta tarefa como "split estratificado (70/15/15)", enquant
 
 **Por que importa pro TCC**: sustenta no Capítulo 3 a escolha do corte temporal com evidência própria, em vez de apenas citar a literatura, e antecipa a pergunta óbvia de banca — "sem estratificar, os conjuntos não ficam desbalanceados?" — com número medido.
 
+### Execução oficial do baseline no dataset completo (m2_p1_5)
+
+Execução de 05/09/2026 sobre as **590.540 transações**, via script dedicado (não pelo notebook — a m2_p1_6 segue pendente). Regressão logística, limiar 0,5, corte temporal 70/15/15. Duração 49 minutos, pico de 4.394 MB de memória. Ambas as estratégias convergiram com `max_iter=1000`.
+
+**Validação** — 88.581 transações, 3.042 fraudes, taxa base 3,434%:
+
+| Métrica | ponderação de classe | SMOTE |
+|---|---|---|
+| AUC-ROC | 0,8414 | 0,8393 |
+| AUC-PR | 0,3936 | **0,3962** |
+| AUC-PR ÷ taxa base | 11,46× | 11,54× |
+| Recall | 0,6792 | 0,6834 |
+| Precisão | **0,1349** | 0,1314 |
+| F1 | 0,2250 | 0,2204 |
+| Tempo de treino | **5min43s** | 42min |
+
+**Teste** — 88.581 transações, 3.083 fraudes, taxa base 3,480%, pipeline SMOTE:
+
+| AUC-ROC | AUC-PR | AUC-PR ÷ taxa base | Recall | Precisão | F1 |
+|---|---|---|---|---|---|
+| 0,8239 | 0,1863 | 5,35× | 0,7074 | 0,1215 | 0,2074 |
+
+#### Achado principal: degradação temporal
+
+A AUC-PR cai de **0,3962 na validação para 0,1863 no teste** — menos da metade — enquanto as taxas base são praticamente iguais (3,434% e 3,480%), a AUC-ROC quase não se move (0,839 para 0,824) e o recall até sobe (0,683 para 0,707). A queda não é efeito de desbalanceamento: é perda de pureza nas previsões de maior confiança no período mais recente. Os padrões aprendidos no passado envelhecem.
+
+O achado só é observável por causa do corte temporal. Um split aleatório teria misturado os períodos e reportado ~0,39 como desempenho do modelo — errado por um fator de dois. É evidência interna, do próprio experimento, para a escolha metodológica do Capítulo 3, e limitação a declarar no Capítulo 5: um protótipo assim exigiria retreino periódico.
+
+Em termos operacionais no teste: das 3.083 fraudes o modelo recupera ~2.181, marcando cerca de 18.000 das 88.581 transações como suspeitas — 20% do total, com 8 de cada 10 acusações sendo falso alarme.
+
+#### A inversão confirma o empate
+
+Na amostra de 50.000 linhas a ponderação de classe vencia por 0,006 de AUC-PR; no dataset completo o SMOTE vence por 0,0026. **As duas margens são mínimas e apontam para lados opostos** — confirmação empírica da leitura já registrada de que as estratégias empatam e que qualquer vencedor nessa casa decimal é ruído.
+
+Dado novo desta escala: o SMOTE levou **7,4× mais tempo** de treino para entregar desempenho equivalente, o que reforça os critérios secundários já registrados (não fabricar dado sintético, não interpolar colunas one-hot).
+
+#### Decisão em aberto — regra de seleção da estratégia
+
+A nota anterior registrou a ponderação de classe como estratégia principal, por critérios secundários. O script de execução usa a regra automática (maior AUC-PR na validação), que no dataset completo seleciona o SMOTE — por isso a avaliação de teste acima é a do pipeline SMOTE. **As duas decisões precisam ser conciliadas em uma redação única antes do Capítulo 4.**
+
+Restrição a respeitar na conciliação: avaliar também a ponderação de classe no teste e então escolher o melhor dos dois **contaminaria o conjunto de teste** — a seleção tem de ser feita na validação, com critério declarado antes de olhar o teste. Reportar os dois números de teste é aceitável desde que o texto declare qual critério de seleção valia previamente.
+
+#### Alterações que viabilizaram a execução
+
+A tentativa anterior falhou com `ArrayMemoryError` ao pedir 1,76 GiB para um bloco de 399 × 590.540 em `float64`. Duas correções, ambas verificadas como neutras em resultado:
+
+- `frequencia_recente_proxy` ordenava e copiava o DataFrame inteiro (434 colunas) para usar duas. Passou a ordenar apenas as colunas-fonte: saída idêntica (`equals` verdadeiro, diferença máxima 0,0) com o custo caindo de 66 MB para 4 MB em 200.000 linhas;
+- `reduzir_precisao` converte `float64` para `float32` após a engenharia de features, e o `OneHotEncoder` e o `CodificadorFrequencia` deixaram de emitir `float64`. Em 300.000 linhas: pico de 3.686 MB para 2.603 MB (menos 29%), tempo 15% menor, métricas diferindo apenas na quarta casa decimal (AUC-PR 0,4472 contra 0,4476; precisão idêntica).
+
+**Nota sobre comparação entre tamanhos de amostra**: a AUC-PR medida em 50.000, 150.000 e 300.000 linhas (0,1395 / 0,2881 / 0,4472) não forma uma curva de aprendizado interpretável, porque cada tamanho usa uma janela de validação diferente, com dificuldade e taxa base próprias. Apenas os números do dataset completo devem ser citados.
+
+**Por que importa pro TCC**: fixa os valores oficiais do baseline de junho — o piso que XGBoost e Random Forest precisam superar em julho (m3_p1_1 / m3_p1_2), com a melhora esperada em precisão sem perda de recall — e entrega o primeiro resultado experimental próprio do trabalho, a degradação temporal.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
