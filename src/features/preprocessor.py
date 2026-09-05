@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as PipelineDesbalanceamento
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
@@ -206,11 +206,18 @@ def montar_pipeline_modelo(
     `usar_smote` e `class_weight` não devem ser combinados no mesmo pipeline
     (decisão registrada: comparar em pipelines separados, não misturar as
     duas estratégias de tratamento de desbalanceamento).
+
+    O `preprocessador` recebido é clonado, não reaproveitado: o sklearn não
+    clona as etapas de um Pipeline, então dois pipelines montados a partir do
+    mesmo objeto compartilhariam o ajuste — o `fit` do segundo sobrescreveria
+    silenciosamente a mediana, as categorias e a escala aprendidas pelo
+    primeiro. Com o clone, cada pipeline aprende do seu próprio conjunto de
+    treino e a comparação entre estratégias continua válida.
     """
     if usar_smote and class_weight is not None:
         raise ValueError("Não combinar SMOTE com class_weight — comparar em pipelines separados.")
 
-    etapas = [("preprocessamento", preprocessador)]
+    etapas = [("preprocessamento", clone(preprocessador))]
     if usar_smote:
         etapas.append(("smote", SMOTE(random_state=random_state)))
     etapas.append((
