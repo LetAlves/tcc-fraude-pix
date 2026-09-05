@@ -136,6 +136,28 @@ Referência para leitura das métricas: com 2,81% de fraude na validação, um c
 
 **Por que importa pro TCC**: dá ao Capítulo 3 uma justificativa de escolha que não depende de um decimal indefensável, e ao Capítulo 4 a leitura correta do baseline (alto recall, baixa precisão). Também é o registro de que o SMOTE foi de fato aplicado e avaliado, e não descartado por conveniência.
 
+### Evidência: o corte temporal dispensa a estratificação (m2_p1_4)
+
+Verificação de 05/09/2026 sobre o **dataset completo** (590.540 transações), lendo apenas `TransactionDT` e `isFraud` — 9 MB, sem carregar as 434 colunas.
+
+| Conjunto | Linhas | Fraudes | Taxa |
+|---|---|---|---|
+| treino | 413.378 | 14.538 | 3,517% |
+| validação | 88.581 | 3.042 | 3,434% |
+| teste | 88.581 | 3.083 | 3,480% |
+
+O cronograma descreve esta tarefa como "split estratificado (70/15/15)", enquanto o implementado é corte temporal, conforme a decisão metodológica registrada acima. A verificação mostra que **não houve troca**: as proporções 70/15/15 são exatas e as três taxas de fraude ficam dentro de 0,08 ponto percentual entre si. O corte cronológico produziu conjuntos balanceados sem estratificar, então o realismo temporal foi obtido sem custo de equilíbrio de classe. O texto da tarefa no organizador está desatualizado em relação à metodologia, não o código.
+
+**Integridade da fronteira**: 2,9% das linhas do dataset compartilham `TransactionDT` com outra transação, o que abriria a possibilidade de um bloco de transações simultâneas ser partido entre dois conjuntos. Nos dois cortes efetivos (`TransactionDT` 10.437.996 e 13.151.840), nenhuma transação do lado direito repete o último timestamp do lado esquerdo — zero vazamento de instante entre treino, validação e teste.
+
+**Ordenação estável**: `dividir_temporal` passou a ordenar com `kind="mergesort"`. Como o IEEE-CIS já chega ordenado por `TransactionDT`, o pandas detecta que a ordem pedida é a existente e não reordena nada — a mudança **não altera nenhum resultado atual**. Ela protege o caso de entrada fora de ordem (amostra embaralhada, arquivos concatenados): entre linhas de mesmo timestamp o mergesort preserva a ordem de chegada, enquanto o quicksort padrão a reorganiza de forma arbitrária e dependente da versão do numpy.
+
+**Alerta sobre números de amostra**: na execução de teste com 50.000 linhas, as taxas de fraude saíram 2,87% / 2,81% / 1,91%. O 1,91% do teste é artefato do recorte — 50.000 linhas cobrem cerca de 9 dias iniciais, e a fraude não se distribui uniformemente nesse intervalo. No dataset completo a distorção desaparece. Reforça que nenhuma métrica de amostra deve ser citada como resultado.
+
+**Onde não está o gargalo de memória**: medido com `psutil` em um DataFrame de 538 MB (150.000 linhas × 440 colunas), `dividir_temporal` custa +8 MB de RSS. A divisão não é a origem do consumo que ameaça a execução com o dataset completo; procurar nas cópias criadas no notebook (`X_treino = treino.drop(...)`) e na duplicação do conjunto de treino pelo SMOTE.
+
+**Por que importa pro TCC**: sustenta no Capítulo 3 a escolha do corte temporal com evidência própria, em vez de apenas citar a literatura, e antecipa a pergunta óbvia de banca — "sem estratificar, os conjuntos não ficam desbalanceados?" — com número medido.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.

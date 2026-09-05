@@ -140,7 +140,10 @@ def dividir_temporal(
     if frac_treino + frac_val >= 1.0:
         raise ValueError("frac_treino + frac_val deve ser menor que 1 (sobra pro teste)")
 
-    ordenado = df.sort_values(coluna_tempo).reset_index(drop=True)
+    # mergesort é estável: entre linhas de mesmo timestamp (2,9% das linhas do
+    # IEEE-CIS) preserva a ordem original, mantendo a fronteira do corte igual
+    # entre execuções. O quicksort padrão do sort_values não garante isso.
+    ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
     n = len(ordenado)
     corte_treino = int(n * frac_treino)
     corte_val = int(n * (frac_treino + frac_val))
