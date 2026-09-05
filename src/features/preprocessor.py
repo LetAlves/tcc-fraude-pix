@@ -1,0 +1,220 @@
+"""
+Pré-processamento e pipeline de modelagem para o baseline de junho.
+
+Cobre: split temporal, imputação de nulos, encoding de categóricas,
+escalonamento e montagem do pipeline (com SMOTE ou peso de classe,
+em pipelines separados, nunca misturados — decisão registrada em
+reports/anotacoes_metodologia.md, seção de junho).
+
+Todo ajuste estatístico (mediana, frequências, escala) é feito somente
+com o conjunto de treino, e reaplicado em validação/teste — nunca o
+contrário, para não vazar informação de val/teste no ajuste.
+"""
+
+from __future__ import annotations
+
+import logging
+
+import numpy as np
+import pandas as pd
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as PipelineDesbalanceamento
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+# ─── Colunas fora do conjunto de features ──────────────────────────────────
+COLUNA_ALVO = "isFraud"
+COLUNAS_DESCARTADAS = [
+    "TransactionID",  # chave, não é feature
+    "TransactionDT",  # usado só para o split temporal, não entra no modelo
+    "card4",  # bandeira do cartão — sem equivalente conceitual em Pix (decisão registrada)
+    "card6",  # crédito/débito — mesma razão acima
+]
+
+# Categorias com poucos valores distintos e visíveis (bandeira/tipo já removidos) — one-hot
+COLUNAS_CATEGORICAS_BAIXA_CARDINALIDADE = [
+    "ProductCD", "DeviceType",
+    "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9",
+]
+
+
+# ─── Codificador de frequência (para categóricas de alta cardinalidade) ────
+
+class CodificadorFrequencia(BaseEstimator, TransformerMixin):
+    """
+    Substitui cada categoria pela sua frequência relativa observada no treino.
+
+    Categorias nunca vistas no treino (inclusive nulos, se não tratados antes)
+    recebem frequência 0.0 — sinaliza "raro/desconhecido" sem inventar uma
+    categoria inexistente no treino.
+    """
+
+    def fit(self, X: pd.DataFrame, y=None) -> "CodificadorFrequencia":
+        X = pd.DataFrame(X)
+        self.mapas_ = {coluna: X[coluna].value_counts(normalize=True) for coluna in X.columns}
+        return self
+
+    def transform(self, X: pd.DataFrame) -> np.ndarray:
+        X = pd.DataFrame(X).copy()
+        for coluna in X.columns:
+            X[coluna] = X[coluna].map(self.mapas_[coluna]).fillna(0.0)
+        return X.to_numpy(dtype=float)
+
+    def get_feature_names_out(self, input_features=None):
+        # Dentro de um Pipeline, este transformador recebe o array NumPy da etapa
+        # de imputação — sem nomes de coluna, então `mapas_` fica indexado por
+        # posição (0, 1, 2...). O sklearn repassa aqui os nomes reais da etapa
+        # anterior via `input_features`; usá-los preserva "DeviceInfo" em vez de
+        # "categoricas_alta__1" nos gráficos do SHAP.
+        if input_features is not None:
+            return np.asarray(input_features, dtype=object)
+        return np.asarray(list(self.mapas_.keys()))
+
+
+# ─── Identificação de colunas ───────────────────────────────────────────────
+
+def identificar_colunas(df: pd.DataFrame) -> tuple[list[str], list[str], list[str]]:
+    """
+    Separa as colunas de features em 3 grupos, por regra automática:
+        - numéricas: dtype numérico, fora das listas de exceção;
+        - categóricas de baixa cardinalidade: lista explícita (one-hot);
+        - categóricas de alta cardinalidade: dtype texto (object), fora da
+          lista de baixa cardinalidade (encoding por frequência).
+
+    Não modifica nem lê `df` além dos dtypes/nomes de coluna.
+    """
+    colunas_features = [
+        c for c in df.columns
+        if c != COLUNA_ALVO and c not in COLUNAS_DESCARTADAS
+    ]
+
+    categoricas_baixa = [c for c in colunas_features if c in COLUNAS_CATEGORICAS_BAIXA_CARDINALIDADE]
+    # Checa por tipo numérico (não por dtype == object): pandas recentes usam
+    # um dtype "str" dedicado para texto em vez do "object" tradicional, então
+    # "not numérico" é o teste robusto pra pegar texto em qualquer representação.
+    numericas = [
+        c for c in colunas_features
+        if c not in categoricas_baixa and pd.api.types.is_numeric_dtype(df[c])
+    ]
+    categoricas_alta = [
+        c for c in colunas_features
+        if c not in categoricas_baixa and c not in numericas
+    ]
+
+    logger.info(
+        "Colunas identificadas — numéricas: %d | categóricas baixa cardinalidade: %d | categóricas alta cardinalidade: %d",
+        len(numericas), len(categoricas_baixa), len(categoricas_alta),
+    )
+    return numericas, categoricas_baixa, categoricas_alta
+
+
+# ─── Split temporal ──────────────────────────────────────────────────────────
+
+def dividir_temporal(
+    df: pd.DataFrame,
+    frac_treino: float = 0.7,
+    frac_val: float = 0.15,
+    coluna_tempo: str = "TransactionDT",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Divide o dataset em treino/validação/teste por corte temporal (não aleatório).
+
+    Ordena por `coluna_tempo` e corta em blocos contíguos: treino = transações
+    mais antigas, teste = mais recentes. Evita que o modelo "veja" um padrão
+    do futuro durante o treino — mais realista para fraude do que um split
+    aleatório (decisão registrada em reports/anotacoes_metodologia.md).
+
+    `frac_treino + frac_val` deve ser menor que 1; o restante vira teste.
+    """
+    if frac_treino + frac_val >= 1.0:
+        raise ValueError("frac_treino + frac_val deve ser menor que 1 (sobra pro teste)")
+
+    ordenado = df.sort_values(coluna_tempo).reset_index(drop=True)
+    n = len(ordenado)
+    corte_treino = int(n * frac_treino)
+    corte_val = int(n * (frac_treino + frac_val))
+
+    treino = ordenado.iloc[:corte_treino]
+    val = ordenado.iloc[corte_treino:corte_val]
+    teste = ordenado.iloc[corte_val:]
+
+    logger.info(
+        "Split temporal — treino: %d (%.1f%%) | val: %d (%.1f%%) | teste: %d (%.1f%%)",
+        len(treino), 100 * len(treino) / n,
+        len(val), 100 * len(val) / n,
+        len(teste), 100 * len(teste) / n,
+    )
+    return treino, val, teste
+
+
+# ─── Pipeline de pré-processamento ──────────────────────────────────────────
+
+def construir_preprocessador(numericas: list[str], categoricas_baixa: list[str], categoricas_alta: list[str]) -> ColumnTransformer:
+    """
+    Monta o ColumnTransformer: imputação + transformação por grupo de coluna.
+
+        - numéricas: mediana (imputação) + StandardScaler (escalonamento);
+        - categóricas baixa cardinalidade: categoria explícita "ausente" + one-hot;
+        - categóricas alta cardinalidade: categoria explícita "ausente" + frequência.
+
+    A mediana, as categorias do one-hot e as frequências são todas aprendidas
+    só no `fit` (ou seja, só com o conjunto de treino, ao usar dentro de um Pipeline).
+    """
+    pipeline_numerica = Pipeline([
+        ("imputar", SimpleImputer(strategy="median")),
+        ("escalar", StandardScaler()),
+    ])
+    pipeline_categorica_baixa = Pipeline([
+        ("imputar", SimpleImputer(strategy="constant", fill_value="ausente")),
+        ("codificar", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+    pipeline_categorica_alta = Pipeline([
+        ("imputar", SimpleImputer(strategy="constant", fill_value="ausente")),
+        ("codificar", CodificadorFrequencia()),
+    ])
+
+    return ColumnTransformer(
+        transformers=[
+            ("numericas", pipeline_numerica, numericas),
+            ("categoricas_baixa", pipeline_categorica_baixa, categoricas_baixa),
+            ("categoricas_alta", pipeline_categorica_alta, categoricas_alta),
+        ],
+        remainder="drop",
+    )
+
+
+def montar_pipeline_modelo(
+    preprocessador: ColumnTransformer,
+    usar_smote: bool = False,
+    class_weight: str | dict | None = None,
+    random_state: int = 42,
+) -> PipelineDesbalanceamento:
+    """
+    Monta o pipeline completo: pré-processamento (+ SMOTE opcional) + Regressão Logística.
+
+    `usar_smote` e `class_weight` não devem ser combinados no mesmo pipeline
+    (decisão registrada: comparar em pipelines separados, não misturar as
+    duas estratégias de tratamento de desbalanceamento).
+    """
+    if usar_smote and class_weight is not None:
+        raise ValueError("Não combinar SMOTE com class_weight — comparar em pipelines separados.")
+
+    etapas = [("preprocessamento", preprocessador)]
+    if usar_smote:
+        etapas.append(("smote", SMOTE(random_state=random_state)))
+    etapas.append((
+        "modelo",
+        LogisticRegression(max_iter=1000, class_weight=class_weight, random_state=random_state),
+    ))
+    return PipelineDesbalanceamento(etapas)
