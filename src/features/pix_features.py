@@ -115,7 +115,11 @@ def frequencia_recente_proxy(
     # Ordena por (cartao, tempo): dentro de cada grupo fica cronológico, e essa
     # é a mesma ordem "em blocos" que groupby().rolling() usa internamente —
     # necessário para reatribuir o índice original por posição depois.
-    ordenado = df.sort_values([coluna_cartao, coluna_tempo]).copy()
+    # Só as duas colunas-fonte entram na ordenação. Ordenar o DataFrame inteiro
+    # por (cartão, tempo) é uma ordem genuinamente nova, então o pandas
+    # materializa as 434 colunas — 1,76 GiB só no bloco float64 do dataset
+    # completo, o que estourava a memória antes de qualquer modelo rodar.
+    ordenado = df[[coluna_cartao, coluna_tempo]].sort_values([coluna_cartao, coluna_tempo])
     ordenado["_dt_sintetico"] = pd.to_datetime(ordenado[coluna_tempo], unit="s")
 
     contagem = (
