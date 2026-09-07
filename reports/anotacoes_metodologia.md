@@ -211,6 +211,49 @@ A tentativa anterior falhou com `ArrayMemoryError` ao pedir 1,76 GiB para um blo
 
 **Por que importa pro TCC**: fixa os valores oficiais do baseline de junho — o piso que XGBoost e Random Forest precisam superar em julho (m3_p1_1 / m3_p1_2), com a melhora esperada em precisão sem perda de recall — e entrega o primeiro resultado experimental próprio do trabalho, a degradação temporal.
 
+### Entregável executado e números canônicos (m2_p1_6)
+
+Execução de 06/09/2026 do `notebooks/02_preprocessing.ipynb` no dataset completo, via `nbconvert --execute --inplace`, com as saídas gravadas no próprio notebook. Nove células de código, zero erros. **Estes são os números a citar na monografia** — a execução via script registrada na seção anterior (m2_p1_5) fica como verificação cruzada, não como fonte.
+
+**Validação** — 88.581 transações, 3.042 fraudes, taxa base 3,434%:
+
+| Métrica | ponderação de classe | SMOTE |
+|---|---|---|
+| AUC-ROC | 0,8414 | 0,8392 |
+| AUC-PR | 0,3934 | **0,3967** |
+| AUC-PR ÷ taxa base | 11,5× | 11,6× |
+| Recall | 0,6785 | 0,6831 |
+| Precisão | **0,1347** | 0,1316 |
+| F1 | 0,2248 | 0,2206 |
+
+**Teste** — 88.581 transações, 3.083 fraudes, taxa base 3,480%, pipeline SMOTE:
+
+| AUC-ROC | AUC-PR | AUC-PR ÷ taxa base | Recall | Precisão | F1 |
+|---|---|---|---|---|---|
+| 0,8234 | 0,1840 | 5,3× | 0,7071 | 0,1213 | 0,2071 |
+
+Todas as conclusões da seção anterior se mantêm: empate entre as estratégias (agora 0,0033 de diferença, ainda com inversão de sinal em relação à amostra) e queda da AUC-PR pela metade entre validação e teste, caracterizando degradação temporal.
+
+#### Limitação de reprodutibilidade
+
+As duas execuções do mesmo código, com a mesma semente, divergem a partir da terceira casa decimal:
+
+| | script (m2_p1_5) | notebook (m2_p1_6) |
+|---|---|---|
+| AUC-PR validação, ponderação | 0,3936 | 0,3934 |
+| AUC-PR validação, SMOTE | 0,3962 | 0,3967 |
+| AUC-PR teste | 0,1863 | 0,1840 |
+
+A causa é a combinação de `float32` com as operações matriciais paralelas do BLAS: a ordem das somas varia entre execuções e o resultado muda nos últimos dígitos. A divergência foi introduzida pela redução de precisão adotada em m2_p1_5 — em `float64` o efeito seria menor, mas a execução completa não caberia na máquina disponível. É um custo assumido conscientemente, e a contrapartida é que **nenhum número citado pode misturar as duas execuções**; a fonte tem de ser identificada.
+
+Observação relacionada: as métricas de limiar (recall, F1, precisão) são mais sensíveis a isso do que as de ordenação (AUC-ROC, AUC-PR), porque pequenas variações de arredondamento fazem transações cruzarem o corte de 0,5. Em teste com 50.000 linhas, o recall variou 0,0142 entre `float64` e `float32`, contra 0,0010 na AUC-PR.
+
+#### Custo de execução e condições de medição
+
+O notebook levou **1h25**, contra 49 minutos do script equivalente. O código é o mesmo; a diferença é pressão de memória — com o kernel do Jupyter e o restante do ambiente carregados, a máquina passou a paginar para o disco. A engenharia de features levou 17 minutos no notebook contra cerca de 40 segundos no script, e a própria redução de precisão levou 4,7 minutos contra tempo desprezível. Qualquer tempo de execução citado na monografia precisa declarar em que condições foi medido, sob pena de descrever a memória disponível da máquina em vez do custo do método.
+
+**Por que importa pro TCC**: fixa a fonte única dos números de junho e documenta duas limitações que só aparecem em execução real — a não reprodutibilidade bit a bit introduzida pelo `float32` e a dependência do tempo de execução em relação à memória livre. As duas são candidatas a menção no Capítulo 5.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
