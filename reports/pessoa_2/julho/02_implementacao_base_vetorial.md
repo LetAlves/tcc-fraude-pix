@@ -2,6 +2,8 @@
 
 Data da execução: **30/08/2026**. Escopo: `m3_p2_2`, `m3_p2_3` e `m3_p2_4`.
 
+> Registro histórico. Após a atualização para o Guia MED 4.4, a [execução de 10/09/2026](../setembro/01_revalidacao_corpus_rag.md) manteve 106 unidades e 290 chunks pais, passando de 1.192 para 1.195 janelas de embedding.
+
 ## Objetivo
 
 Transformar o corpus oficial em uma base local pesquisável, com chunking reproduzível, embeddings multilíngues e recuperação por similaridade. Esta etapa implementa somente ingestão e busca; não chama um LLM e não gera uma conclusão sobre fraude.

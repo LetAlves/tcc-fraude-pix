@@ -87,6 +87,8 @@ def _base_metadata(entry: dict[str, Any]) -> dict[str, Any]:
         "final_url",
         "published_at",
         "version_label",
+        "effective_from",
+        "future_effective_from",
         "norm_status",
         "corpus_role",
         "retrieved_at",

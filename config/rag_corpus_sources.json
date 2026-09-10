@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.0",
-  "description": "Fontes aprovadas para o corpus documental do RAG do TCC.",
+  "schema_version": "1.1",
+  "description": "Fontes aprovadas para o corpus documental do RAG do TCC, incluindo controle de vigência quando aplicável.",
   "sources": [
     {
       "document_id": "bcb-regulamento-pix-resolucao-1-2020",
@@ -31,17 +31,19 @@
       "corpus_role": "Ato que introduziu o Mecanismo Especial de Devolução no Regulamento do Pix."
     },
     {
-      "document_id": "bcb-guia-med-4-3",
-      "title": "Guia do Mecanismo Especial de Devolução — versão 4.3",
+      "document_id": "bcb-guia-med-4-4",
+      "title": "Guia do Mecanismo Especial de Devolução — versão 4.4",
       "issuer": "Banco Central do Brasil",
       "document_type": "guia_operacional",
       "format": "pdf",
-      "source_url": "https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Guia_MED.pdf",
-      "filename": "bcb_guia_med_v4_3.pdf",
-      "published_at": "2026-07-07",
-      "version_label": "4.3",
-      "norm_status": "guia operacional vigente na data da coleta",
-      "corpus_role": "Detalhamento operacional do MED e dos fluxos de recuperação de valores."
+      "source_url": "https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Regulamento_Pix/versoes_futuras/Guia_MED-versao4-4.pdf",
+      "filename": "bcb_guia_med_v4_4.pdf",
+      "published_at": "2026-09-01",
+      "version_label": "4.4",
+      "effective_from": "2026-09-01",
+      "future_effective_from": "2026-10-26",
+      "norm_status": "guia operacional com vigência escalonada em 2026-09-01 e 2026-10-26",
+      "corpus_role": "Detalhamento operacional do MED e dos fluxos de recuperação de valores; alterações identificadas para 2026-10-26 devem ser tratadas como futuras até essa data."
     },
     {
       "document_id": "febraban-tecnologia-bancaria-2024-volume-1",
