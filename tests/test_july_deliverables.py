@@ -14,6 +14,7 @@ class JulyDeliverablesTest(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        self.assertEqual(config["schema_version"], "1.1")
         sources = config["sources"]
         document_ids = [source["document_id"] for source in sources]
 
@@ -24,7 +25,7 @@ class JulyDeliverablesTest(unittest.TestCase):
             {
                 "bcb-regulamento-pix-resolucao-1-2020",
                 "bcb-resolucao-103-2021",
-                "bcb-guia-med-4-3",
+                "bcb-guia-med-4-4",
                 "febraban-tecnologia-bancaria-2024-volume-1",
             },
         )
@@ -34,6 +35,15 @@ class JulyDeliverablesTest(unittest.TestCase):
                 urlparse(source.get("download_url", source["source_url"])).scheme,
                 "https",
             )
+
+        guide = next(
+            source
+            for source in sources
+            if source["document_id"] == "bcb-guia-med-4-4"
+        )
+        self.assertEqual(guide["version_label"], "4.4")
+        self.assertEqual(guide["effective_from"], "2026-09-01")
+        self.assertEqual(guide["future_effective_from"], "2026-10-26")
 
     def test_large_rag_artifacts_are_ignored(self) -> None:
         gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
@@ -49,6 +59,8 @@ class JulyDeliverablesTest(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("TreeExplainer", methodology)
+        self.assertIn("feature\\_perturbation=interventional", methodology)
+        self.assertIn("model\\_output=probability", methodology)
         self.assertIn("log-odds", methodology)
         self.assertIn("atributo anonimizado de alta influência", methodology)
         self.assertIn("não como causalidade", methodology)
@@ -62,18 +74,27 @@ class JulyDeliverablesTest(unittest.TestCase):
         self.assertIn("m3_p1_1", report)
         self.assertIn("não foram marcadas como concluídas", report)
 
-    def test_snapshot_has_sha256_for_every_catalog_document(self) -> None:
+    def test_current_snapshot_matches_catalog_and_has_hashes(self) -> None:
         snapshot = json.loads(
             (
                 PROJECT_ROOT
                 / "reports"
                 / "pessoa_2"
-                / "julho"
-                / "corpus_snapshot_2026-08-30.json"
+                / "setembro"
+                / "corpus_snapshot_2026-09-10.json"
             ).read_text(encoding="utf-8")
+        )
+        config = json.loads(
+            (PROJECT_ROOT / "config" / "rag_corpus_sources.json").read_text(
+                encoding="utf-8"
+            )
         )
 
         self.assertEqual(len(snapshot["documents"]), 4)
+        self.assertEqual(
+            {document["document_id"] for document in snapshot["documents"]},
+            {source["document_id"] for source in config["sources"]},
+        )
         for document in snapshot["documents"]:
             self.assertEqual(len(document["sha256"]), 64)
             int(document["sha256"], 16)
