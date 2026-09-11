@@ -279,6 +279,22 @@ A inferência original estava na direção certa e **subestimava** o efeito: o f
 
 **Por que importa pro TCC**: transforma a justificativa do corte temporal de argumento citado em evidência medida, com o número do contrafactual. É o parágrafo mais forte disponível para o Capítulo 3.
 
+### Garantia de fronteira por instante no corte temporal (m2_p1_4)
+
+Revisão do Lucas (10/09/2026) observou que o cronograma passou a descrever o corte temporal como "mantendo transações com o mesmo timestamp no mesmo conjunto", garantia que `dividir_temporal` não oferecia: o corte era feito por posição. A verificação de 05/09 mostrava que, no 70/15/15 do IEEE-CIS, nenhum bloco de empate era atravessado — mas isso era propriedade daquelas frações com aqueles dados, não do algoritmo.
+
+A função passa a empurrar cada fronteira até a próxima mudança de instante, com três consequências registradas:
+
+- **as frações tornam-se aproximadas**, com desvio máximo limitado ao tamanho do bloco de empate atravessado. No IEEE-CIS a 70/15/15 o desvio é zero (ver abaixo); em um caso construído com blocos irregulares, 70/15/15 resulta em 75/15/10;
+- **três períodos não vazios deixam de ser garantidos** quando há poucos instantes distintos. O caso degenerado (todas as linhas no mesmo instante) agora levanta `ValueError` com mensagem explicativa, em vez de devolver conjuntos vazios silenciosamente;
+- **a ordem interna de cada conjunto depende da ordem de entrada**, porque o mergesort é estável em relação a ela. O que a função garante é quais linhas caem em cada conjunto, não a ordem dentro deles.
+
+**Impacto nos resultados já medidos: nenhum.** Verificado no dataset completo após a mudança — o split continua 413.378 / 88.581 / 88.581, com zero instantes compartilhados entre conjuntos e as mesmas taxas de fraude (3,517% / 3,434% / 3,480%). Todos os números de junho seguem válidos; a garantia passou de coincidência a propriedade.
+
+Cobertura em `tests/test_split_temporal.py`, nove testes em `unittest` (o projeto não tem `pytest` instalado na venv): empates nas duas fronteiras, preservação de todas as linhas sem duplicação, ordem cronológica entre conjuntos, estabilidade frente a entrada desordenada, proporções aproximadas, e os casos de erro — instante único, dois instantes, frações inválidas. Um teste verifica a própria premissa do cenário, confirmando que o corte ingênuo por posição de fato partiria um bloco.
+
+**Por que importa pro TCC**: a monografia pode afirmar que nenhuma transação simultânea foi dividida entre treino, validação e teste, e apontar o teste que garante isso — em vez de depender de uma verificação pontual que valeria só para aquele recorte.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
