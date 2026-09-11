@@ -24,6 +24,13 @@ data/rag/manifest.json
 reports/*.png
 reports/*.txt
 
+# Exceções: evidência citada de tarefas concluídas (maio, m1_p1_3 / m1_p1_4).
+# São os artefatos que a entrega parcial 1 referencia; sem versioná-los, o
+# documento aponta para arquivos que só existem na máquina de quem os gerou.
+!reports/eda_summary.txt
+!reports/fig_distribuicao_alvo.png
+!reports/fig_top_correlacoes.png
+
 # Artefatos de compilação LaTeX/Overleaf
 monografia/*.aux
 monografia/*.bbl

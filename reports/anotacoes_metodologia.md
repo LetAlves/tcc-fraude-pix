@@ -146,9 +146,9 @@ Verificação de 05/09/2026 sobre o **dataset completo** (590.540 transações),
 | validação | 88.581 | 3.042 | 3,434% |
 | teste | 88.581 | 3.083 | 3,480% |
 
-O cronograma descreve esta tarefa como "split estratificado (70/15/15)", enquanto o implementado é corte temporal, conforme a decisão metodológica registrada acima. A verificação mostra que **não houve troca**: as proporções 70/15/15 são exatas e as três taxas de fraude ficam dentro de 0,08 ponto percentual entre si. O corte cronológico produziu conjuntos balanceados sem estratificar, então o realismo temporal foi obtido sem custo de equilíbrio de classe. O texto da tarefa no organizador está desatualizado em relação à metodologia, não o código.
+O cronograma descrevia esta tarefa como "split estratificado (70/15/15)", enquanto o implementado é corte temporal, conforme a decisão metodológica registrada acima. A verificação mostra que **não houve troca**: neste dataset, as proporções 70/15/15 são exatas e as três taxas de fraude ficam dentro de 0,08 ponto percentual entre si. O corte cronológico produziu conjuntos balanceados sem estratificar, então o realismo temporal foi obtido sem custo de equilíbrio de classe. O texto da tarefa no organizador foi atualizado para refletir a metodologia e a garantia de fronteira por instante.
 
-**Integridade da fronteira**: 2,9% das linhas do dataset compartilham `TransactionDT` com outra transação. O `dividir_temporal` passou a avançar qualquer fronteira que caia dentro de um grupo empatado até a próxima mudança de timestamp. Assim, eventos simultâneos não são separados. Como consequência, as proporções são aproximadamente 70/15/15 quando existe empate na fronteira. Nos dois cortes efetivos do dataset completo (`TransactionDT` 10.437.996 e 13.151.840), não foi necessário deslocar as posições e as contagens originais foram preservadas.
+**Integridade da fronteira**: 2,9% das linhas do dataset compartilham `TransactionDT` com outra transação, o que abriria a possibilidade de um bloco de transações simultâneas ser partido entre dois conjuntos. Nos dois cortes efetivos (`TransactionDT` 10.437.996 e 13.151.840), nenhuma transação do lado direito repete o último timestamp do lado esquerdo — zero vazamento de instante entre treino, validação e teste.
 
 **Ordenação estável**: `dividir_temporal` passou a ordenar com `kind="mergesort"`. Como o IEEE-CIS já chega ordenado por `TransactionDT`, o pandas detecta que a ordem pedida é a existente e não reordena nada — a mudança **não altera nenhum resultado atual**. Ela protege o caso de entrada fora de ordem (amostra embaralhada, arquivos concatenados): entre linhas de mesmo timestamp o mergesort preserva a ordem de chegada, enquanto o quicksort padrão a reorganiza de forma arbitrária e dependente da versão do numpy.
 
@@ -184,7 +184,7 @@ Execução de 05/09/2026 sobre as **590.540 transações**, via script dedicado 
 
 A AUC-PR cai de **0,3962 na validação para 0,1863 no teste** — menos da metade — enquanto as taxas base são praticamente iguais (3,434% e 3,480%), a AUC-ROC quase não se move (0,839 para 0,824) e o recall até sobe (0,683 para 0,707). A queda não é efeito de desbalanceamento: é perda de pureza nas previsões de maior confiança no período mais recente. Os padrões aprendidos no passado envelhecem.
 
-O contraste só é observável porque o corte temporal preserva períodos distintos. Um split aleatório misturaria os períodos e poderia mascarar parte da degradação, mas esse controle não foi executado no dataset completo; por isso, não se atribui a ele uma AUC-PR específica. É evidência interna para a escolha metodológica do Capítulo 3 e uma limitação a declarar no Capítulo 5: um protótipo operacional exigiria monitoramento temporal e critérios de retreino.
+O achado só é observável por causa do corte temporal — afirmação agora verificada por controle complementar, registrado em seção própria abaixo. É evidência interna, do próprio experimento, para a escolha metodológica do Capítulo 3, e limitação a declarar no Capítulo 5: um protótipo assim exigiria retreino periódico.
 
 Em termos operacionais no teste: das 3.083 fraudes o modelo recupera ~2.181, marcando cerca de 18.000 das 88.581 transações como suspeitas — 20% do total, com 8 de cada 10 acusações sendo falso alarme.
 
@@ -253,6 +253,72 @@ Observação relacionada: as métricas de limiar (recall, F1, precisão) são ma
 O notebook levou **1h25**, contra 49 minutos do script equivalente. O código é o mesmo; a diferença é pressão de memória — com o kernel do Jupyter e o restante do ambiente carregados, a máquina passou a paginar para o disco. A engenharia de features levou 17 minutos no notebook contra cerca de 40 segundos no script, e a própria redução de precisão levou 4,7 minutos contra tempo desprezível. Qualquer tempo de execução citado na monografia precisa declarar em que condições foi medido, sob pena de descrever a memória disponível da máquina em vez do custo do método.
 
 **Por que importa pro TCC**: fixa a fonte única dos números de junho e documenta duas limitações que só aparecem em execução real — a não reprodutibilidade bit a bit introduzida pelo `float32` e a dependência do tempo de execução em relação à memória livre. As duas são candidatas a menção no Capítulo 5.
+
+### Controle complementar: corte temporal contra divisão aleatória (m2_p1_5)
+
+Execução de 10/09/2026 no dataset completo. Mesmo modelo (regressão logística, `class_weight='balanced'`, `max_iter=1000`, semente 42) e mesmo pré-processamento nos dois braços; muda apenas a forma de dividir os dados. Duração 23 minutos, pico de 3.489 MB. Ambos convergiram.
+
+**Motivação**: as notas anteriores afirmavam que uma divisão aleatória "teria reportado ~0,39, errando por um fator de dois". Isso era inferência, não medição — nenhum split aleatório havia sido executado. A revisão do Lucas (10/09/2026) apontou corretamente o problema. Este experimento é o complemento aleatório que a decisão metodológica de junho já previa ("usar corte temporal como avaliação principal e registrar qualquer análise estratificada aleatória apenas como complemento") e que não tinha sido feito.
+
+| | Corte temporal | Divisão aleatória estratificada |
+|---|---|---|
+| AUC-PR validação | 0,3936 | 0,4220 |
+| **AUC-PR teste** | **0,1858** | **0,4250** |
+| Variação validação → teste | **−52,8%** | +0,7% |
+| AUC-ROC teste | 0,8289 | 0,8604 |
+| Recall teste | 0,7032 | 0,7289 |
+| Precisão teste | 0,1236 | 0,1374 |
+
+**Resultado**: a divisão aleatória reporta **2,3× a AUC-PR** do corte temporal no conjunto de teste (0,4250 contra 0,1858) e **não mostra degradação alguma** — validação e teste praticamente idênticos. Descreveria um modelo estável e cerca de duas vezes melhor do que ele de fato é no período mais recente.
+
+A inferência original estava na direção certa e **subestimava** o efeito: o fator medido é 2,3 e não 2, e o valor aleatório (0,4250) supera até a validação temporal. Mas a correção do Lucas procede: afirmação sem medição não é resultado, e a redação anterior não podia ficar.
+
+**Ressalva obrigatória na redação**: a divisão aleatória coloca transações do **mesmo `card1`** no treino e no teste simultaneamente, além de misturar os períodos. A inflação observada combina os dois vazamentos — período compartilhado e identificador compartilhado — e **não pode ser atribuída inteiramente ao tempo**. Separar as duas contribuições exigiria um terceiro braço com divisão por grupo (`GroupShuffleSplit` por `card1`), não executado nesta etapa.
+
+**Número novo relevante**: este experimento produziu também o teste do corte temporal com ponderação de classe — AUC-PR **0,1858**, contra 0,1840 do SMOTE. O empate entre as duas estratégias, já observado na validação, **se mantém no teste** (diferença de 0,0018). Adotar a ponderação de classe pelos critérios secundários não custa desempenho, e os dois números de teste podem ser reportados lado a lado sem contaminar a seleção.
+
+**Por que importa pro TCC**: transforma a justificativa do corte temporal de argumento citado em evidência medida, com o número do contrafactual. É o parágrafo mais forte disponível para o Capítulo 3.
+
+### Garantia de fronteira por instante no corte temporal (m2_p1_4)
+
+Revisão do Lucas (10/09/2026) observou que o cronograma passou a descrever o corte temporal como "mantendo transações com o mesmo timestamp no mesmo conjunto", garantia que `dividir_temporal` não oferecia: o corte era feito por posição. A verificação de 05/09 mostrava que, no 70/15/15 do IEEE-CIS, nenhum bloco de empate era atravessado — mas isso era propriedade daquelas frações com aqueles dados, não do algoritmo.
+
+A função passa a empurrar cada fronteira até a próxima mudança de instante, com três consequências registradas:
+
+- **as frações tornam-se aproximadas**, com desvio máximo limitado ao tamanho do bloco de empate atravessado. No IEEE-CIS a 70/15/15 o desvio é zero (ver abaixo); em um caso construído com blocos irregulares, 70/15/15 resulta em 75/15/10;
+- **três períodos não vazios deixam de ser garantidos** quando há poucos instantes distintos. O caso degenerado (todas as linhas no mesmo instante) agora levanta `ValueError` com mensagem explicativa, em vez de devolver conjuntos vazios silenciosamente;
+- **a ordem interna de cada conjunto depende da ordem de entrada**, porque o mergesort é estável em relação a ela. O que a função garante é quais linhas caem em cada conjunto, não a ordem dentro deles.
+
+**Impacto nos resultados já medidos: nenhum.** Verificado no dataset completo após a mudança — o split continua 413.378 / 88.581 / 88.581, com zero instantes compartilhados entre conjuntos e as mesmas taxas de fraude (3,517% / 3,434% / 3,480%). Todos os números de junho seguem válidos; a garantia passou de coincidência a propriedade.
+
+Cobertura em `tests/test_split_temporal.py`, treze testes em `unittest` (o projeto não tem `pytest` instalado na venv): empates nas duas fronteiras, duas fronteiras no mesmo bloco, preservação de todas as linhas sem duplicação, ordem cronológica entre conjuntos, estabilidade frente a entrada desordenada, proporções aproximadas, e casos de erro para poucos instantes, frações inválidas, coluna ausente, dataset vazio e timestamp ausente. Um teste verifica a própria premissa do cenário, confirmando que o corte ingênuo por posição de fato partiria um bloco.
+
+**Por que importa pro TCC**: a monografia pode afirmar que nenhuma transação simultânea foi dividida entre treino, validação e teste, e apontar o teste que garante isso — em vez de depender de uma verificação pontual que valeria só para aquele recorte.
+
+### Reconfirmação dos resultados sobre as features corrigidas (m2_p1_5)
+
+Em 11/09/2026 a branch `feat/preprocessor-junho` foi atualizada com a `main`, trazendo dois merges do Lucas feitos em paralelo: `c5d0ee3` (validação das features Pix) e `156d643` (corpus RAG). O primeiro **corrige um vazamento causal em `src/features/pix_features.py`**: transações do mesmo instante usavam uma à outra como histórico. Todos os números de junho haviam sido produzidos antes dessa correção.
+
+**Resolução do conflito**: o merge conflitou em `pix_features.py`, onde as duas linhas de trabalho mexeram na mesma função. Prevaleceu a versão da `main`. Ela corrige o vazamento e, além disso, já resolve por outro caminho o consumo de memória atacado pelo commit `d8ef6c9` desta branch — seleciona apenas as colunas-fonte (`df.loc[validos, [card1, TransactionDT]]`) e conta por grupo com `searchsorted`, em vez de `groupby().rolling()` sobre uma coluna de data sintética. O commit `d8ef6c9` fica superado.
+
+**População afetada pelo vazamento**: 312 linhas em 590.540 (0,053%), contendo 24 fraudes. `card1` não tem valores ausentes neste dataset, então a mudança de 0 para `NaN` em identificador ausente não altera nada aqui.
+
+**Reexecução do controle sobre as features corrigidas:**
+
+| AUC-PR | Antes | Depois | Δ |
+|---|---|---|---|
+| Temporal, validação | 0,3936 | 0,3933 | −0,0003 |
+| Temporal, teste | 0,1858 | 0,1860 | +0,0002 |
+| Aleatório, validação | 0,4220 | 0,4213 | −0,0007 |
+| Aleatório, teste | 0,4250 | 0,4243 | −0,0007 |
+
+Todas as diferenças ficam em 0,0007 ou menos, dentro da faixa de ruído já documentada para `float32` entre execuções. As conclusões não se movem: fator aleatório/temporal de **2,28×** (antes 2,29×) e queda de **−52,7%** entre validação e teste (antes −52,8%). O pico total medido subiu de 3.489 MB para 3.836 MB, portanto não se atribui redução ao processo inteiro; isoladamente, a preparação das features consumiu cerca de 70 MB a menos com a implementação por grupo.
+
+**Testes diretamente relacionados após a reconciliação**: 18 testes passam — os 13 de `tests/test_split_temporal.py` e os 5 de `tests/test_pix_features.py`, escritos pelo Lucas para as features. O split temporal e as features corrigidas convivem sem regressão em nenhuma direção.
+
+**Pendência registrada**: o `notebooks/02_preprocessing.ipynb`, declarado fonte canônica em m2_p1_6, foi executado **antes** da correção das features. Os valores nele diferem dos atuais na quarta casa decimal. Reexecutá-lo alinha o entregável ao código final; enquanto isso não acontece, esta nota é o registro de que a diferença é conhecida e medida.
+
+**Por que importa pro TCC**: documenta que uma correção de causalidade feita depois dos experimentos foi verificada, e não presumida inofensiva. O tamanho da população afetada (0,053%) explica por que o efeito é nulo na prática, sem que isso sirva de desculpa para não medir.
 
 ### LangChain
 

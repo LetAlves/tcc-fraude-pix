@@ -167,15 +167,17 @@ def dividir_temporal(
     Divide o dataset em treino/validação/teste por corte temporal (não aleatório).
 
     Ordena por `coluna_tempo` e corta em blocos contíguos: treino = transações
-    mais antigas, teste = mais recentes. Se uma posição nominal de corte cair
-    dentro de um grupo com o mesmo timestamp, a fronteira avança até o fim do
-    grupo. Assim, eventos simultâneos nunca são separados entre conjuntos.
+    mais antigas, teste = mais recentes. `frac_treino + frac_val` deve ser
+    menor que 1; o restante vira teste.
 
-    Esse deslocamento torna as proporções 70/15/15 aproximadas quando há empate
-    na fronteira. A diferença é limitada ao tamanho do grupo deslocado e evita
-    que o modelo "veja" no treino um instante também presente na validação.
+    As frações são **aproximadas**: cada fronteira é empurrada até a próxima
+    mudança de `coluna_tempo`, de modo que transações com o mesmo instante
+    nunca caiam em conjuntos diferentes. O desvio máximo em relação à fração
+    pedida é o tamanho do bloco de empate atravessado.
 
-    `frac_treino + frac_val` deve ser menor que 1; o restante vira teste.
+    Levanta `ValueError` se não for possível formar três períodos não vazios —
+    o que acontece quando há poucos instantes distintos em relação às frações
+    pedidas (no limite, um único instante para todas as linhas).
     """
     if not 0.0 < frac_treino < 1.0:
         raise ValueError("frac_treino deve estar entre 0 e 1")
@@ -194,36 +196,43 @@ def dividir_temporal(
     # IEEE-CIS) preserva a ordem original, mantendo a fronteira do corte igual
     # entre execuções. O quicksort padrão do sort_values não garante isso.
     ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
-    timestamps = ordenado[coluna_tempo].to_numpy()
     n = len(ordenado)
-    corte_treino = int(n * frac_treino)
-    corte_val = int(n * (frac_treino + frac_val))
+    tempos = ordenado[coluna_tempo].to_numpy()
 
-    def avancar_ate_proximo_timestamp(corte: int) -> int:
-        """Move uma fronteira interna até depois do grupo temporal empatado."""
+    def avancar_fronteira(posicao: int) -> int:
+        """
+        Empurra o corte até a próxima mudança de instante.
 
-        if corte <= 0 or corte >= n:
-            return corte
-        timestamp_anterior = timestamps[corte - 1]
-        while corte < n and timestamps[corte] == timestamp_anterior:
-            corte += 1
-        return corte
+        Transações que compartilham `coluna_tempo` formam um bloco indivisível:
+        cortar no meio dele colocaria eventos simultâneos em conjuntos
+        diferentes, o que é vazamento temporal — o modelo veria, no treino,
+        eventos do mesmo instante que precisa prever. O bloco inteiro fica à
+        esquerda da fronteira.
+        """
+        if posicao <= 0:
+            return 0
+        if posicao >= n:
+            return n
+        return int(np.searchsorted(tempos, tempos[posicao - 1], side="right"))
 
-    corte_treino = avancar_ate_proximo_timestamp(corte_treino)
-    corte_val = avancar_ate_proximo_timestamp(corte_val)
-    if corte_val <= corte_treino and corte_treino < n:
-        # Se as duas posições nominais caírem no mesmo grupo temporal, reserve
-        # ao menos o próximo grupo completo para validação.
-        corte_val = avancar_ate_proximo_timestamp(corte_treino + 1)
-    if not 0 < corte_treino < corte_val < n:
-        raise ValueError(
-            "não é possível formar treino, validação e teste sem dividir "
-            f"grupos de {coluna_tempo}"
-        )
+    corte_treino = avancar_fronteira(int(n * frac_treino))
+    corte_val = max(avancar_fronteira(int(n * (frac_treino + frac_val))), corte_treino)
+    if corte_val == corte_treino and corte_treino < n:
+        # Se as duas posições nominais caírem no mesmo bloco, o próximo grupo
+        # temporal completo forma a validação, desde que ainda reste um teste.
+        corte_val = avancar_fronteira(corte_treino + 1)
 
     treino = ordenado.iloc[:corte_treino]
     val = ordenado.iloc[corte_treino:corte_val]
     teste = ordenado.iloc[corte_val:]
+
+    if min(len(treino), len(val), len(teste)) == 0:
+        raise ValueError(
+            f"Não foi possível formar três períodos não vazios: {n} linhas com "
+            f"apenas {len(np.unique(tempos))} instantes distintos. Empurrar os "
+            f"cortes até a próxima mudança de '{coluna_tempo}' esvazia ao menos "
+            f"um conjunto. Ajuste as frações ou use um recorte com mais instantes."
+        )
 
     logger.info(
         "Split temporal — treino: %d (%.1f%%) | val: %d (%.1f%%) | teste: %d (%.1f%%)",
