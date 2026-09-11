@@ -18,18 +18,29 @@ A verificação de consistência deve testar a propriedade aditiva na escala esc
 saída_do_modelo ≈ valor_base + soma(contribuições_SHAP)
 ```
 
-Para modelos de árvore, será usado `shap.TreeExplainer`. O experimento deve registrar se a saída explicada é margem/log-odds ou probabilidade; contribuições de escalas diferentes não podem ser comparadas como se fossem equivalentes. O conjunto de referência e a configuração de dependência entre atributos também devem ser versionados.
+Para modelos de árvore, será usado `shap.TreeExplainer`. A configuração inicial será explícita: `feature_perturbation="interventional"`, fundo com 500 linhas amostradas somente do treino por seed registrada e `model_output="probability"`. A escala de probabilidade foi escolhida por ser mais compreensível na apresentação e por permitir conferir a soma diretamente contra a probabilidade prevista. O tamanho do fundo fica dentro da faixa de 100 a 1.000 exemplos recomendada na documentação do explicador; qualquer alteração deverá ocorrer antes da avaliação final e ser registrada.
+
+Não serão usados os padrões implícitos da biblioteca, pois o comportamento de `feature_perturbation="auto"` depende da presença do conjunto de fundo e mudou entre versões do SHAP. A versão instalada será registrada. No Random Forest, a saída possui uma dimensão por classe; a classe positiva será localizada por `model.classes_ == 1`, sem presumir uma posição fixa. Contribuições de classes ou escalas diferentes não serão comparadas como se fossem equivalentes.
+
+## Por que SHAP foi escolhido
+
+- produz uma explicação local aditiva que pode ser verificada numericamente;
+- permite obter uma visão global agregando a magnitude das contribuições locais;
+- possui o `TreeExplainer`, algoritmo eficiente e exato para XGBoost e Random Forest sob a configuração declarada;
+- separa a previsão do classificador da posterior contextualização documental do RAG;
+- oferece uma estrutura comum para auditar acertos e erros, sem transformar importância em causalidade.
 
 ## Protocolo
 
 1. congelar split, pré-processamento, features, modelo e limiar;
-2. construir o explicador somente com artefatos derivados do treino;
-3. calcular SHAP para uma amostra fixa do teste e para casos representativos: verdadeiro positivo, falso positivo, falso negativo e verdadeiro negativo;
-4. verificar aditividade, valores ausentes, ordem das colunas e estabilidade numérica;
-5. reportar visão global por média de `|SHAP|`, sem confundi-la com causalidade;
-6. reportar explicações locais com valor observado, sinal e magnitude;
-7. comparar XGBoost e Random Forest apenas após ambos serem executados no mesmo protocolo;
-8. registrar limitações e exemplos em que a explicação não é semanticamente interpretável.
+2. amostrar e congelar 500 linhas de fundo somente do treino, com seed registrada;
+3. construir o explicador com `feature_perturbation="interventional"` e `model_output="probability"`;
+4. calcular SHAP para uma amostra fixa do teste e para casos representativos: verdadeiro positivo, falso positivo, falso negativo e verdadeiro negativo;
+5. verificar aditividade, valores ausentes, ordem das colunas, classe positiva e estabilidade numérica;
+6. reportar visão global por média de `|SHAP|`, sem confundi-la com causalidade;
+7. reportar explicações locais com valor observado, sinal e magnitude;
+8. comparar XGBoost e Random Forest apenas após ambos serem executados no mesmo protocolo;
+9. registrar limitações e exemplos em que a explicação não é semanticamente interpretável.
 
 ## Ponte SHAP → RAG
 
@@ -62,4 +73,4 @@ Features anônimas (`V*`, `C*`, `D*`, `M*`, `id_*`) podem aparecer como importan
 - Uma explicação fiel pode expor um modelo errado, enviesado ou mal calibrado.
 - O domínio IEEE-CIS é comércio eletrônico/cartão e não valida desempenho operacional no Pix.
 
-Referência metodológica principal: Lundberg e Lee (2017), já incluída em `monografia/referencias.bib` como `lundberg2017unified`.
+Referências metodológicas: Lundberg e Lee (2017), incluída em `monografia/referencias.bib` como `lundberg2017unified`, e a [documentação oficial do `TreeExplainer`](https://shap.readthedocs.io/en/latest/generated/shap.TreeExplainer.html), consultada em 10/09/2026.

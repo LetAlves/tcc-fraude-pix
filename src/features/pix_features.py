@@ -40,16 +40,33 @@ SEGUNDOS_POR_DIA = 86400
 
 # ─── Auxiliar causal ────────────────────────────────────────────────────────
 
-def _mediana_expandida_causal(serie_ordenada: pd.Series, chave_grupo: pd.Series) -> pd.Series:
+def _mediana_expandida_causal(
+    serie_ordenada: pd.Series,
+    chave_grupo: pd.Series,
+    tempo_ordenado: pd.Series,
+) -> pd.Series:
     """
     Mediana expandida por grupo, usando só observações estritamente anteriores.
 
-    Pré-requisito: `serie_ordenada` e `chave_grupo` já devem estar ordenadas
-    por tempo (ex.: TransactionDT) antes da chamada.
+    Pré-requisito: as séries já devem estar ordenadas por grupo e tempo.
+    Linhas com o mesmo instante recebem a mesma estatística, calculada antes
+    daquele instante; nenhuma delas é tratada como histórico da outra.
     """
     mediana = serie_ordenada.groupby(chave_grupo).expanding().median()
     mediana = mediana.reset_index(level=0, drop=True)
-    return mediana.groupby(chave_grupo).shift(1)
+    mediana_anterior = mediana.groupby(chave_grupo).shift(1)
+    grupos_temporais = pd.DataFrame(
+        {
+            "_grupo": chave_grupo,
+            "_tempo": tempo_ordenado,
+        },
+        index=serie_ordenada.index,
+    )
+    primeira_linha = ~grupos_temporais.duplicated()
+    valor_antes_do_instante = mediana_anterior.where(primeira_linha)
+    return valor_antes_do_instante.groupby(
+        [chave_grupo, tempo_ordenado]
+    ).transform("max")
 
 
 # ─── Atributos derivados ────────────────────────────────────────────────────
@@ -75,10 +92,22 @@ def valor_atipico_proxy(
     Risco de vazamento: nenhum — só usa observações anteriores no tempo.
     Ressalva (ata 16/08/2026): card1 é um proxy mascarado, não uma conta Pix real.
     """
-    ordenado = df.sort_values(coluna_tempo)
-    mediana_anterior = _mediana_expandida_causal(ordenado[coluna_valor], ordenado[coluna_cartao])
+    ordenado = df.sort_values(
+        [coluna_cartao, coluna_tempo],
+        kind="mergesort",
+        na_position="last",
+    )
+    mediana_anterior = _mediana_expandida_causal(
+        ordenado[coluna_valor],
+        ordenado[coluna_cartao],
+        ordenado[coluna_tempo],
+    )
     desvio_abs = (ordenado[coluna_valor] - mediana_anterior).abs()
-    mad_anterior = _mediana_expandida_causal(desvio_abs, ordenado[coluna_cartao])
+    mad_anterior = _mediana_expandida_causal(
+        desvio_abs,
+        ordenado[coluna_cartao],
+        ordenado[coluna_tempo],
+    )
 
     eps = 1e-6
     z = (ordenado[coluna_valor] - mediana_anterior) / (mad_anterior * 1.4826 + eps)
@@ -107,32 +136,27 @@ def frequencia_recente_proxy(
         fuso/origem conhecidos — "86400s" é a unidade do relógio relativo do
         dataset, não necessariamente um dia civil.
     Unidade: contagem inteira (>= 0).
-    Nulos: 0 quando não há transação anterior na janela (ausência de evento,
-        não ausência de dado).
-    Risco de vazamento: nenhum — janela fechada à esquerda (`closed="left"`)
-        exclui a própria linha e qualquer evento futuro.
+    Nulos: NaN quando card1 ou TransactionDT está ausente; 0 quando existe
+        identificador válido, mas não há evento estritamente anterior.
+    Risco de vazamento: nenhum — o intervalo aberto (t - janela, t) exclui
+        a própria linha, eventos do mesmo instante e qualquer evento futuro.
     """
-    # Ordena por (cartao, tempo): dentro de cada grupo fica cronológico, e essa
-    # é a mesma ordem "em blocos" que groupby().rolling() usa internamente —
-    # necessário para reatribuir o índice original por posição depois.
-    # Só as duas colunas-fonte entram na ordenação. Ordenar o DataFrame inteiro
-    # por (cartão, tempo) é uma ordem genuinamente nova, então o pandas
-    # materializa as 434 colunas — 1,76 GiB só no bloco float64 do dataset
-    # completo, o que estourava a memória antes de qualquer modelo rodar.
-    ordenado = df[[coluna_cartao, coluna_tempo]].sort_values([coluna_cartao, coluna_tempo])
-    ordenado["_dt_sintetico"] = pd.to_datetime(ordenado[coluna_tempo], unit="s")
+    if janela_segundos <= 0:
+        raise ValueError("janela_segundos deve ser maior que zero")
 
-    contagem = (
-        ordenado.groupby(coluna_cartao)
-        .rolling(f"{janela_segundos}s", on="_dt_sintetico", closed="left")[coluna_tempo]
-        .count()
+    resultado = pd.Series(np.nan, index=df.index, dtype="float64")
+    validos = df[coluna_cartao].notna() & df[coluna_tempo].notna()
+    ordenado = df.loc[validos, [coluna_cartao, coluna_tempo]].sort_values(
+        [coluna_cartao, coluna_tempo],
+        kind="mergesort",
     )
-    # Com on=, o 2º nível do MultiIndex vira a data sintética (que se repete
-    # entre cartões) em vez do índice original — por isso reatribuímos por
-    # posição, e não por reindex baseado em rótulo.
-    contagem = contagem.reset_index(drop=True)
-    contagem.index = ordenado.index
-    return contagem.reindex(df.index).rename("frequencia_recente_proxy")
+    for _, grupo in ordenado.groupby(coluna_cartao, sort=False):
+        tempos = grupo[coluna_tempo].to_numpy()
+        inicio = np.searchsorted(tempos, tempos - janela_segundos, side="right")
+        fim = np.searchsorted(tempos, tempos, side="left")
+        resultado.loc[grupo.index] = (fim - inicio).astype("float64")
+
+    return resultado.rename("frequencia_recente_proxy")
 
 
 def dispositivo_raro_proxy(
@@ -152,19 +176,37 @@ def dispositivo_raro_proxy(
         treino têm dado de identidade — ver reports/pessoa_2/maio/05_mapeamento_e_kickoff.md).
     Janela: expandida, causal (cumcount após ordenar por TransactionDT).
     Unidade: adimensional, em (0, 1].
-    Nulos: NaN quando DeviceInfo está ausente — tratamento de imputação fica
-        a cargo de preprocessor.py (tarefa seguinte), não deste módulo.
-    Risco de vazamento: nenhum — cumcount só conta ocorrências anteriores
-        na ordem cronológica.
+    Nulos: NaN quando card1, DeviceInfo ou TransactionDT está ausente;
+        o tratamento de imputação pertence ao pré-processador.
+    Risco de vazamento: nenhum — a contagem usa apenas ocorrências em
+        instantes estritamente anteriores, excluindo empates temporais.
     """
-    ordenado = df.sort_values(coluna_tempo)
-    tem_dispositivo = ordenado[coluna_dispositivo].notna()
-    chave_par = ordenado[coluna_cartao].astype(str) + "|" + ordenado[coluna_dispositivo].astype(str)
+    resultado = pd.Series(np.nan, index=df.index, dtype="float64")
+    validos = (
+        df[coluna_cartao].notna()
+        & df[coluna_dispositivo].notna()
+        & df[coluna_tempo].notna()
+    )
+    historico = df.loc[
+        validos,
+        [coluna_cartao, coluna_dispositivo, coluna_tempo],
+    ]
 
-    contagem_anterior = chave_par.groupby(chave_par).cumcount()
-    raridade = 1.0 / (contagem_anterior + 1)
-    raridade = raridade.where(tem_dispositivo)
-    return raridade.reindex(df.index).rename("dispositivo_raro_proxy")
+    contagens_por_instante = historico.groupby(
+        [coluna_cartao, coluna_dispositivo, coluna_tempo],
+        sort=True,
+    ).size()
+    contagens_anteriores = (
+        contagens_por_instante.groupby(level=[0, 1]).cumsum()
+        - contagens_por_instante
+    )
+    chaves = pd.MultiIndex.from_frame(
+        historico[[coluna_cartao, coluna_dispositivo, coluna_tempo]]
+    )
+    anteriores_por_linha = contagens_anteriores.reindex(chaves).to_numpy()
+    resultado.loc[historico.index] = 1.0 / (anteriores_por_linha + 1.0)
+
+    return resultado.rename("dispositivo_raro_proxy")
 
 
 def posicao_ciclo_diario_relativa(

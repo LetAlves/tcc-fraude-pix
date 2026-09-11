@@ -30,6 +30,8 @@ Evidências conjuntas:
 - [`../../../src/features/pix_features.py`](../../../src/features/pix_features.py): implementação causal das quatro features;
 - [`04_entrega_parcial_eda_features.md`](04_entrega_parcial_eda_features.md): estatísticas reais e pauta de decisão;
 - [`../../../scripts/gerar_entrega_junho.py`](../../../scripts/gerar_entrega_junho.py): geração reproduzível com leitura seletiva dos CSVs.
+- [`05_validacao_detetive_features_pix.md`](05_validacao_detetive_features_pix.md): validação investigativa das quatro features, mapeamentos rejeitados, riscos e controles temporais.
+- [`../../../tests/test_pix_features.py`](../../../tests/test_pix_features.py): testes específicos para nulos, empates de tempo, janela aberta e codificação cíclica.
 
 `m2_ab_1` pode ser marcada como concluída porque há decisão conjunta e implementação versionadas. `m2_ab_2` permanece aberta até existirem baseline e registro do envio ao orientador.
 

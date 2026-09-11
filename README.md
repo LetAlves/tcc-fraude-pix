@@ -6,7 +6,7 @@ Prova de conceito acadêmica para **detecção e explicação de risco de fraude
 
 > O IEEE-CIS contém transações do domínio de comércio eletrônico/cartão, não transações Pix reais. As features do projeto representam analogias analíticas documentadas. Os experimentos não comprovam desempenho operacional no Pix e o protótipo não deve ser usado para bloquear transações ou acusar pessoas.
 
-[Guia do TCC](https://letalves.github.io/tcc-fraude-pix/) · [Entregas de maio](reports/pessoa_2/maio/README.md) · [Entregas de junho — PR #2](https://github.com/LetAlves/tcc-fraude-pix/pull/2) · [Entregas de julho](reports/pessoa_2/julho/README.md) · [Monografia](monografia/README.md) · [Como contribuir](CONTRIBUTING.md)
+[Guia do TCC](https://letalves.github.io/tcc-fraude-pix/) · [Entregas de maio](reports/pessoa_2/maio/README.md) · [Entregas de junho](reports/pessoa_2/junho/README.md) · [Entregas de julho](reports/pessoa_2/julho/README.md) · [Revalidação de setembro](reports/pessoa_2/setembro/README.md) · [Monografia](monografia/README.md) · [Como contribuir](CONTRIBUTING.md)
 
 ## Arquitetura proposta
 
@@ -23,19 +23,17 @@ O [registro de features proposto no PR #2](https://github.com/LetAlves/tcc-fraud
 
 ## Estado do projeto
 
-Situação verificada localmente em **30/08/2026**. As entregas de julho da Pessoa 2 foram validadas pelo responsável e submetidas à revisão da dupla. Dependências instaladas não significam que todas as camadas já estejam implementadas.
-
-As entregas de junho da Pessoa 2 estão em revisão no [PR #2](https://github.com/LetAlves/tcc-fraude-pix/pull/2), separadas da `main`. Os links dessas entregas abaixo apontam para a versão submetida à revisão, sem depender de arquivos ainda ausentes na branch principal.
+Situação verificada localmente em **10/09/2026**. As entregas de junho e julho da Pessoa 2 estão integradas à `main`; o corpus RAG foi revalidado com o Guia MED 4.4. Dependências instaladas não significam que todas as camadas já estejam implementadas.
 
 | Componente | Situação | Evidência |
 |---|---|---|
 | Download, leitura e junção dos dados | Implementados | [Data loader](src/data_loader.py) |
 | Análise exploratória | Notebook executado | [EDA](notebooks/01_eda.ipynb) |
 | Features Pix simuladas | Quatro conceitos implementados, gerando seis colunas | [Módulo de features](src/features/pix_features.py) e [ata de aprovação](reports/reunioes/2026-08-16_mapeamento_ieee_cis_pix.md) |
-| Estudo de LangChain | Laboratório local no PR #2; sem chamada a LLM | [Guia prático em revisão](https://github.com/LetAlves/tcc-fraude-pix/blob/ff73aa5ce60a5daf43fdf8195d1ac9386ad5718e/reports/pessoa_2/junho/01_estudo_langchain.md) |
-| Monografia | Capítulo 1 e bibliografia na `main`; Capítulos 2 e 3 no PR #2 | [Projeto de escrita](monografia/README.md) |
+| Estudo de LangChain | Laboratório local integrado; sem chamada a LLM | [Guia prático](reports/pessoa_2/junho/01_estudo_langchain.md) |
+| Monografia | Capítulos 1, 2 e 3 versionados; revisão acadêmica ainda necessária | [Projeto de escrita](monografia/README.md) |
 | Pré-processamento, SMOTE e primeiros modelos | Pendentes de implementação e avaliação | [Protocolo metodológico proposto](https://github.com/LetAlves/tcc-fraude-pix/blob/ff73aa5ce60a5daf43fdf8195d1ac9386ad5718e/reports/pessoa_2/junho/03_metodologia_tres_camadas.md) |
-| RAG vetorial | Implementado e testado localmente; aguarda revisão | [Entregas de julho](reports/pessoa_2/julho/README.md) |
+| RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |
 | SHAP executado e interface de demonstração | Planejados | [Metodologia SHAP](reports/pessoa_2/julho/04_metodologia_shap.md) |
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
@@ -151,7 +149,7 @@ Lê colunas selecionadas dos CSVs completos e **atualiza** [a entrega parcial de
 .\.venv\Scripts\python.exe scripts/gerar_entrega_junho.py --output data/processed/entrega_junho.md
 ```
 
-### Construir e consultar a base RAG de julho
+### Construir e consultar a base RAG
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\download_rag_corpus.py --refresh
@@ -161,16 +159,18 @@ Lê colunas selecionadas dos CSVs completos e **atualiza** [a entrega parcial de
 
 Os documentos oficiais, chunks e vetores são artefatos locais ignorados pelo Git. O catálogo de fontes, o código, os testes e o snapshot de hashes são versionáveis. Depois do primeiro download do modelo, use `scripts\build_rag_index.py --offline` para reconstruir sem acesso ao Hugging Face.
 
+O catálogo atual usa o Guia MED 4.4 e registra separadamente as vigências de 01/09/2026 e 26/10/2026. Até a segunda data, respostas sobre alterações futuras devem conferir os metadados de vigência.
+
 ## Testes e protocolo experimental
 
-Execute a suíte na branch de junho, após a troca descrita acima. A `main` ainda não contém esses testes; uma execução com zero testes não valida as entregas do PR.
+Execute a suíte na raiz do projeto:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -v
 git diff --check
 ```
 
-Os testes atuais cobrem o laboratório LangChain, o registro de features, estatísticas em dados sintéticos e referências dos capítulos. Eles não medem desempenho preditivo nem substituem uma validação completa das features e dos modelos.
+Na revalidação de 10/09/2026, **30 testes** foram aprovados. Eles cobrem o laboratório LangChain, o registro de features, estatísticas sintéticas, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não medem desempenho preditivo nem substituem uma avaliação anotada da recuperação ou uma validação completa dos modelos.
 
 Para os próximos experimentos:
 
