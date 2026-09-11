@@ -184,7 +184,7 @@ Execução de 05/09/2026 sobre as **590.540 transações**, via script dedicado 
 
 A AUC-PR cai de **0,3962 na validação para 0,1863 no teste** — menos da metade — enquanto as taxas base são praticamente iguais (3,434% e 3,480%), a AUC-ROC quase não se move (0,839 para 0,824) e o recall até sobe (0,683 para 0,707). A queda não é efeito de desbalanceamento: é perda de pureza nas previsões de maior confiança no período mais recente. Os padrões aprendidos no passado envelhecem.
 
-O achado só é observável por causa do corte temporal. Um split aleatório teria misturado os períodos e reportado ~0,39 como desempenho do modelo — errado por um fator de dois. É evidência interna, do próprio experimento, para a escolha metodológica do Capítulo 3, e limitação a declarar no Capítulo 5: um protótipo assim exigiria retreino periódico.
+O achado só é observável por causa do corte temporal — afirmação agora verificada por controle complementar, registrado em seção própria abaixo. É evidência interna, do próprio experimento, para a escolha metodológica do Capítulo 3, e limitação a declarar no Capítulo 5: um protótipo assim exigiria retreino periódico.
 
 Em termos operacionais no teste: das 3.083 fraudes o modelo recupera ~2.181, marcando cerca de 18.000 das 88.581 transações como suspeitas — 20% do total, com 8 de cada 10 acusações sendo falso alarme.
 
@@ -253,6 +253,31 @@ Observação relacionada: as métricas de limiar (recall, F1, precisão) são ma
 O notebook levou **1h25**, contra 49 minutos do script equivalente. O código é o mesmo; a diferença é pressão de memória — com o kernel do Jupyter e o restante do ambiente carregados, a máquina passou a paginar para o disco. A engenharia de features levou 17 minutos no notebook contra cerca de 40 segundos no script, e a própria redução de precisão levou 4,7 minutos contra tempo desprezível. Qualquer tempo de execução citado na monografia precisa declarar em que condições foi medido, sob pena de descrever a memória disponível da máquina em vez do custo do método.
 
 **Por que importa pro TCC**: fixa a fonte única dos números de junho e documenta duas limitações que só aparecem em execução real — a não reprodutibilidade bit a bit introduzida pelo `float32` e a dependência do tempo de execução em relação à memória livre. As duas são candidatas a menção no Capítulo 5.
+
+### Controle complementar: corte temporal contra divisão aleatória (m2_p1_5)
+
+Execução de 10/09/2026 no dataset completo. Mesmo modelo (regressão logística, `class_weight='balanced'`, `max_iter=1000`, semente 42) e mesmo pré-processamento nos dois braços; muda apenas a forma de dividir os dados. Duração 23 minutos, pico de 3.489 MB. Ambos convergiram.
+
+**Motivação**: as notas anteriores afirmavam que uma divisão aleatória "teria reportado ~0,39, errando por um fator de dois". Isso era inferência, não medição — nenhum split aleatório havia sido executado. A revisão do Lucas (10/09/2026) apontou corretamente o problema. Este experimento é o complemento aleatório que a decisão metodológica de junho já previa ("usar corte temporal como avaliação principal e registrar qualquer análise estratificada aleatória apenas como complemento") e que não tinha sido feito.
+
+| | Corte temporal | Divisão aleatória estratificada |
+|---|---|---|
+| AUC-PR validação | 0,3936 | 0,4220 |
+| **AUC-PR teste** | **0,1858** | **0,4250** |
+| Variação validação → teste | **−52,8%** | +0,7% |
+| AUC-ROC teste | 0,8289 | 0,8604 |
+| Recall teste | 0,7032 | 0,7289 |
+| Precisão teste | 0,1236 | 0,1374 |
+
+**Resultado**: a divisão aleatória reporta **2,3× a AUC-PR** do corte temporal no conjunto de teste (0,4250 contra 0,1858) e **não mostra degradação alguma** — validação e teste praticamente idênticos. Descreveria um modelo estável e cerca de duas vezes melhor do que ele de fato é no período mais recente.
+
+A inferência original estava na direção certa e **subestimava** o efeito: o fator medido é 2,3 e não 2, e o valor aleatório (0,4250) supera até a validação temporal. Mas a correção do Lucas procede: afirmação sem medição não é resultado, e a redação anterior não podia ficar.
+
+**Ressalva obrigatória na redação**: a divisão aleatória coloca transações do **mesmo `card1`** no treino e no teste simultaneamente, além de misturar os períodos. A inflação observada combina os dois vazamentos — período compartilhado e identificador compartilhado — e **não pode ser atribuída inteiramente ao tempo**. Separar as duas contribuições exigiria um terceiro braço com divisão por grupo (`GroupShuffleSplit` por `card1`), não executado nesta etapa.
+
+**Número novo relevante**: este experimento produziu também o teste do corte temporal com ponderação de classe — AUC-PR **0,1858**, contra 0,1840 do SMOTE. O empate entre as duas estratégias, já observado na validação, **se mantém no teste** (diferença de 0,0018). Adotar a ponderação de classe pelos critérios secundários não custa desempenho, e os dois números de teste podem ser reportados lado a lado sem contaminar a seleção.
+
+**Por que importa pro TCC**: transforma a justificativa do corte temporal de argumento citado em evidência medida, com o número do contrafactual. É o parágrafo mais forte disponível para o Capítulo 3.
 
 ### LangChain
 

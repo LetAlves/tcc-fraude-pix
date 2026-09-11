@@ -41,7 +41,7 @@ O IEEE-CIS traz duas tabelas, unidas pelo `TransactionID`:
 
 O desbalanceamento de 27,6:1 é o fato que organiza todas as decisões seguintes: um classificador que sempre responda "não é fraude" acerta 96,5% dos casos e é inútil. Por isso a acurácia não é reportada em nenhum momento deste trabalho.
 
-Detalhamento completo da EDA, incluindo padrão de nulos e correlações, em `reports/pessoa_2/junho/04_entrega_parcial_eda_features.md` e `reports/eda_summary.txt`.
+Este documento é o relatório oficial desta entrega. O detalhamento técnico da EDA — padrão de nulos, correlações e o registro completo das features — está em `reports/pessoa_2/junho/04_entrega_parcial_eda_features.md` e `reports/eda_summary.txt`, que funcionam como evidência de apoio e não como relatórios independentes.
 
 ---
 
@@ -101,11 +101,14 @@ Como a AUC-PR de um classificador aleatório é igual à taxa base, **os dois mo
 
 **As duas estratégias empataram.** A diferença de 0,0033 é menor que a incerteza esperada para 3.042 fraudes — e o sinal se inverte conforme o recorte: em uma amostra de 50.000 linhas, a ponderação de classe vencia pela mesma margem. A escolha entre elas será feita por critérios secundários (não fabricar dados sintéticos, não interpolar variáveis categóricas, custo computacional), com o critério declarado antes da avaliação final.
 
-**Teste** — 3.083 fraudes, taxa base 3,480%:
+**Teste** — 3.083 fraudes, taxa base 3,480%. Reportamos as duas estratégias, já que empataram na validação:
 
-| AUC-ROC | AUC-PR | Recall | Precisão | F1 |
-|---|---|---|---|---|
-| 0,8234 | 0,1840 | 0,7071 | 0,1213 | 0,2071 |
+| Estratégia | AUC-ROC | AUC-PR | Recall | Precisão | F1 |
+|---|---|---|---|---|---|
+| Ponderação de classe | 0,8289 | 0,1858 | 0,7032 | 0,1236 | 0,2102 |
+| SMOTE | 0,8234 | 0,1840 | 0,7071 | 0,1213 | 0,2071 |
+
+O empate se confirma também no teste: 0,0018 de diferença em AUC-PR. A escolha da estratégia será feita pelos critérios secundários já descritos, e não por desempenho.
 
 Em termos operacionais: das 3.083 fraudes do período de teste, o modelo recupera cerca de 2.180, marcando aproximadamente 18.000 das 88.581 transações como suspeitas — 20% do total, com 8 de cada 10 acusações sendo alarme falso. É o comportamento esperado de um baseline linear, e é o piso que os modelos de julho precisam superar.
 
@@ -121,7 +124,19 @@ Em termos operacionais: das 3.083 fraudes do período de teste, o modelo recuper
 
 O que se degrada é a **pureza das previsões de maior confiança** no período mais recente. Os padrões aprendidos no passado envelhecem.
 
-Esse resultado **só é observável por causa da divisão temporal**. Uma divisão aleatória teria misturado os períodos e reportado ~0,39 como desempenho do modelo — errando por um fator de dois. É evidência interna, produzida pelo próprio experimento, para a escolha metodológica adotada, e indica que um sistema como este exigiria retreino periódico em operação.
+Esse resultado **só é observável por causa da divisão temporal**, e isso foi verificado experimentalmente. Rodamos um controle complementar com o mesmo modelo e os mesmos dados, mudando apenas a forma de dividir:
+
+| | Corte temporal | Divisão aleatória |
+|---|---|---|
+| AUC-PR validação | 0,3936 | 0,4220 |
+| AUC-PR teste | 0,1858 | 0,4250 |
+| Variação | −52,8% | +0,7% |
+
+A divisão aleatória reporta **2,3 vezes** a AUC-PR do corte temporal no teste e **não mostra degradação alguma**: descreveria um modelo estável e cerca de duas vezes melhor do que ele de fato é no período mais recente.
+
+Cabe uma ressalva: a divisão aleatória também coloca transações do mesmo identificador de cartão nos dois lados, além de misturar os períodos. A diferença observada combina os dois efeitos e não pode ser atribuída inteiramente ao tempo; isolá-los exigiria um terceiro experimento, com divisão por grupo, que não foi executado.
+
+O achado indica que um sistema como este exigiria retreino periódico em operação.
 
 ---
 
