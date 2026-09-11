@@ -72,6 +72,8 @@ class KnowledgeBaseTest(unittest.TestCase):
                                 "format": "html",
                                 "local_filename": "norma.html",
                                 "sha256": digest,
+                                "effective_from": "2026-09-01",
+                                "future_effective_from": "2026-10-26",
                             }
                         ]
                     }
@@ -84,6 +86,10 @@ class KnowledgeBaseTest(unittest.TestCase):
             self.assertEqual(len(pages), 1)
             self.assertIn("Texto aplicável", pages[0].page_content)
             self.assertNotIn("regra revogada", pages[0].page_content)
+            self.assertEqual(pages[0].metadata["effective_from"], "2026-09-01")
+            self.assertEqual(
+                pages[0].metadata["future_effective_from"], "2026-10-26"
+            )
 
     def test_jsonl_round_trip_uses_plain_data(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

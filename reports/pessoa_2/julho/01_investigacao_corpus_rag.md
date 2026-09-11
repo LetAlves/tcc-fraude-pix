@@ -2,6 +2,8 @@
 
 Data da investigação: **30/08/2026**. Escopo: `m3_p2_1`.
 
+> Registro histórico. O Guia MED 4.3 era a versão coletada nesta data. A [revalidação de 10/09/2026](../setembro/01_revalidacao_corpus_rag.md) atualizou o catálogo para o Guia 4.4 e gerou um novo snapshot.
+
 ## Objetivo
 
 Confirmar quais documentos devem formar a primeira base de conhecimento do TCC, localizar suas versões oficiais atuais e definir o papel permitido de cada fonte. A investigação separa fatos confirmados, decisões técnicas e pendências; um link conhecido não foi considerado evidência suficiente sem inspeção do conteúdo efetivamente baixado.

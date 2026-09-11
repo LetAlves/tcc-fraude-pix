@@ -26,8 +26,8 @@
       "definition": "contagem de transações do mesmo card1 no intervalo (t - janela_segundos, t)",
       "population": "transações com card1 não nulo",
       "window": "86400 segundos por padrão, com a linha corrente excluída",
-      "null_handling": "0 quando não há evento anterior na janela",
-      "leakage_control": "janela causal com closed='left', sem a própria linha ou eventos futuros",
+      "null_handling": "NaN quando card1 ou TransactionDT está ausente; 0 quando há identificador válido, mas nenhum evento estritamente anterior na janela",
+      "leakage_control": "intervalo aberto (t - janela, t), sem a própria linha, eventos no mesmo instante ou eventos futuros",
       "rag_tags": ["frequencia_recente_proxy"],
       "warning": "A janela usa o relógio relativo do dataset e não representa necessariamente um dia civil Pix."
     },
@@ -38,8 +38,8 @@
       "definition": "1 / (contagem_anterior_do_par(card1, DeviceInfo) + 1)",
       "population": "transações com card1 e DeviceInfo não nulos",
       "window": "histórico expandido estritamente anterior do par card1 e DeviceInfo",
-      "null_handling": "NaN quando DeviceInfo está ausente; tratamento posterior pertence ao pré-processador",
-      "leakage_control": "cumcount é calculado após ordenação temporal e usa somente ocorrências anteriores",
+      "null_handling": "NaN quando card1, DeviceInfo ou TransactionDT está ausente; tratamento posterior pertence ao pré-processador",
+      "leakage_control": "a contagem usa somente ocorrências em instantes estritamente anteriores e exclui eventos empatados no tempo",
       "rag_tags": ["dispositivo_raro_proxy"],
       "warning": "Raridade estatística não equivale a dispositivo comprometido, novo ou associado a fraude."
     },
