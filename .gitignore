@@ -40,3 +40,9 @@ monografia/*.toc
 # IDEs
 .vscode/
 .idea/
+
+# Lixo de ferramenta (JupyterLab e logs de servidor)
+.virtual_documents/
+jupyter_out.log
+jupyter_err.log
+notebooks/Untitled*.ipynb
