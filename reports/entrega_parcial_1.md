@@ -41,7 +41,7 @@ O IEEE-CIS traz duas tabelas, unidas pelo `TransactionID`:
 
 O desbalanceamento de 27,6:1 é o fato que organiza todas as decisões seguintes: um classificador que sempre responda "não é fraude" acerta 96,5% dos casos e é inútil. Por isso a acurácia não é reportada em nenhum momento deste trabalho.
 
-Detalhamento completo da EDA, incluindo padrão de nulos e correlações, em `reports/pessoa_2/junho/04_entrega_parcial_eda_features.md` e `reports/eda_summary.txt`.
+Detalhamento completo da EDA, incluindo padrão de nulos e correlações, em `reports/pessoa_2/junho/04_entrega_parcial_eda_features.md`. O notebook `notebooks/01_eda.ipynb` também gera `reports/eda_summary.txt` localmente; esse arquivo é reproduzível e permanece fora do Git.
 
 ---
 
@@ -68,7 +68,7 @@ Três itens da proposta permanecem **sem feature correspondente**, por não tere
 
 `card4` (bandeira do cartão) e `card6` (crédito/débito) foram **excluídas**: são conceitos exclusivos do domínio de cartão, sem equivalente possível no Pix, e não constam da lista de variáveis da proposta aprovada.
 
-**A divisão é temporal, não aleatória**: as transações mais antigas formam o treino, as mais recentes o teste. Em detecção de fraude, só se tem o passado para prever o futuro; um sorteio aleatório permitiria ao modelo aprender padrões de datas posteriores às que ele tenta prever.
+**A divisão é temporal, não aleatória**: as transações mais antigas formam o treino, as mais recentes o teste. Em detecção de fraude, só se tem o passado para prever o futuro; um sorteio aleatório permitiria ao modelo aprender padrões de datas posteriores às que ele tenta prever. Se a posição nominal de uma fronteira cair dentro de um grupo com o mesmo `TransactionDT`, o corte avança até a próxima mudança de timestamp. Isso impede que eventos simultâneos sejam separados, tornando as proporções aproximadamente — e não obrigatoriamente exatamente — 70/15/15.
 
 A preocupação natural é que, sem estratificar, os conjuntos fiquem desbalanceados entre si. Verificamos no dataset completo que isso não ocorre:
 
@@ -119,9 +119,9 @@ Em termos operacionais: das 3.083 fraudes do período de teste, o modelo recuper
 - a AUC-ROC quase não se move (0,8392 → 0,8234), ou seja, o modelo continua ordenando;
 - o recall inclusive sobe (0,6831 → 0,7071).
 
-O que se degrada é a **pureza das previsões de maior confiança** no período mais recente. Os padrões aprendidos no passado envelhecem.
+O que se degrada é a **pureza das previsões de maior confiança** no período mais recente. O comportamento é compatível com envelhecimento dos padrões, embora o experimento isolado não identifique sozinho a causa da mudança.
 
-Esse resultado **só é observável por causa da divisão temporal**. Uma divisão aleatória teria misturado os períodos e reportado ~0,39 como desempenho do modelo — errando por um fator de dois. É evidência interna, produzida pelo próprio experimento, para a escolha metodológica adotada, e indica que um sistema como este exigiria retreino periódico em operação.
+Esse contraste **só é observável porque validação e teste preservam períodos distintos**. Uma divisão aleatória misturaria os períodos e poderia mascarar parte da degradação. Como não foi executado um controle aleatório no dataset completo, não se atribui a ele uma AUC-PR específica. O resultado é evidência interna para a escolha metodológica e indica que um sistema operacional exigiria monitoramento temporal e critérios de retreino.
 
 ---
 
@@ -154,8 +154,6 @@ Os modelos serão avaliados no **mesmo corte temporal**, para que a queda entre 
 ---
 
 ## 10. Ponto para alinhamento
-
-<!-- Letícia: ajuste este parágrafo com o que você quiser combinar sobre o calendário. -->
 
 Esta entrega está sendo enviada em setembro, e não no prazo originalmente previsto. Gostaríamos de alinhar com o senhor o calendário das etapas seguintes antes de avançar, para que as próximas entregas tenham prazos realistas.
 

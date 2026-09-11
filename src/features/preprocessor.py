@@ -167,22 +167,59 @@ def dividir_temporal(
     Divide o dataset em treino/validação/teste por corte temporal (não aleatório).
 
     Ordena por `coluna_tempo` e corta em blocos contíguos: treino = transações
-    mais antigas, teste = mais recentes. Evita que o modelo "veja" um padrão
-    do futuro durante o treino — mais realista para fraude do que um split
-    aleatório (decisão registrada em reports/anotacoes_metodologia.md).
+    mais antigas, teste = mais recentes. Se uma posição nominal de corte cair
+    dentro de um grupo com o mesmo timestamp, a fronteira avança até o fim do
+    grupo. Assim, eventos simultâneos nunca são separados entre conjuntos.
+
+    Esse deslocamento torna as proporções 70/15/15 aproximadas quando há empate
+    na fronteira. A diferença é limitada ao tamanho do grupo deslocado e evita
+    que o modelo "veja" no treino um instante também presente na validação.
 
     `frac_treino + frac_val` deve ser menor que 1; o restante vira teste.
     """
+    if not 0.0 < frac_treino < 1.0:
+        raise ValueError("frac_treino deve estar entre 0 e 1")
+    if not 0.0 < frac_val < 1.0:
+        raise ValueError("frac_val deve estar entre 0 e 1")
     if frac_treino + frac_val >= 1.0:
         raise ValueError("frac_treino + frac_val deve ser menor que 1 (sobra pro teste)")
+    if coluna_tempo not in df.columns:
+        raise ValueError(f"coluna temporal ausente: {coluna_tempo}")
+    if df.empty:
+        raise ValueError("não é possível dividir um dataset vazio")
+    if df[coluna_tempo].isna().any():
+        raise ValueError(f"{coluna_tempo} não pode conter valores ausentes")
 
     # mergesort é estável: entre linhas de mesmo timestamp (2,9% das linhas do
     # IEEE-CIS) preserva a ordem original, mantendo a fronteira do corte igual
     # entre execuções. O quicksort padrão do sort_values não garante isso.
     ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
+    timestamps = ordenado[coluna_tempo].to_numpy()
     n = len(ordenado)
     corte_treino = int(n * frac_treino)
     corte_val = int(n * (frac_treino + frac_val))
+
+    def avancar_ate_proximo_timestamp(corte: int) -> int:
+        """Move uma fronteira interna até depois do grupo temporal empatado."""
+
+        if corte <= 0 or corte >= n:
+            return corte
+        timestamp_anterior = timestamps[corte - 1]
+        while corte < n and timestamps[corte] == timestamp_anterior:
+            corte += 1
+        return corte
+
+    corte_treino = avancar_ate_proximo_timestamp(corte_treino)
+    corte_val = avancar_ate_proximo_timestamp(corte_val)
+    if corte_val <= corte_treino and corte_treino < n:
+        # Se as duas posições nominais caírem no mesmo grupo temporal, reserve
+        # ao menos o próximo grupo completo para validação.
+        corte_val = avancar_ate_proximo_timestamp(corte_treino + 1)
+    if not 0 < corte_treino < corte_val < n:
+        raise ValueError(
+            "não é possível formar treino, validação e teste sem dividir "
+            f"grupos de {coluna_tempo}"
+        )
 
     treino = ordenado.iloc[:corte_treino]
     val = ordenado.iloc[corte_treino:corte_val]

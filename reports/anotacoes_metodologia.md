@@ -148,7 +148,7 @@ Verificação de 05/09/2026 sobre o **dataset completo** (590.540 transações),
 
 O cronograma descreve esta tarefa como "split estratificado (70/15/15)", enquanto o implementado é corte temporal, conforme a decisão metodológica registrada acima. A verificação mostra que **não houve troca**: as proporções 70/15/15 são exatas e as três taxas de fraude ficam dentro de 0,08 ponto percentual entre si. O corte cronológico produziu conjuntos balanceados sem estratificar, então o realismo temporal foi obtido sem custo de equilíbrio de classe. O texto da tarefa no organizador está desatualizado em relação à metodologia, não o código.
 
-**Integridade da fronteira**: 2,9% das linhas do dataset compartilham `TransactionDT` com outra transação, o que abriria a possibilidade de um bloco de transações simultâneas ser partido entre dois conjuntos. Nos dois cortes efetivos (`TransactionDT` 10.437.996 e 13.151.840), nenhuma transação do lado direito repete o último timestamp do lado esquerdo — zero vazamento de instante entre treino, validação e teste.
+**Integridade da fronteira**: 2,9% das linhas do dataset compartilham `TransactionDT` com outra transação. O `dividir_temporal` passou a avançar qualquer fronteira que caia dentro de um grupo empatado até a próxima mudança de timestamp. Assim, eventos simultâneos não são separados. Como consequência, as proporções são aproximadamente 70/15/15 quando existe empate na fronteira. Nos dois cortes efetivos do dataset completo (`TransactionDT` 10.437.996 e 13.151.840), não foi necessário deslocar as posições e as contagens originais foram preservadas.
 
 **Ordenação estável**: `dividir_temporal` passou a ordenar com `kind="mergesort"`. Como o IEEE-CIS já chega ordenado por `TransactionDT`, o pandas detecta que a ordem pedida é a existente e não reordena nada — a mudança **não altera nenhum resultado atual**. Ela protege o caso de entrada fora de ordem (amostra embaralhada, arquivos concatenados): entre linhas de mesmo timestamp o mergesort preserva a ordem de chegada, enquanto o quicksort padrão a reorganiza de forma arbitrária e dependente da versão do numpy.
 
@@ -184,7 +184,7 @@ Execução de 05/09/2026 sobre as **590.540 transações**, via script dedicado 
 
 A AUC-PR cai de **0,3962 na validação para 0,1863 no teste** — menos da metade — enquanto as taxas base são praticamente iguais (3,434% e 3,480%), a AUC-ROC quase não se move (0,839 para 0,824) e o recall até sobe (0,683 para 0,707). A queda não é efeito de desbalanceamento: é perda de pureza nas previsões de maior confiança no período mais recente. Os padrões aprendidos no passado envelhecem.
 
-O achado só é observável por causa do corte temporal. Um split aleatório teria misturado os períodos e reportado ~0,39 como desempenho do modelo — errado por um fator de dois. É evidência interna, do próprio experimento, para a escolha metodológica do Capítulo 3, e limitação a declarar no Capítulo 5: um protótipo assim exigiria retreino periódico.
+O contraste só é observável porque o corte temporal preserva períodos distintos. Um split aleatório misturaria os períodos e poderia mascarar parte da degradação, mas esse controle não foi executado no dataset completo; por isso, não se atribui a ele uma AUC-PR específica. É evidência interna para a escolha metodológica do Capítulo 3 e uma limitação a declarar no Capítulo 5: um protótipo operacional exigiria monitoramento temporal e critérios de retreino.
 
 Em termos operacionais no teste: das 3.083 fraudes o modelo recupera ~2.181, marcando cerca de 18.000 das 88.581 transações como suspeitas — 20% do total, com 8 de cada 10 acusações sendo falso alarme.
 
@@ -232,7 +232,7 @@ Execução de 06/09/2026 do `notebooks/02_preprocessing.ipynb` no dataset comple
 |---|---|---|---|---|---|
 | 0,8234 | 0,1840 | 5,3× | 0,7071 | 0,1213 | 0,2071 |
 
-Todas as conclusões da seção anterior se mantêm: empate entre as estratégias (agora 0,0033 de diferença, ainda com inversão de sinal em relação à amostra) e queda da AUC-PR pela metade entre validação e teste, caracterizando degradação temporal.
+Todas as conclusões da seção anterior se mantêm: empate entre as estratégias (agora 0,0033 de diferença, ainda com inversão de sinal em relação à amostra) e queda da AUC-PR pela metade entre validação e teste, comportamento compatível com degradação temporal.
 
 #### Limitação de reprodutibilidade
 
