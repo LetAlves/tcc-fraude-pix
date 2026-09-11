@@ -101,16 +101,28 @@ def reduzir_precisao(df: pd.DataFrame) -> pd.DataFrame:
     Reduz o DataFrame completo de ~2,2 GB para ~1,2 GB e faz a matriz
     pré-processada de treino cair de ~1,5 GB para ~0,76 GB.
     """
-    convertido = df.copy(deep=False)
-    for coluna in df.columns:
-        tipo = df[coluna].dtype
-        if pd.api.types.is_float_dtype(tipo) and tipo.itemsize > 4:
-            convertido[coluna] = df[coluna].astype("float32")
-        elif pd.api.types.is_integer_dtype(tipo):
-            convertido[coluna] = pd.to_numeric(df[coluna], downcast="integer")
+    # As colunas de ponto flutuante são convertidas em uma única chamada. Atribuir
+    # coluna a coluna em um DataFrame largo força o pandas a refragmentar e
+    # reconsolidar os blocos a cada passo, e a consolidação do bloco float64
+    # inteiro pede 1,76 GiB de uma vez no dataset completo — o suficiente para
+    # abortar a execução quando a memória livre está apertada.
+    tipos_float = {
+        coluna: "float32"
+        for coluna in df.columns
+        if pd.api.types.is_float_dtype(df[coluna].dtype) and df[coluna].dtype.itemsize > 4
+    }
+    convertido = df.astype(tipos_float) if tipos_float else df.copy(deep=False)
 
-    antes = df.memory_usage(deep=True).sum() / 1e6
-    depois = convertido.memory_usage(deep=True).sum() / 1e6
+    # Inteiros são poucas colunas (chave, tempo, alvo), então o laço aqui é barato.
+    for coluna in convertido.columns:
+        if pd.api.types.is_integer_dtype(convertido[coluna].dtype):
+            convertido[coluna] = pd.to_numeric(convertido[coluna], downcast="integer")
+
+    # deep=False: medir com deep=True percorre todas as strings das colunas de
+    # texto, o que custa minutos no dataset completo. Como essas colunas não são
+    # tocadas pela conversão, a diferença entre antes e depois é a mesma.
+    antes = df.memory_usage(deep=False).sum() / 1e6
+    depois = convertido.memory_usage(deep=False).sum() / 1e6
     logger.info(
         "Precisão reduzida — %.0f MB para %.0f MB (%.0f%% do original)",
         antes, depois, 100 * depois / antes,

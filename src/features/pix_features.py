@@ -92,7 +92,11 @@ def valor_atipico_proxy(
     Risco de vazamento: nenhum — só usa observações anteriores no tempo.
     Ressalva (ata 16/08/2026): card1 é um proxy mascarado, não uma conta Pix real.
     """
-    ordenado = df.sort_values(
+    # Só as três colunas-fonte entram na ordenação. Ordenar o DataFrame inteiro
+    # por (cartão, tempo) é uma ordem nova, então o pandas materializa todas as
+    # colunas: 1,76 GiB só no bloco float64 do dataset completo, o que estoura a
+    # memória disponível antes de qualquer modelo rodar.
+    ordenado = df[[coluna_valor, coluna_cartao, coluna_tempo]].sort_values(
         [coluna_cartao, coluna_tempo],
         kind="mergesort",
         na_position="last",
