@@ -295,6 +295,31 @@ Cobertura em `tests/test_split_temporal.py`, nove testes em `unittest` (o projet
 
 **Por que importa pro TCC**: a monografia pode afirmar que nenhuma transação simultânea foi dividida entre treino, validação e teste, e apontar o teste que garante isso — em vez de depender de uma verificação pontual que valeria só para aquele recorte.
 
+### Reconfirmação dos resultados sobre as features corrigidas (m2_p1_5)
+
+Em 11/09/2026 a branch `feat/preprocessor-junho` foi atualizada com a `main`, trazendo dois merges do Lucas feitos em paralelo: `c5d0ee3` (validação das features Pix) e `156d643` (corpus RAG). O primeiro **corrige um vazamento causal em `src/features/pix_features.py`**: transações do mesmo instante usavam uma à outra como histórico. Todos os números de junho haviam sido produzidos antes dessa correção.
+
+**Resolução do conflito**: o merge conflitou em `pix_features.py`, onde as duas linhas de trabalho mexeram na mesma função. Prevaleceu a versão da `main`. Ela corrige o vazamento e, além disso, já resolve por outro caminho o consumo de memória atacado pelo commit `d8ef6c9` desta branch — seleciona apenas as colunas-fonte (`df.loc[validos, [card1, TransactionDT]]`) e conta por grupo com `searchsorted`, em vez de `groupby().rolling()` sobre uma coluna de data sintética. O commit `d8ef6c9` fica superado.
+
+**População afetada pelo vazamento**: 312 linhas em 590.540 (0,053%), contendo 24 fraudes. `card1` não tem valores ausentes neste dataset, então a mudança de 0 para `NaN` em identificador ausente não altera nada aqui.
+
+**Reexecução do controle sobre as features corrigidas:**
+
+| AUC-PR | Antes | Depois | Δ |
+|---|---|---|---|
+| Temporal, validação | 0,3936 | 0,3933 | −0,0003 |
+| Temporal, teste | 0,1858 | 0,1860 | +0,0002 |
+| Aleatório, validação | 0,4220 | 0,4213 | −0,0007 |
+| Aleatório, teste | 0,4250 | 0,4243 | −0,0007 |
+
+Todas as diferenças ficam em 0,0007 ou menos, dentro da faixa de ruído já documentada para `float32` entre execuções. As conclusões não se movem: fator aleatório/temporal de **2,28×** (antes 2,29×) e queda de **−52,7%** entre validação e teste (antes −52,8%). O pico de memória caiu de 3.489 MB para 3.836 MB de pico total de processo com preparação 70 MB mais barata — a implementação por grupo do Lucas é mais econômica que a anterior.
+
+**Suíte completa após o merge**: 14 testes passam — os 9 de `tests/test_split_temporal.py` e os 5 de `tests/test_pix_features.py`, escritos pelo Lucas para as features. O split temporal e as features corrigidas convivem sem regressão em nenhuma direção.
+
+**Pendência registrada**: o `notebooks/02_preprocessing.ipynb`, declarado fonte canônica em m2_p1_6, foi executado **antes** da correção das features. Os valores nele diferem dos atuais na quarta casa decimal. Reexecutá-lo alinha o entregável ao código final; enquanto isso não acontece, esta nota é o registro de que a diferença é conhecida e medida.
+
+**Por que importa pro TCC**: documenta que uma correção de causalidade feita depois dos experimentos foi verificada, e não presumida inofensiva. O tamanho da população afetada (0,053%) explica por que o efeito é nulo na prática, sem que isso sirva de desculpa para não medir.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
