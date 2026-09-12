@@ -34,6 +34,18 @@ Este documento consolida a **EDA executada e as features aprovadas pela dupla em
 4. A identidade cobre apenas parte das transações; ausência de `DeviceInfo` precisa ser tratada explicitamente e não pode ser interpretada como fraude.
 5. Estatísticas históricas por `card1` devem usar apenas eventos anteriores. Cálculo global antes da divisão de treino/validação/teste causaria vazamento.
 
+## Protocolo temporal aprovado
+
+A avaliação principal usa corte temporal 70/15/15, com as transações mais antigas no treino e as mais recentes no teste. As fronteiras são deslocadas quando necessário para manter todas as transações com o mesmo `TransactionDT` na mesma partição.
+
+| Conjunto | Linhas | Fraudes | Taxa de fraude |
+|---|---:|---:|---:|
+| treino | 413.378 | 14.538 | 3.517% |
+| validação | 88.581 | 3.042 | 3.434% |
+| teste | 88.581 | 3.083 | 3.480% |
+
+A diferença máxima entre as taxas é de **0.083 ponto percentual**. Isso representa proporções semelhantes entre as partições, não balanceamento entre as classes: fraude continua sendo rara. Ocorrências repetidas de `TransactionDT`, desconsiderando a primeira de cada valor, correspondem a **2.9%** das linhas; ao contar todas as linhas pertencentes a grupos de timestamps repetidos, a proporção é **5.7%**. Fronteiras sem timestamps compartilhados: **sim**. Qualquer divisão aleatória estratificada será apenas uma análise complementar.
+
 ## Registro aprovado de features
 
 Status do registro: `approved_and_implemented`.
@@ -58,7 +70,8 @@ O arquivo-fonte completo, incluindo fórmula, janela, tratamento de nulos, contr
 ## Evolução posterior desta entrega
 
 - [x] comparar ponderação de classe e SMOTE sem vazamento;
-- [x] implementar split temporal 70/15/15 e registrar as seeds do experimento;
+- [x] implementar split temporal 70/15/15, preservando empates de `TransactionDT`;
+- [x] registrar as seeds do experimento;
 - [x] executar e revisar o baseline da Pessoa 1 no dataset completo;
 - [x] consolidar EDA, features, pré-processamento e baseline em `reports/entrega_parcial_1.md`;
 - [ ] registrar a data de apresentação desta entrega ao orientador.

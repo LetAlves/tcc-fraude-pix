@@ -31,6 +31,74 @@ TRANSACTION_COLUMNS = [
 IDENTITY_COLUMNS = ["TransactionID", "DeviceType", "DeviceInfo"]
 
 
+def calcular_split_temporal(transactions: pd.DataFrame) -> dict[str, object]:
+    """Resume o corte 70/15/15 sem separar transações com o mesmo instante."""
+
+    required_columns = {"TransactionID", "TransactionDT", "isFraud"}
+    missing_columns = required_columns - set(transactions.columns)
+    if missing_columns:
+        raise ValueError(
+            "Colunas obrigatórias para o split temporal ausentes: "
+            + ", ".join(sorted(missing_columns))
+        )
+    if transactions.empty:
+        raise ValueError("O split temporal exige pelo menos uma transação.")
+    if transactions["TransactionDT"].isna().any():
+        raise ValueError("TransactionDT não pode conter nulos no split temporal.")
+
+    ordered = transactions.sort_values(
+        ["TransactionDT", "TransactionID"], kind="mergesort"
+    ).reset_index(drop=True)
+    timestamps = ordered["TransactionDT"].to_numpy()
+    total = len(ordered)
+
+    def advance_past_ties(boundary: int) -> int:
+        while 0 < boundary < total and timestamps[boundary] == timestamps[boundary - 1]:
+            boundary += 1
+        return boundary
+
+    train_end = advance_past_ties(int(total * 0.70))
+    validation_end = advance_past_ties(max(train_end, int(total * 0.85)))
+    frames = {
+        "treino": ordered.iloc[:train_end],
+        "validação": ordered.iloc[train_end:validation_end],
+        "teste": ordered.iloc[validation_end:],
+    }
+    if any(frame.empty for frame in frames.values()):
+        raise ValueError(
+            "O dataset não permite formar três partições temporais não vazias sem "
+            "separar timestamps empatados."
+        )
+
+    partitions = []
+    for name, frame in frames.items():
+        frauds = int(frame["isFraud"].eq(1).sum())
+        partitions.append(
+            {
+                "name": name,
+                "rows": int(len(frame)),
+                "frauds": frauds,
+                "fraud_rate": frauds / len(frame),
+            }
+        )
+
+    return {
+        "partitions": partitions,
+        "repeated_timestamp_rate": float(
+            ordered["TransactionDT"].duplicated(keep="first").mean()
+        ),
+        "rows_in_repeated_timestamp_groups_rate": float(
+            ordered["TransactionDT"].duplicated(keep=False).mean()
+        ),
+        "boundaries_preserve_timestamps": bool(
+            frames["treino"]["TransactionDT"].max()
+            < frames["validação"]["TransactionDT"].min()
+            and frames["validação"]["TransactionDT"].max()
+            < frames["teste"]["TransactionDT"].min()
+        ),
+    }
+
+
 def calcular_estatisticas(data_dir: Path) -> dict[str, object]:
     """Calcula somente as estatísticas necessárias para a entrega parcial."""
 
@@ -87,6 +155,7 @@ def calcular_estatisticas(data_dir: Path) -> dict[str, object]:
         "product_counts": transactions["ProductCD"].value_counts().to_dict(),
         "device_type_counts": device_type_counts,
         "device_info_unique": int(identities["DeviceInfo"].nunique(dropna=True)),
+        "temporal_split": calcular_split_temporal(transactions),
     }
 
 
@@ -109,6 +178,7 @@ def render_report(stats: dict[str, object], registry: dict[str, object]) -> str:
     legitimate_amount = amount_by_class.get(0, amount_by_class.get("0", {}))
     fraud_amount = amount_by_class.get(1, amount_by_class.get("1", {}))
     features = registry["features"]
+    temporal_split = stats["temporal_split"]
 
     feature_rows = "\n".join(
         "| `{feature_id}` | {label} | {sources} | {warning} |".format(
@@ -119,6 +189,19 @@ def render_report(stats: dict[str, object], registry: dict[str, object]) -> str:
         )
         for feature in features
     )
+    split_rows = "\n".join(
+        "| {name} | {rows} | {frauds} | {fraud_rate:.3%} |".format(
+            name=partition["name"],
+            rows=_format_count(partition["rows"]),
+            frauds=_format_count(partition["frauds"]),
+            fraud_rate=partition["fraud_rate"],
+        )
+        for partition in temporal_split["partitions"]
+    )
+    rates = [
+        partition["fraud_rate"] for partition in temporal_split["partitions"]
+    ]
+    max_rate_difference_pp = (max(rates) - min(rates)) * 100
 
     return f"""# Entrega parcial 1 — EDA e features Pix simuladas
 
@@ -154,6 +237,16 @@ Este documento consolida a **EDA executada e as features aprovadas pela dupla em
 4. A identidade cobre apenas parte das transações; ausência de `DeviceInfo` precisa ser tratada explicitamente e não pode ser interpretada como fraude.
 5. Estatísticas históricas por `card1` devem usar apenas eventos anteriores. Cálculo global antes da divisão de treino/validação/teste causaria vazamento.
 
+## Protocolo temporal aprovado
+
+A avaliação principal usa corte temporal 70/15/15, com as transações mais antigas no treino e as mais recentes no teste. As fronteiras são deslocadas quando necessário para manter todas as transações com o mesmo `TransactionDT` na mesma partição.
+
+| Conjunto | Linhas | Fraudes | Taxa de fraude |
+|---|---:|---:|---:|
+{split_rows}
+
+A diferença máxima entre as taxas é de **{max_rate_difference_pp:.3f} ponto percentual**. Isso representa proporções semelhantes entre as partições, não balanceamento entre as classes: fraude continua sendo rara. Ocorrências repetidas de `TransactionDT`, desconsiderando a primeira de cada valor, correspondem a **{temporal_split['repeated_timestamp_rate']:.1%}** das linhas; ao contar todas as linhas pertencentes a grupos de timestamps repetidos, a proporção é **{temporal_split['rows_in_repeated_timestamp_groups_rate']:.1%}**. Fronteiras sem timestamps compartilhados: **{'sim' if temporal_split['boundaries_preserve_timestamps'] else 'não'}**. Qualquer divisão aleatória estratificada será apenas uma análise complementar.
+
 ## Registro aprovado de features
 
 Status do registro: `{registry['decision_status']}`.
@@ -175,7 +268,8 @@ O arquivo-fonte completo, incluindo fórmula, janela, tratamento de nulos, contr
 ## Pendências para concluir a entrega ao orientador
 
 - [ ] decidir comparação entre peso de classe e SMOTE sem vazamento;
-- [ ] definir split temporal e seeds do experimento;
+- [x] definir split temporal 70/15/15, preservando empates de `TransactionDT`;
+- [ ] registrar seeds do experimento;
 - [ ] executar e revisar o baseline da Pessoa 1;
 - [ ] registrar a data de apresentação desta entrega ao orientador.
 """
