@@ -53,3 +53,8 @@ monografia/*.toc
 jupyter_out.log
 jupyter_err.log
 notebooks/Untitled*.ipynb
+
+# Modelos treinados (binários grandes, reproduzíveis pelos scripts).
+# A barra inicial ancora na raiz: sem ela, o padrão casaria também com
+# src/models/, tornando invisível todo arquivo novo do pacote de modelos.
+/models/
