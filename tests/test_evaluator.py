@@ -10,6 +10,7 @@ import unittest
 import numpy as np
 
 from src.models.evaluator import (avaliar_probabilidades, comparar,
+                                  escolher_limiar,
                                   curva_precisao_recall, matriz_confusao,
                                   resumo_operacional)
 
@@ -146,3 +147,59 @@ class CompararTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EscolherLimiarTest(unittest.TestCase):
+    """Cenário: as fraudes recebem probabilidades altas, mas não acima de 0,5.
+
+    Com o limiar padrão o modelo não marca nada e o recall é zero, embora a
+    ordenação seja perfeita. É exatamente a situação que o ajuste de limiar
+    resolve, e a que passa despercebida quando só se olha AUC-PR.
+    """
+
+    def setUp(self) -> None:
+        self.y = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+        self.probas = [0.01, 0.02, 0.03, 0.04, 0.05, 0.20, 0.30, 0.35, 0.40, 0.45]
+
+    def test_limiar_padrao_nao_marca_nada(self) -> None:
+        m = avaliar_probabilidades(self.y, self.probas, limiar=0.5)
+        self.assertEqual(m["recall"], 0.0)
+        self.assertAlmostEqual(m["auc_pr"], 1.0)  # ordenação perfeita mesmo assim
+
+    def test_criterio_f1_encontra_o_corte_util(self) -> None:
+        escolha = escolher_limiar(self.y, self.probas, criterio="f1")
+
+        self.assertLessEqual(escolha["limiar"], 0.30)
+        self.assertAlmostEqual(escolha["metricas"]["recall"], 1.0)
+        self.assertAlmostEqual(escolha["metricas"]["precisao"], 1.0)
+        self.assertEqual(escolha["metricas_no_padrao"]["recall"], 0.0)
+
+    def test_metricas_devolvidas_batem_com_o_limiar_devolvido(self) -> None:
+        escolha = escolher_limiar(self.y, self.probas, criterio="f1")
+        recalculado = avaliar_probabilidades(self.y, self.probas, limiar=escolha["limiar"])
+
+        self.assertEqual(escolha["metricas"], recalculado)
+
+    def test_precisao_minima_respeita_o_alvo(self) -> None:
+        y = [0] * 6 + [1] * 4
+        probas = [0.1, 0.2, 0.3, 0.45, 0.55, 0.7, 0.4, 0.6, 0.8, 0.9]
+
+        escolha = escolher_limiar(y, probas, criterio="precisao_minima", alvo=0.75)
+
+        self.assertGreaterEqual(escolha["metricas"]["precisao"], 0.75)
+
+    def test_recall_minimo_respeita_o_alvo(self) -> None:
+        escolha = escolher_limiar(self.y, self.probas, criterio="recall_minimo", alvo=0.75)
+        self.assertGreaterEqual(escolha["metricas"]["recall"], 0.75)
+
+    def test_alvo_inatingivel_levanta_erro_explicando(self) -> None:
+        with self.assertRaisesRegex(ValueError, "nenhum limiar atinge precisão"):
+            escolher_limiar(self.y, self.probas, criterio="precisao_minima", alvo=1.01)
+
+    def test_alvo_obrigatorio_nos_criterios_com_restricao(self) -> None:
+        with self.assertRaisesRegex(ValueError, "exige um `alvo`"):
+            escolher_limiar(self.y, self.probas, criterio="precisao_minima")
+
+    def test_criterio_desconhecido(self) -> None:
+        with self.assertRaisesRegex(ValueError, "critério desconhecido"):
+            escolher_limiar(self.y, self.probas, criterio="acuracia")

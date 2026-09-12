@@ -196,3 +196,84 @@ def comparar(resultados: dict[str, dict]) -> pd.DataFrame:
     tabela = pd.DataFrame(resultados).T
     colunas = [c for c in ORDEM_METRICAS if c in tabela.columns]
     return tabela[colunas]
+
+
+# ─── Escolha do limiar de decisão ────────────────────────────────────────────
+
+def escolher_limiar(
+    y_verdadeiro,
+    probabilidades,
+    criterio: str = "f1",
+    alvo: float | None = None,
+) -> dict:
+    """
+    Escolhe o limiar de decisão a partir de um critério declarado.
+
+    **Deve ser chamada com o conjunto de validação, nunca com o de teste.** O
+    limiar é uma decisão de modelagem como qualquer outra: escolhê-lo olhando o
+    teste transforma o teste em mais um conjunto de validação e o número
+    reportado deixa de estimar desempenho fora da amostra.
+
+    O limiar padrão 0,5 não é neutro. Ele é o ponto em que a probabilidade
+    prevista cruza a metade, o que só faz sentido quando as classes são
+    equilibradas e o custo dos dois erros é o mesmo — nenhuma das duas coisas
+    vale aqui. Pior: modelos diferentes distribuem suas probabilidades de forma
+    diferente, então o mesmo 0,5 cai em pontos distintos de cada curva, e
+    comparar precisão ou recall nesse limiar compara calibração, não qualidade.
+
+    Critérios:
+        - `"f1"`: maximiza F1, equilibrando precisão e recall sem privilegiar
+          nenhum dos dois. É o padrão quando não há uma prioridade declarada.
+        - `"precisao_minima"`: maior recall entre os limiares que garantem
+          precisão ≥ `alvo`. Use quando o custo de alarme falso é o que limita
+          a operação — cada transação marcada custa revisão humana.
+        - `"recall_minimo"`: maior precisão entre os limiares que garantem
+          recall ≥ `alvo`. Use quando deixar fraude passar é o custo dominante.
+
+    Devolve o limiar escolhido, o critério usado e as métricas naquele ponto.
+    """
+    y_verdadeiro = np.asarray(y_verdadeiro)
+    probabilidades = np.asarray(probabilidades)
+
+    precisao, recall, limiares = precision_recall_curve(y_verdadeiro, probabilidades)
+    # O último ponto de precisao/recall (1,0) não corresponde a limiar algum.
+    precisao, recall = precisao[:-1], recall[:-1]
+
+    if criterio == "f1":
+        soma = precisao + recall
+        f1 = np.divide(2 * precisao * recall, soma, out=np.zeros_like(soma), where=soma > 0)
+        indice = int(np.argmax(f1))
+    elif criterio == "precisao_minima":
+        if alvo is None:
+            raise ValueError("critério 'precisao_minima' exige um `alvo`")
+        elegiveis = np.flatnonzero(precisao >= alvo)
+        if elegiveis.size == 0:
+            raise ValueError(
+                f"nenhum limiar atinge precisão >= {alvo}; a máxima observada é "
+                f"{precisao.max():.4f}"
+            )
+        indice = int(elegiveis[np.argmax(recall[elegiveis])])
+    elif criterio == "recall_minimo":
+        if alvo is None:
+            raise ValueError("critério 'recall_minimo' exige um `alvo`")
+        elegiveis = np.flatnonzero(recall >= alvo)
+        if elegiveis.size == 0:
+            raise ValueError(
+                f"nenhum limiar atinge recall >= {alvo}; o máximo observado é "
+                f"{recall.max():.4f}"
+            )
+        indice = int(elegiveis[np.argmax(precisao[elegiveis])])
+    else:
+        raise ValueError(
+            f"critério desconhecido: {criterio!r}. "
+            "Use 'f1', 'precisao_minima' ou 'recall_minimo'."
+        )
+
+    limiar = float(limiares[indice])
+    return {
+        "limiar": limiar,
+        "criterio": criterio,
+        "alvo": alvo,
+        "metricas": avaliar_probabilidades(y_verdadeiro, probabilidades, limiar=limiar),
+        "metricas_no_padrao": avaliar_probabilidades(y_verdadeiro, probabilidades, limiar=0.5),
+    }
