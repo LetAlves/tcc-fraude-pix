@@ -23,7 +23,7 @@ O [registro de features proposto no PR #2](https://github.com/LetAlves/tcc-fraud
 
 ## Estado do projeto
 
-Situação verificada localmente em **10/09/2026**. As entregas de junho e julho da Pessoa 2 estão integradas à `main`; o corpus RAG foi revalidado com o Guia MED 4.4. Dependências instaladas não significam que todas as camadas já estejam implementadas.
+Situação verificada localmente em **12/09/2026**. As entregas de junho e julho da Pessoa 2 estão integradas à `main`; o corpus RAG foi revalidado com o Guia MED 4.4. A camada de ML de junho está concluída e executada no dataset completo; julho está em andamento. Dependências instaladas não significam que todas as camadas já estejam implementadas.
 
 | Componente | Situação | Evidência |
 |---|---|---|
@@ -32,11 +32,19 @@ Situação verificada localmente em **10/09/2026**. As entregas de junho e julho
 | Features Pix simuladas | Quatro conceitos implementados, gerando seis colunas | [Módulo de features](src/features/pix_features.py) e [ata de aprovação](reports/reunioes/2026-08-16_mapeamento_ieee_cis_pix.md) |
 | Estudo de LangChain | Laboratório local integrado; sem chamada a LLM | [Guia prático](reports/pessoa_2/junho/01_estudo_langchain.md) |
 | Monografia | Capítulos 1, 2 e 3 versionados; revisão acadêmica ainda necessária | [Projeto de escrita](monografia/README.md) |
-| Pré-processamento, SMOTE e primeiros modelos | Pendentes de implementação e avaliação | [Protocolo metodológico proposto](https://github.com/LetAlves/tcc-fraude-pix/blob/ff73aa5ce60a5daf43fdf8195d1ac9386ad5718e/reports/pessoa_2/junho/03_metodologia_tres_camadas.md) |
+| Pré-processamento e split temporal | Implementados, com garantia de fronteira por instante e 13 testes | [Pré-processador](src/features/preprocessor.py) |
+| SMOTE e ponderação de classe | Comparados em quatro medições; empate, adotada a ponderação | [Anotações de metodologia](reports/anotacoes_metodologia.md) |
+| Baseline (regressão logística) | Executado no dataset completo; AUC-PR 0,3930 na validação e 0,1850 no teste | [Notebook 02 executado](notebooks/02_preprocessing.ipynb) |
+| Random Forest (modelo comparativo) | Treinado em duas configurações; AUC-PR 0,5298 | [Script](scripts/treinar_random_forest.py) |
+| XGBoost (modelo principal) | Busca de hiperparâmetros implementada; execução completa pendente | [Módulo de busca](src/models/xgboost_tuning.py) |
+| Avaliação e escolha de limiar | Implementadas em módulo único, usado por todos os modelos | [Evaluator](src/models/evaluator.py) |
+| Persistência de modelos | Implementada, com manifesto, hashes e compressão | [Persistência](src/models/persistencia.py) |
 | RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |
 | SHAP executado e interface de demonstração | Planejados | [Metodologia SHAP](reports/pessoa_2/julho/04_metodologia_shap.md) |
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
+
+**Achado principal até aqui:** o desempenho cai pela metade entre validação e teste — AUC-PR de 0,3930 para 0,1850 — com taxas de fraude equivalentes nos dois conjuntos. É degradação temporal, e só é observável por causa do corte cronológico: um controle com divisão aleatória obteve 0,4243 no teste, 2,3× mais, sem mostrar queda alguma. O registro completo está nas [anotações de metodologia](reports/anotacoes_metodologia.md).
 
 ## Instalação — Windows / PowerShell
 
