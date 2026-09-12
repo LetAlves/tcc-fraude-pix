@@ -44,14 +44,16 @@ Se uma coluna anônima estiver entre as maiores contribuições, a explicação 
 ## Protocolo experimental planejado
 
 1. ordenar as transações por `TransactionDT`;
-2. separar treino, validação e teste sem consultar o alvo das partições futuras;
+2. separar temporalmente treino, validação e teste em 70/15/15, mantendo timestamps empatados na mesma partição e sem consultar o alvo das partições futuras;
 3. ajustar imputação, encoding, escalonamento, seleção e estatísticas históricas apenas no treino;
 4. comparar baseline com peso de classe e, separadamente, SMOTE dentro do pipeline de treino;
 5. escolher limiar na validação segundo critério registrado;
 6. avaliar uma única vez no teste preservado;
 7. registrar seed, versões, features e parâmetros.
 
-O cronograma original fala em divisão estratificada 70/15/15. Para fraude com dependência temporal, estratificação aleatória pode superestimar a generalização. A decisão recomendada é priorizar corte temporal e usar estratificação somente em análises complementares ou folds internos, com justificativa.
+O cronograma original falava em divisão estratificada 70/15/15. Para fraude com dependência temporal, a estratificação aleatória pode misturar padrões futuros no treino e superestimar a generalização. A decisão aprovada é usar corte temporal 70/15/15 como avaliação principal e reservar a estratificação aleatória para análises complementares ou folds internos devidamente justificados.
+
+No dataset completo, o protocolo produziu 413.378 linhas de treino, 88.581 de validação e 88.581 de teste. As taxas de fraude foram, respectivamente, 3,517%, 3,434% e 3,480%, com diferença máxima de 0,083 ponto percentual. As classes continuam desbalanceadas, porém a proporção da classe positiva permaneceu semelhante entre as partições sem necessidade de estratificação. Ocorrências repetidas além da primeira representam 2,9% das linhas; todas as linhas pertencentes a grupos de `TransactionDT` repetidos representam 5,7%. Nenhuma delas atravessou uma fronteira do corte.
 
 ## Avaliação da explicação
 
@@ -74,7 +76,8 @@ O cronograma original fala em divisão estratificada 70/15/15. Para fraude com d
 
 - [x] aprovação da dupla sobre o registro de quatro features e implementação causal;
 - [ ] execução e revisão do baseline;
-- [ ] escolha final do split temporal e do limiar;
+- [x] escolha final do split temporal 70/15/15, preservando empates de `TransactionDT`;
+- [ ] escolha final do limiar;
 - [ ] modelo de embeddings validado em português;
 - [ ] LLM e política de custo/privacidade;
 - [ ] conjunto de perguntas e chunks de referência para avaliação;

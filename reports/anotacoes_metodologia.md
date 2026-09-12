@@ -82,13 +82,24 @@ Contagem real confirmada no `train_transaction.csv`: **C1–C14** (14 colunas), 
 
 ### Decisão metodológica e registro aprovado
 
-- usar corte temporal como avaliação principal e registrar qualquer análise estratificada aleatória apenas como complemento;
+- usar corte temporal 70/15/15 como avaliação principal, com as transações mais antigas no treino e as mais recentes no teste;
+- manter todas as transações com o mesmo `TransactionDT` na mesma partição e registrar qualquer análise estratificada aleatória apenas como complemento;
 - ajustar toda transformação e reamostragem somente no treino;
 - comparar ponderação de classe e SMOTE em pipelines separados;
 - escolher limiar na validação, nunca no teste;
 - usar somente features do registro versionado como ponte semântica SHAP→RAG;
 - manter somente as quatro features aprovadas pela dupla em 16/08/2026 como ponte semântica: valor atípico, frequência recente, dispositivo raro e ciclo diário relativo, todas explicitamente qualificadas como proxies do IEEE-CIS;
 - usar a implementação causal de `src/features/pix_features.py`, sem consultar alvo ou eventos futuros.
+
+### Validação do corte temporal no dataset completo
+
+| Conjunto | Linhas | Fraudes | Taxa de fraude |
+|---|---:|---:|---:|
+| treino | 413.378 | 14.538 | 3,517% |
+| validação | 88.581 | 3.042 | 3,434% |
+| teste | 88.581 | 3.083 | 3,480% |
+
+As proporções de fraude diferem no máximo 0,083 ponto percentual entre as partições. Isso não torna o problema balanceado — a classe de fraude permanece rara —, mas mostra que o corte temporal preservou proporções semelhantes sem consultar o alvo para estratificar. Ocorrências repetidas de `TransactionDT`, desconsiderando a primeira de cada valor, correspondem a 2,9% das linhas; ao contar todas as linhas pertencentes a grupos de timestamps repetidos, a proporção é 5,7%. Nenhuma ocorrência do mesmo timestamp atravessa as fronteiras entre treino, validação e teste.
 
 ### Decisão: excluir `card4` e `card6` do pré-processamento
 

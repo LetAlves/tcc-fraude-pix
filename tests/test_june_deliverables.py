@@ -6,7 +6,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from scripts.gerar_entrega_junho import calcular_estatisticas, render_report
+from scripts.gerar_entrega_junho import (
+    calcular_estatisticas,
+    calcular_split_temporal,
+    render_report,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -67,6 +71,27 @@ class JuneDeliverablesTest(unittest.TestCase):
         self.assertEqual(stats["frauds"], 1)
         self.assertEqual(stats["fraud_rate"], 0.25)
         self.assertEqual(stats["identity_coverage"], 0.5)
+        self.assertEqual(
+            [part["rows"] for part in stats["temporal_split"]["partitions"]],
+            [2, 1, 1],
+        )
+
+    def test_temporal_split_keeps_equal_timestamps_together(self) -> None:
+        transactions = pd.DataFrame(
+            {
+                "TransactionID": list(range(1, 21)),
+                "TransactionDT": list(range(1, 15)) + [14, 15, 16, 17, 18, 19],
+                "isFraud": [0] * 17 + [1, 0, 1],
+            }
+        )
+
+        split = calcular_split_temporal(transactions)
+
+        self.assertTrue(split["boundaries_preserve_timestamps"])
+        self.assertEqual(
+            [part["rows"] for part in split["partitions"]],
+            [15, 2, 3],
+        )
 
     def test_report_keeps_pix_limitation_visible(self) -> None:
         registry = json.loads(
@@ -91,6 +116,21 @@ class JuneDeliverablesTest(unittest.TestCase):
             },
             "card1_unique": 3,
             "device_info_unique": 2,
+            "temporal_split": {
+                "partitions": [
+                    {"name": "treino", "rows": 2, "frauds": 0, "fraud_rate": 0.0},
+                    {
+                        "name": "validação",
+                        "rows": 1,
+                        "frauds": 0,
+                        "fraud_rate": 0.0,
+                    },
+                    {"name": "teste", "rows": 1, "frauds": 1, "fraud_rate": 1.0},
+                ],
+                "repeated_timestamp_rate": 0.0,
+                "rows_in_repeated_timestamp_groups_rate": 0.0,
+                "boundaries_preserve_timestamps": True,
+            },
         }
 
         report = render_report(stats, registry)
@@ -99,6 +139,8 @@ class JuneDeliverablesTest(unittest.TestCase):
         self.assertIn("features aprovadas pela dupla", report)
         self.assertIn("src/features/pix_features.py", report)
         self.assertIn("SMOTE", report)
+        self.assertIn("Protocolo temporal aprovado", report)
+        self.assertIn("preservando empates de `TransactionDT`", report)
 
     def test_monograph_chapters_use_existing_citations(self) -> None:
         bibliography = (PROJECT_ROOT / "monografia" / "referencias.bib").read_text(
