@@ -46,6 +46,11 @@ import sklearn
 
 logger = logging.getLogger(__name__)
 
+# Nivel de compressao do joblib. Estruturas de arvore comprimem muito bem, e o
+# projeto vive dentro de uma pasta sincronizada: cada regravacao de um artefato
+# nao comprimido subiria centenas de megabytes para a nuvem.
+COMPRESSAO = 3
+
 ARQUIVO_PREPROCESSADOR = "preprocessador.joblib"
 ARQUIVO_MANIFESTO = "manifest.json"
 ARQUIVO_MODELO_NATIVO = "modelo.json"
@@ -91,7 +96,7 @@ def salvar(
     diretorio = Path(diretorio)
     diretorio.mkdir(parents=True, exist_ok=True)
 
-    joblib.dump(preprocessador, diretorio / ARQUIVO_PREPROCESSADOR)
+    joblib.dump(preprocessador, diretorio / ARQUIVO_PREPROCESSADOR, compress=COMPRESSAO)
 
     if _e_xgboost(modelo):
         nome_modelo = ARQUIVO_MODELO_NATIVO
@@ -99,7 +104,7 @@ def salvar(
         formato = "xgboost_nativo"
     else:
         nome_modelo = ARQUIVO_MODELO_JOBLIB
-        joblib.dump(modelo, diretorio / nome_modelo)
+        joblib.dump(modelo, diretorio / nome_modelo, compress=COMPRESSAO)
         formato = "joblib"
 
     manifesto = {

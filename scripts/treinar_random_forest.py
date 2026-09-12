@@ -32,6 +32,7 @@ from src.features.preprocessor import (COLUNA_ALVO, construir_preprocessador,
                                        dividir_temporal, identificar_colunas,
                                        reduzir_precisao)
 from src.models.evaluator import avaliar_probabilidades
+from src.models.persistencia import salvar
 from src.models.random_forest import CONFIGURACOES, criar_modelo, descrever_arvores
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
@@ -39,6 +40,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 SAIDA = RAIZ / "reports" / "random_forest.json"
+DIRETORIO_MODELO = RAIZ / "models" / "random_forest"
+
+# Das duas configuracoes comparadas, apenas esta e persistida: e a adotada, e a
+# outra existe para sustentar o argumento da profundidade, nao para ser usada.
+CONFIGURACAO_ADOTADA = "arvores_completas"
 
 
 def main() -> None:
@@ -89,6 +95,25 @@ def main() -> None:
         marco("%s — auc_pr %.4f | f1 %.4f | %.0fs | profundidade média %.1f" % (
             nome, metricas["auc_pr"], metricas["f1"], segundos,
             resultados[nome]["arvores"]["profundidade_media"]))
+
+        if nome == CONFIGURACAO_ADOTADA:
+            salvar(
+                DIRETORIO_MODELO, preprocessador, modelo,
+                metadados={
+                    "tarefa": "m3_p1_2",
+                    "papel": "modelo comparativo da proposta aprovada",
+                    "configuracao": nome,
+                    "linhas_treino": int(M_treino.shape[0]),
+                    "colunas": int(M_treino.shape[1]),
+                    "desbalanceamento": "class_weight='balanced'",
+                    "split": "temporal 70/15/15",
+                    "metricas_validacao": metricas,
+                    "segundos_treino": round(segundos, 1),
+                },
+            )
+            resultados[nome]["modelo_salvo_em"] = str(DIRETORIO_MODELO)
+            marco("modelo persistido em %s" % DIRETORIO_MODELO)
+
         del modelo
         gc.collect()
 

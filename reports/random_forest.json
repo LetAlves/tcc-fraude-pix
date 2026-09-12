@@ -10,14 +10,15 @@
     "n_fraudes": 3042,
     "taxa_base": 0.03434145019812375,
     "auc_pr_relativo": 15.426614569550347,
-    "segundos_treino": 176.3,
+    "segundos_treino": 172.7,
     "arvores": {
       "n_arvores": 100,
       "profundidade_media": 64.33,
       "profundidade_maxima": 81,
       "folhas_media": 16430.29
     },
-    "max_depth": null
+    "max_depth": null,
+    "modelo_salvo_em": "C:\\Users\\alves\\OneDrive\\Documentos\\tcc-fraude-cartao\\models\\random_forest"
   },
   "profundidade_20": {
     "auc_roc": 0.8751389523857682,
@@ -30,7 +31,7 @@
     "n_fraudes": 3042,
     "taxa_base": 0.03434145019812375,
     "auc_pr_relativo": 13.31692952933758,
-    "segundos_treino": 139.8,
+    "segundos_treino": 137.9,
     "arvores": {
       "n_arvores": 100,
       "profundidade_media": 20.0,
@@ -51,7 +52,7 @@
   "_meta": {
     "linhas_treino": 413378,
     "colunas": 460,
-    "segundos": 453,
-    "pico_mb": 3647
+    "segundos": 519,
+    "pico_mb": 4441
   }
 }

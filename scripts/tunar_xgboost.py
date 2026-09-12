@@ -31,6 +31,7 @@ from src.features.preprocessor import (COLUNA_ALVO, construir_preprocessador,
                                        dividir_temporal, identificar_colunas,
                                        reduzir_precisao)
 from src.models.evaluator import avaliar_probabilidades
+from src.models.persistencia import salvar
 from src.models.xgboost_tuning import buscar, criar_modelo, razao_entre_classes, resumo
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
@@ -38,6 +39,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 SAIDA = RAIZ / "reports" / "tuning_xgboost.json"
+DIRETORIO_MODELO = RAIZ / "models" / "xgboost"
 
 
 def main(n_tentativas: int = 50) -> None:
@@ -97,6 +99,38 @@ def main(n_tentativas: int = 50) -> None:
         "segundos": round(time.time() - inicio),
         "pico_mb": round(processo.memory_info().peak_wset / 1e6),
     }
+
+    # Modelo final: os melhores hiperparametros, com o numero de arvores que a
+    # parada antecipada selecionou naquela tentativa. Sem fixar esse numero, o
+    # modelo final treinaria ate o teto e seria diferente do que foi avaliado.
+    marco("treinando o modelo final com os melhores hiperparametros...")
+    final = criar_modelo(
+        relatorio["melhores_parametros"], razao,
+        n_estimators=relatorio["n_arvores_da_melhor"],
+    )
+    final.fit(M_treino, y_treino)
+    metricas_final = avaliar_probabilidades(
+        y_validacao, final.predict_proba(M_validacao)[:, 1])
+    relatorio["metricas_modelo_final_validacao"] = metricas_final
+    marco("modelo final — AUC-PR %.4f" % metricas_final["auc_pr"])
+
+    salvar(
+        DIRETORIO_MODELO, preprocessador, final,
+        metadados={
+            "tarefa": "m3_p1_1",
+            "papel": "modelo principal da proposta aprovada",
+            "hiperparametros": relatorio["melhores_parametros"],
+            "n_arvores": relatorio["n_arvores_da_melhor"],
+            "n_tentativas": relatorio["n_tentativas"],
+            "scale_pos_weight": razao,
+            "linhas_treino": int(M_treino.shape[0]),
+            "colunas": int(M_treino.shape[1]),
+            "split": "temporal 70/15/15",
+            "metricas_validacao": metricas_final,
+        },
+    )
+    relatorio["modelo_salvo_em"] = str(DIRETORIO_MODELO)
+    marco("modelo persistido em %s" % DIRETORIO_MODELO)
 
     SAIDA.write_text(json.dumps(relatorio, indent=2, ensure_ascii=False), encoding="utf-8")
     marco("resultado gravado em %s" % SAIDA)
