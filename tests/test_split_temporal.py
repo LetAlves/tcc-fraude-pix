@@ -5,7 +5,7 @@ formam um bloco indivisível e nunca podem ficar em conjuntos diferentes.
 Cortar no meio de um bloco é vazamento temporal — o modelo veria, no treino,
 eventos do mesmo instante que precisa prever.
 
-No IEEE-CIS, 2,9% das linhas compartilham timestamp com outra transação, e no
+No IEEE-CIS, 5,7% das linhas pertencem a grupos com `TransactionDT` repetido, e no
 recorte 70/15/15 nenhum bloco chega a ser atravessado. Esses testes garantem
 que isso não é sorte das frações escolhidas.
 """

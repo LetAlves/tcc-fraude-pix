@@ -204,7 +204,7 @@ def dividir_temporal(
     if df[coluna_tempo].isna().any():
         raise ValueError(f"{coluna_tempo} não pode conter valores ausentes")
 
-    # mergesort é estável: entre linhas de mesmo timestamp (2,9% das linhas do
+    # mergesort é estável: entre linhas de mesmo timestamp (5,7% das linhas do
     # IEEE-CIS) preserva a ordem original, mantendo a fronteira do corte igual
     # entre execuções. O quicksort padrão do sort_values não garante isso.
     ordenado = df.sort_values(coluna_tempo, kind="mergesort").reset_index(drop=True)
