@@ -393,6 +393,27 @@ Em termos de trabalho, os dois pontos de operação são produtos diferentes: "a
 
 **Por que importa pro TCC**: entrega o modelo comparativo exigido pela proposta com número próprio, e produz duas ressalvas que sustentam a honestidade da tabela comparativa — o empate com o XGBoost não ajustado e a incomparabilidade das métricas de limiar.
 
+### Registro de versões do ambiente
+
+Criado `requirements-lock.txt` em 12/09/2026, com as versões exatas do ambiente que produziu todos os resultados registrados até aqui. As principais:
+
+| Biblioteca | Versão |
+|---|---|
+| Python | 3.13.9 |
+| numpy | 2.5.2 |
+| pandas | 3.0.5 |
+| scikit-learn | 1.9.0 |
+| xgboost | 3.4.1 |
+| imbalanced-learn | 0.14.2 |
+| optuna | 4.9.0 |
+| shap | 0.52.0 |
+
+**Efeito sobre a limitação de reprodutibilidade já declarada.** Havia duas fontes de variação: a ordem das somas em `float32` com operações matriciais paralelas, que é inerente e permanece, e o desconhecimento de quais versões produziram os números, que este arquivo elimina. A redação do Capítulo 5 deve distinguir as duas — dizer apenas "não é reprodutível" é mais fraco e menos preciso do que a situação real.
+
+Correção registrada de passagem: o README afirmava que o ambiente fora validado com Python 3.12; o interpretador em uso é 3.13.9.
+
+**Por que importa pro TCC**: permite que a banca, ou qualquer pessoa, reconstrua o ambiente exato. Sem isso, "os resultados não reproduzem" fica sem explicação possível.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.

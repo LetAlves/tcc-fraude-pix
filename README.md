@@ -48,7 +48,7 @@ O laboratório de LangChain não é o RAG final. Os textos da monografia ainda e
 
 ## Instalação — Windows / PowerShell
 
-Pré-requisitos: Git e Python. O ambiente de desenvolvimento foi validado com **Python 3.12**.
+Pré-requisitos: Git e Python. O ambiente de desenvolvimento foi validado com **Python 3.13.9** em Windows 10.
 
 ```powershell
 git clone https://github.com/LetAlves/tcc-fraude-pix.git
@@ -59,7 +59,13 @@ python -m venv .venv
 
 Execute os comandos seguintes na raiz do repositório. Eles usam diretamente o Python da venv, sem exigir sua ativação ou alteração da política de execução do PowerShell. Em Linux/macOS, o executável equivalente é `.venv/bin/python`.
 
-As dependências estão em [requirements.txt](requirements.txt). Atualmente elas usam limites mínimos de versão, sem um lockfile; registre as versões efetivamente utilizadas em cada experimento.
+As dependências diretas estão em [requirements.txt](requirements.txt), com limites mínimos de versão. Para **reproduzir os números registrados no trabalho**, instale a partir de [requirements-lock.txt](requirements-lock.txt), que fixa as versões exatas do ambiente que os produziu:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+```
+
+Fixar as versões não torna a execução reprodutível bit a bit — o caminho de modelagem usa `float32` e as operações matriciais são paralelas, então a ordem das somas varia e os resultados mudam a partir da terceira casa decimal. O lockfile elimina a outra fonte de variação: não saber com que versões os números foram produzidos.
 
 ## Dataset e autenticação Kaggle
 
