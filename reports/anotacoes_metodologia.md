@@ -352,6 +352,47 @@ As três correções foram verificadas como neutras em resultado: saída idênti
 
 **Por que importa pro TCC**: fixa a fonte única dos números de junho, produzida pelo mesmo código de avaliação que julho vai usar, e documenta o padrão de consumo que limita o que é viável executar na máquina disponível.
 
+## Julho — Modelos principais e explicabilidade
+
+### Random Forest comparativo: duas configurações (m3_p1_2)
+
+Execução de 11/09/2026 no conjunto de treino completo (413.378 × 460), 100 árvores, `class_weight='balanced'` — o mesmo tratamento de desbalanceamento da regressão logística e do `scale_pos_weight` do XGBoost, para que a comparação meça o algoritmo e não a estratégia de desbalanceamento. Sem busca de hiperparâmetros: a proposta aprovada define o Random Forest como modelo comparativo, e isso precisa estar dito no texto para que a comparação com um XGBoost ajustado não pareça enviesada.
+
+| Configuração | AUC-PR | AUC-ROC | Recall | Precisão | F1 | Tempo | Profundidade média | Folhas/árvore |
+|---|---|---|---|---|---|---|---|---|
+| Árvores completas | **0,5298** | **0,9078** | 0,3192 | **0,8018** | 0,4566 | 176 s | 64,3 | 16.430 |
+| Profundidade ≤ 20 | 0,4573 | 0,8751 | 0,4757 | 0,3988 | 0,4339 | 140 s | 20,0 | 4.965 |
+
+#### Por que duas configurações, e a correção de uma conclusão precipitada
+
+A medição preliminar de custo usou **10 árvores** e mostrou AUC-PR praticamente idêntica entre as duas configurações (0,4189 contra 0,4187), o que levou à conclusão de que a profundidade extra não comprava desempenho. **Com 100 árvores a conclusão se inverte**: a diferença é de 0,0725 a favor das árvores completas.
+
+O motivo está no mecanismo do próprio algoritmo. Árvores profundas decoram individualmente, e é a média de muitas delas que converte capacidade em generalização. Com 10 árvores a média não tem de quem tirar e as duas configurações empatam por baixo; com 100, a floresta profunda aproveita a capacidade. **Extrapolar de 10 para 100 falhou porque a propriedade em questão depende justamente do número de árvores.**
+
+Registro da lição: extrapolação linear vale para custo (tempo e memória cresceram como previsto), não para qualidade.
+
+#### O XGBoost só se separa depois do ajuste
+
+| Modelo (validação) | AUC-PR |
+|---|---|
+| Regressão logística (baseline de junho) | 0,3930 |
+| Random Forest, profundidade ≤ 20 | 0,4573 |
+| XGBoost padrão | 0,5293 |
+| **Random Forest, árvores completas** | **0,5298** |
+| XGBoost, melhor tentativa do Optuna até agora | 0,5794 |
+
+O Random Forest **empata com o XGBoost sem ajuste**. A monografia não pode afirmar superioridade do XGBoost sobre o comparativo de forma genérica: o que a evidência sustenta é que o XGBoost se separa **depois da busca de hiperparâmetros**.
+
+#### Pontos de operação incomparáveis no limiar padrão
+
+No limiar 0,5, o Random Forest com árvores completas opera em **precisão 0,80 com recall 0,32**; o XGBoost padrão, em **precisão 0,27 com recall 0,67**. Marcam quantidades muito diferentes de transações e acertam em proporções muito diferentes.
+
+Comparar F1, precisão ou recall entre modelos nesse limiar compara **calibração de probabilidade**, não qualidade de modelo — cada modelo distribui suas probabilidades de forma própria, e o corte de 0,5 cai em lugares distintos de cada curva. A comparação legítima é a AUC-PR, que independe do limiar. **Isso precisa estar escrito no Capítulo 4**, senão a tabela sugere que o Random Forest tem precisão muito superior à do XGBoost, o que é falso.
+
+Em termos de trabalho, os dois pontos de operação são produtos diferentes: "acusa pouco e quase sempre acerta" contra "acusa muito e recupera mais fraude". A escolha entre eles é decisão de negócio, não de métrica, e cabe como discussão no Capítulo 5.
+
+**Por que importa pro TCC**: entrega o modelo comparativo exigido pela proposta com número próprio, e produz duas ressalvas que sustentam a honestidade da tabela comparativa — o empate com o XGBoost não ajustado e a incomparabilidade das métricas de limiar.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.
