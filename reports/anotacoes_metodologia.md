@@ -320,6 +320,38 @@ Todas as diferenças ficam em 0,0007 ou menos, dentro da faixa de ruído já doc
 
 **Por que importa pro TCC**: documenta que uma correção de causalidade feita depois dos experimentos foi verificada, e não presumida inofensiva. O tamanho da população afetada (0,053%) explica por que o efeito é nulo na prática, sem que isso sirva de desculpa para não medir.
 
+### Números canônicos definitivos de junho (m2_p1_6)
+
+Execução de 11/09/2026 do `notebooks/02_preprocessing.ipynb` no dataset completo, já sobre as features corrigidas e usando `src/models/evaluator.py`. Duração 45 minutos, zero erros, onze células de código. **Estes substituem todos os valores registrados antes** — as execuções anteriores usavam as features com o vazamento causal e uma função de avaliação definida dentro do notebook.
+
+| Métrica | Validação (ponderação) | Validação (SMOTE) | Teste (ponderação) | Teste (SMOTE) |
+|---|---|---|---|---|
+| AUC-PR | 0,3930 | 0,3962 | **0,1850** | 0,1852 |
+| AUC-ROC | 0,8410 | 0,8391 | 0,8286 | 0,8238 |
+| Recall | 0,6772 | 0,6831 | 0,7026 | 0,7078 |
+| Precisão | 0,1350 | 0,1315 | 0,1237 | 0,1216 |
+| F1 | 0,2251 | 0,2205 | 0,2103 | 0,2076 |
+
+Leitura operacional no teste, com a estratégia adotada: 2.166 fraudes recuperadas de 3.083, 917 perdidas, 17.513 transações marcadas (19,8% do total) das quais 15.347 são alarme falso.
+
+**O empate foi medido quatro vezes, com o vencedor alternando:** amostra de 50.000 (ponderação por 0,006), dataset completo na validação (SMOTE por 0,003), teste do controle (ponderação por 0,002) e agora o teste do notebook (SMOTE por 0,0002). A margem sempre menor que o ruído entre execuções encerra a discussão de desempenho: **a decisão pela ponderação de classe se sustenta exclusivamente nos critérios secundários**, e a seção 8 do notebook passou a declarar o critério em vez de selecionar pelo maior AUC-PR.
+
+#### Três cópias do DataFrame eliminadas
+
+A execução abortou duas vezes com `MemoryError` pedindo 1,76 GiB para um bloco de 399 × 590.540 em `float64`. Três pontos distintos operavam o DataFrame inteiro para usar poucas colunas, cada um encoberto pelo anterior:
+
+| Ponto | Efeito medido |
+|---|---|
+| `valor_atipico_proxy` ordenava 434 colunas por (card1, tempo) | 15 min → 18 s |
+| `reduzir_precisao` atribuía coluna a coluna, forçando reconsolidação | 4,7 min → 1,1 s |
+| `criar_features_pix` usava `pd.concat` para acrescentar 6 colunas | destravou a execução |
+
+As três correções foram verificadas como neutras em resultado: saída idêntica em 200.000 linhas reais, com zero linhas divergentes, e os 30 testes da suíte passando. A execução caiu de 1h25 para 45 minutos.
+
+**Regra prática que resume os três casos, e que vale para julho**: selecionar as colunas **antes** de ordenar, copiar ou transformar, nunca depois. Um bloco `float64` de 399 colunas × 590 mil linhas exige 1,76 GiB em alocação única — se não houver esse espaço contíguo, aborta, por mais memória total que a máquina tenha.
+
+**Por que importa pro TCC**: fixa a fonte única dos números de junho, produzida pelo mesmo código de avaliação que julho vai usar, e documenta o padrão de consumo que limita o que é viável executar na máquina disponível.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.

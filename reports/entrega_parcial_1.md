@@ -21,26 +21,28 @@ Regressão logística, limiar 0,5. Duas estratégias de desbalanceamento compara
 | | Validação | | Teste | |
 |---|---|---|---|---|
 | **Métrica** | Ponderação | SMOTE | Ponderação | SMOTE |
-| AUC-PR | 0,3934 | 0,3967 | 0,1858 | 0,1840 |
-| AUC-ROC | 0,8414 | 0,8392 | 0,8289 | 0,8234 |
-| Recall | 0,6785 | 0,6831 | 0,7032 | 0,7071 |
-| Precisão | 0,1347 | 0,1316 | 0,1236 | 0,1213 |
+| AUC-PR | 0,3930 | 0,3962 | 0,1850 | 0,1852 |
+| AUC-ROC | 0,8410 | 0,8391 | 0,8286 | 0,8238 |
+| Recall | 0,6772 | 0,6831 | 0,7026 | 0,7078 |
+| Precisão | 0,1350 | 0,1315 | 0,1237 | 0,1216 |
 
-**As duas estratégias empataram**, na validação e no teste (diferenças de 0,003 e 0,002). O sinal da diferença inclusive se inverte conforme o recorte dos dados. A escolha entre elas será feita por critérios secundários — não fabricar dados sintéticos, não interpolar variáveis categóricas e custo computacional (o SMOTE levou 42 minutos contra 6) — e não por desempenho.
+**As duas estratégias empataram**, na validação e no teste — diferenças de 0,003 e 0,0002. O vencedor muda de lado conforme o recorte: em uma amostra de 50.000 linhas a ponderação vencia pela mesma ordem de margem. Quando isso acontece, a diferença é ruído.
 
-Em termos operacionais no teste: das 3.083 fraudes o modelo recupera cerca de 2.180, marcando ~18.000 das 88.581 transações como suspeitas. São 20% do total, com 8 de cada 10 acusações sendo alarme falso — comportamento esperado de um baseline linear, e o piso que os modelos de julho precisam superar.
+**A estratégia adotada é a ponderação de classe**, por critérios declarados antes da avaliação final e registrados em `reports/anotacoes_metodologia.md`: não fabricar dados sintéticos, não interpolar variáveis categóricas já codificadas, e custo computacional (o SMOTE levou 42 minutos de treino contra 6). O número do SMOTE no teste é reportado por transparência e não participou da escolha — selecionar a estratégia vendo o conjunto de teste o transformaria em mais um conjunto de validação.
+
+Em termos operacionais no teste: das 3.083 fraudes o modelo recupera **2.166** e perde 917, marcando **17.513 das 88.581 transações** como suspeitas — 19,8% do total, com 8 de cada 10 acusações sendo alarme falso. É o comportamento esperado de um baseline linear, e o piso que os modelos de julho precisam superar.
 
 ## 3. Achado principal: degradação temporal
 
-**A AUC-PR cai pela metade entre validação e teste — de 0,3934 para 0,1858.** A queda não se explica por desbalanceamento: as taxas base são equivalentes (3,43% e 3,48%), a AUC-ROC quase não se move e o recall até sobe. O que se degrada é a pureza das previsões de maior confiança no período mais recente, comportamento compatível com envelhecimento dos padrões.
+**A AUC-PR cai pela metade entre validação e teste — de 0,3930 para 0,1850.** A queda não se explica por desbalanceamento: as taxas base são equivalentes (3,43% e 3,48%), a AUC-ROC quase não se move e o recall até sobe. O que se degrada é a pureza das previsões de maior confiança no período mais recente, comportamento compatível com envelhecimento dos padrões.
 
 No controle complementar, a diferença entre períodos desapareceu quando as linhas foram misturadas por uma divisão aleatória estratificada. O experimento usou o mesmo modelo e os mesmos dados, mudando apenas a forma de dividir:
 
 | | Corte temporal | Divisão aleatória |
 |---|---|---|
-| AUC-PR validação | 0,3936 | 0,4220 |
-| AUC-PR teste | 0,1858 | 0,4250 |
-| Variação | **−52,8%** | +0,7% |
+| AUC-PR validação | 0,3933 | 0,4213 |
+| AUC-PR teste | 0,1860 | 0,4243 |
+| Variação | **−52,7%** | +0,7% |
 
 A divisão aleatória reporta **2,3 vezes** a AUC-PR no teste e não mostra degradação alguma: descreveria um modelo estável e duas vezes melhor do que ele é. *Ressalva:* ela também coloca transações do mesmo identificador de cartão nos dois lados, então a diferença combina período e identificador compartilhados, e não se atribui inteiramente ao tempo.
 
