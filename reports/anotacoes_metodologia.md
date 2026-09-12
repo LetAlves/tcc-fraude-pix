@@ -1,7 +1,7 @@
 # Anotações da Metodologia — TCC Fraude Pix
 
 Registro compartilhado de entendimentos importantes discutidos ao longo do cronograma.
-Objetivo: virar base direta de parágrafos do TCC (principalmente Capítulo 3 — Metodologia) sem precisar reconstruir o raciocínio depois. Preencher juntos (Letícia e Lucas) conforme as tarefas do [cronograma](https://letalves.github.io/tcc-fraude-pix/) forem concluídas.
+Objetivo: virar base direta de parágrafos do TCC (principalmente Capítulo 3 — Metodologia) sem precisar reconstruir o raciocínio depois. Preencher juntos (Letícia e Lucas) conforme as tarefas do [cronograma](https://lunogueira-67.github.io/tcc-organizador-tarefas/) forem concluídas.
 
 ---
 

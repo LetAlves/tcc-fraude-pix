@@ -6,7 +6,7 @@ Prova de conceito acadêmica para **detecção e explicação de risco de fraude
 
 > O IEEE-CIS contém transações do domínio de comércio eletrônico/cartão, não transações Pix reais. As features do projeto representam analogias analíticas documentadas. Os experimentos não comprovam desempenho operacional no Pix e o protótipo não deve ser usado para bloquear transações ou acusar pessoas.
 
-[Guia do TCC](https://letalves.github.io/tcc-fraude-pix/) · [Entregas de maio](reports/pessoa_2/maio/README.md) · [Entregas de junho](reports/pessoa_2/junho/README.md) · [Entregas de julho](reports/pessoa_2/julho/README.md) · [Revalidação de setembro](reports/pessoa_2/setembro/README.md) · [Monografia](monografia/README.md) · [Como contribuir](CONTRIBUTING.md)
+[Cronograma de tarefas](https://lunogueira-67.github.io/tcc-organizador-tarefas/) · [Entregas de maio](reports/pessoa_2/maio/README.md) · [Entregas de junho](reports/pessoa_2/junho/README.md) · [Entregas de julho](reports/pessoa_2/julho/README.md) · [Revalidação de setembro](reports/pessoa_2/setembro/README.md) · [Monografia](monografia/README.md) · [Como contribuir](CONTRIBUTING.md)
 
 ## Arquitetura proposta
 
