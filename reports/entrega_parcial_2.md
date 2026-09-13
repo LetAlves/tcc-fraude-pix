@@ -30,11 +30,11 @@ Conjunto de validação: 88.581 transações, 3.042 fraudes, taxa base 3,434%. A
 |---|---|---|---|
 | Regressão logística (baseline de junho) | 0,3930 | 0,8410 | 6 min |
 | Random Forest, profundidade ≤ 20 | 0,4573 | 0,8751 | 140 s |
-| XGBoost, hiperparâmetros padrão | 0,5293 | _a completar_ | 56 s |
+| XGBoost, hiperparâmetros padrão | 0,5293 | 0,9044 | 56 s |
 | Random Forest, árvores completas | 0,5298 | 0,9078 | 176 s |
-| **XGBoost ajustado (Optuna)** | _a preencher_ | _a preencher_ | _a preencher_ |
+| **XGBoost ajustado (Optuna, retreino completo)** | **0,5703** | **0,9070** | 30 s¹ |
 
-> ⚠️ **A PREENCHER — busca de hiperparâmetros do XGBoost.** Depende da execução da `m3_p1_1`. Resultado preliminar de duas tentativas indicou AUC-PR de 0,5794, acima do XGBoost padrão, mas **duas tentativas não são um resultado** e esse número não deve ser citado.
+¹ Tempo aproximado somente do retreino final. A busca com 50 tentativas levou 829 s; o fluxo completo levou 902 s e atingiu pico de 5.266 MB.
 
 **Dois pontos que a tabela já sustenta:**
 
@@ -44,12 +44,16 @@ O **Random Forest empata com o XGBoost sem ajuste** (0,5298 contra 0,5293). Não
 
 ## 3. Metodologia da busca de hiperparâmetros
 
-Quatro decisões, fixadas antes de rodar e registradas em `reports/anotacoes_metodologia.md`:
+Seis decisões, registradas em `reports/anotacoes_metodologia.md`:
 
 1. **A métrica otimizada é a AUC-PR na validação.** Otimizar AUC-ROC premiaria ordenar bem os 96,5% de casos fáceis; acurácia premiaria não detectar nada.
 2. **O parâmetro de desbalanceamento não entra na busca.** Fica fixo na razão real entre classes (27,43), que é a forma do XGBoost expressar a ponderação de classe adotada em junho. Deixá-lo variar transformaria uma decisão metodológica já comparada em mais um hiperparâmetro.
 3. **O pré-processamento é ajustado uma vez, fora da busca.** Não depende dos hiperparâmetros, e é ajustado somente no treino — validação e teste apenas recebem a transformação.
 4. **O conjunto de teste não é tocado durante a busca.** A seleção acontece na validação; o teste é avaliado uma única vez, ao final, com o modelo já escolhido.
+5. **A busca usa uma amostra temporal do treino.** Cada tentativa usa as 150 mil transações mais recentes do treino, com a validação completa. O candidato alcançou AUC-PR 0,5912 nessa condição; depois de retreinado no treino completo, obteve 0,5703, que é o número oficial. A diferença é registrada como custo da aproximação.
+6. **O espaço e a poda foram reduzidos por viabilidade.** O teto passou de 600 para 300 árvores e a profundidade máxima de 10 para 8. Um `MedianPruner` interrompeu 25 das 50 tentativas após aquecimento. A melhor configuração atingiu os dois tetos, portanto não se afirma que seja um ótimo global.
+
+Os melhores parâmetros foram `learning_rate=0,2308`, `max_depth=8`, `min_child_weight=14,5371`, `subsample=0,8712`, `colsample_bytree=0,9159`, `gamma=1,6854`, `reg_alpha=0,1130` e `reg_lambda=1,2327`, com 300 árvores e `scale_pos_weight=27,4343` fixo.
 
 ## 4. Explicabilidade — SHAP
 
@@ -83,6 +87,8 @@ Uma medição preliminar com 10 árvores havia indicado empate entre as duas con
 - **Três variáveis da proposta não têm equivalente no IEEE-CIS**: tipo de chave Pix, perfil do destinatário e idade da conta.
 - **O Random Forest não passou por busca de hiperparâmetros**, conforme seu papel de modelo comparativo na proposta. A comparação com o XGBoost ajustado precisa ser lida com essa assimetria em mente.
 - **A execução não é reprodutível bit a bit**: o uso de `float32`, necessário para caber na memória disponível, faz os resultados variarem a partir da terceira casa decimal.
+- **A busca amostral é uma aproximação**: o melhor candidato na cauda do treino marcou 0,5912, mas o mesmo conjunto de parâmetros retreinado no treino completo marcou 0,5703. Só o segundo valor entra na comparação final.
+- **A melhor tentativa atingiu os limites do espaço reduzido** (300 árvores e profundidade 8), de modo que a busca não demonstra que esses tetos sejam ótimos globais.
 - **A degradação temporal identificada em junho continua valendo** e deve ser verificada também nos modelos desta etapa.
 
 ## 8. Próxima etapa

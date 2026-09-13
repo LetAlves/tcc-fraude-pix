@@ -36,7 +36,7 @@ Situação verificada localmente em **12/09/2026**. As entregas de junho e julho
 | SMOTE e ponderação de classe | Comparados em quatro medições; empate, adotada a ponderação | [Anotações de metodologia](reports/anotacoes_metodologia.md) |
 | Baseline (regressão logística) | Executado no dataset completo; AUC-PR 0,3930 na validação e 0,1850 no teste | [Notebook 02 executado](notebooks/02_preprocessing.ipynb) |
 | Random Forest (modelo comparativo) | Treinado em duas configurações; AUC-PR 0,5298 | [Script](scripts/treinar_random_forest.py) |
-| XGBoost (modelo principal) | Busca de hiperparâmetros implementada; execução completa pendente | [Módulo de busca](src/models/xgboost_tuning.py) |
+| XGBoost (modelo principal) | 50 tentativas executadas; AUC-PR 0,5703 após retreino completo | [Resultado da busca](reports/tuning_xgboost.json) |
 | Avaliação e escolha de limiar | Implementadas em módulo único, usado por todos os modelos | [Evaluator](src/models/evaluator.py) |
 | Persistência de modelos | Implementada, com manifesto, hashes e compressão | [Persistência](src/models/persistencia.py) |
 | RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |

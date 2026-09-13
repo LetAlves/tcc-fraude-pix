@@ -367,6 +367,31 @@ As três correções foram verificadas como neutras em resultado: saída idênti
 
 ## Julho — Modelos principais e explicabilidade
 
+### Busca de hiperparâmetros do XGBoost (m3_p1_1)
+
+Execução de 12/09/2026 com 50 tentativas do Optuna. Para que a busca coubesse na máquina disponível, o espaço foi limitado a **300 árvores** e profundidade máxima **8**, e cada tentativa foi treinada nas **150.000 transações mais recentes do conjunto de treino**. A validação permaneceu completa, com 88.581 transações. Depois da escolha, os melhores parâmetros foram treinados novamente nas 413.378 linhas do treino completo.
+
+O pré-processador foi ajustado uma única vez, somente no treino completo. O `scale_pos_weight` ficou fixo em 27,4343, calculado nesse mesmo treino, e não entrou na busca. O conjunto de teste não foi transformado, consultado nem usado para escolher parâmetros.
+
+O Optuna usou `MedianPruner`: cinco tentativas iniciais completas, 50 árvores de aquecimento e verificações a cada dez árvores. A poda usou a `aucpr` interna do XGBoost como sinal intermediário; a métrica de seleção das tentativas completas e todos os números apresentados abaixo vieram do `src/models/evaluator.py`.
+
+| Modelo/etapa na validação | Dados usados no ajuste do modelo | AUC-PR | AUC-ROC | Recall | Precisão |
+|---|---:|---:|---:|---:|---:|
+| Regressão logística de junho | treino completo | 0,3930 | 0,8410 | 0,6772 | 0,1350 |
+| XGBoost padrão | treino completo | 0,5293 | 0,9044 | 0,6749 | 0,2675 |
+| Melhor tentativa da busca | cauda de 150 mil | 0,5912 | 0,9076 | 0,5181 | 0,6420 |
+| **XGBoost final ajustado** | **treino completo** | **0,5703** | **0,9070** | **0,5621** | **0,5198** |
+
+O número oficial para comparar modelos é **0,5703**, obtido depois de treinar os parâmetros selecionados no treino completo. O 0,5912 mede o candidato durante a busca amostral e não deve ser apresentado como desempenho final. A diferença de 0,0209 entre os dois confirma o custo metodológico antecipado: otimizar na cauda reduz muito o custo, mas o alvo não é idêntico ao treino completo.
+
+Foram concluídas 25 tentativas e podadas 25, sem falhas. A busca levou **829 s (13 min 49 s)**; o fluxo completo, incluindo carregamento, pré-processamento, referências, retreino e persistência, levou **902 s (15 min 02 s)**. O pico de memória observado foi **5.266 MB**.
+
+Os melhores valores chegaram simultaneamente aos limites de **profundidade 8** e **300 árvores**. Portanto, o resultado comprova a melhor configuração encontrada **dentro do espaço reduzido**, mas não prova que a capacidade ótima esteja abaixo desses tetos. Ampliar somente essa vizinhança é uma possibilidade de refinamento futuro, não requisito para considerar a tarefa concluída.
+
+No limiar 0,5, o modelo final aumenta muito a precisão em relação ao baseline, mas reduz o recall. Isso não contradiz a comparação principal: a AUC-PR independe do limiar, enquanto precisão e recall dependem do ponto de operação. O XGBoost padrão já dobrou a precisão mantendo praticamente o recall do baseline; o limiar do modelo ajustado ainda deve ser escolhido na validação antes da única avaliação no teste.
+
+**Por que importa pro TCC**: conclui a busca reproduzível do modelo principal, quantifica o compromisso entre custo e fidelidade da amostragem, e mantém o teste reservado para a avaliação final. O artefato completo está em `reports/tuning_xgboost.json`; o banco local do Optuna e o modelo treinado permanecem fora do Git.
+
 ### Random Forest comparativo: duas configurações (m3_p1_2)
 
 Execução de 11/09/2026 no conjunto de treino completo (413.378 × 460), 100 árvores, `class_weight='balanced'` — o mesmo tratamento de desbalanceamento da regressão logística e do `scale_pos_weight` do XGBoost, para que a comparação meça o algoritmo e não a estratégia de desbalanceamento. Sem busca de hiperparâmetros: a proposta aprovada define o Random Forest como modelo comparativo, e isso precisa estar dito no texto para que a comparação com um XGBoost ajustado não pareça enviesada.
@@ -392,9 +417,9 @@ Registro da lição: extrapolação linear vale para custo (tempo e memória cre
 | Random Forest, profundidade ≤ 20 | 0,4573 |
 | XGBoost padrão | 0,5293 |
 | **Random Forest, árvores completas** | **0,5298** |
-| XGBoost, melhor tentativa do Optuna até agora | 0,5794 |
+| **XGBoost ajustado, retreinado no conjunto completo** | **0,5703** |
 
-O Random Forest **empata com o XGBoost sem ajuste**. A monografia não pode afirmar superioridade do XGBoost sobre o comparativo de forma genérica: o que a evidência sustenta é que o XGBoost se separa **depois da busca de hiperparâmetros**.
+O Random Forest **empata com o XGBoost sem ajuste**. Depois da busca de hiperparâmetros e do retreino no conjunto completo, o XGBoost chega a 0,5703 e abre 0,0405 de AUC-PR sobre o comparativo. A afirmação sustentada é específica: a vantagem aparece **depois do ajuste**, dentro do protocolo e do espaço de busca registrados.
 
 #### Pontos de operação incomparáveis no limiar padrão
 
