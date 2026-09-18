@@ -452,6 +452,40 @@ Correção registrada de passagem: o README afirmava que o ambiente fora validad
 
 **Por que importa pro TCC**: permite que a banca, ou qualquer pessoa, reconstrua o ambiente exato. Sem isso, "os resultados não reproduzem" fica sem explicação possível.
 
+### SHAP no XGBoost final (m3_p1_4)
+
+Execução de 17/09/2026 sobre o conjunto temporal de validação. O
+`TreeExplainer` foi configurado com `feature_perturbation="interventional"`,
+`model_output="probability"`, seed 42 e fundo de **500 linhas amostradas apenas
+do treino**. Foi necessário criar explicitamente um `Independent` masker com
+`max_samples=500`: no SHAP 0.52, passar a matriz diretamente reduz o fundo para
+100 linhas de modo automático, o que contrariaria o protocolo descrito no
+Capítulo 3.
+
+A importância global foi calculada em 1.000 transações aleatórias da validação.
+As cinco primeiras features foram `TransactionAmt`, `C13`, `C1`, `C14` e
+`card1`. Entre as proxies documentadas, `valor_atipico_proxy` ficou em 7º e
+`frequencia_recente_proxy` em 13º. Essas posições descrevem influência no
+classificador; não autorizam significado semântico para colunas anônimas.
+
+Foram explicados quatro casos locais, um de cada quadrante, selecionados pela
+probabilidade mediana do grupo: verdadeiro positivo (0,9624), falso positivo
+(0,6692), falso negativo (0,1210) e verdadeiro negativo (0,0098). O maior erro
+na identidade `valor_base + soma(phi) = probabilidade` foi **3,04 × 10⁻⁷**,
+abaixo da tolerância 10⁻⁵.
+
+**Compatibilidade registrada.** XGBoost 3.4.1 com SHAP 0.52 recusa o modo
+interventional mesmo quando as categorias já foram codificadas. A explicação
+foi executada com XGBoost 3.0.5, scikit-learn 1.9.0 e SHAP 0.52. O modelo foi
+reconstruído com os parâmetros finais já selecionados, sem repetir a busca, e
+obteve AUC-PR 0,5719. A pequena variação de versão não substitui o resultado
+canônico da comparação (0,5703), produzido pelo ambiente histórico e preservado
+em `reports/tuning_xgboost.json`.
+
+**Por que importa pro TCC**: conclui a Camada 2 com evidência global, local e
+teste de fidelidade numérica. Os artefatos e o notebook comparativo executado
+estão em `reports/pessoa_1/julho/` e `notebooks/03_models.ipynb`.
+
 ### LangChain
 
 O laboratório de junho usa `Document`, um retriever lexical e composição por `Runnable` com `PromptTemplate`. Ele não chama LLM e não é o RAG final. Seu objetivo é validar as interfaces e as restrições antes da inclusão de embeddings e FAISS.

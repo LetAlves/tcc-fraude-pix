@@ -4,7 +4,7 @@ numpy>=1.26.0
 
 # ── Machine Learning ──────────────────────────────────────────────────────────
 scikit-learn>=1.4.0
-xgboost>=2.0.0                # modelo principal do TCC
+xgboost>=2.0.0,<3.4.0         # 3.4.x quebra TreeExplainer interventional no SHAP 0.52
 imbalanced-learn>=0.12.0      # SMOTE para desbalanceamento
 joblib>=1.3.0                 # persistência do modelo e do pré-processador
 

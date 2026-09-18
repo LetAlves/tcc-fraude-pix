@@ -23,7 +23,7 @@ O [registro de features proposto no PR #2](https://github.com/LetAlves/tcc-fraud
 
 ## Estado do projeto
 
-Situação verificada localmente em **12/09/2026**. As entregas de junho e julho da Pessoa 2 estão integradas à `main`; o corpus RAG foi revalidado com o Guia MED 4.4. A camada de ML de junho está concluída e executada no dataset completo; julho está em andamento. Dependências instaladas não significam que todas as camadas já estejam implementadas.
+Situação verificada localmente em **17/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4. A interface e a integração final SHAP → RAG continuam pendentes. Dependências instaladas não significam que todas as camadas já estejam implementadas.
 
 | Componente | Situação | Evidência |
 |---|---|---|
@@ -37,10 +37,12 @@ Situação verificada localmente em **12/09/2026**. As entregas de junho e julho
 | Baseline (regressão logística) | Executado no dataset completo; AUC-PR 0,3930 na validação e 0,1850 no teste | [Notebook 02 executado](notebooks/02_preprocessing.ipynb) |
 | Random Forest (modelo comparativo) | Treinado em duas configurações; AUC-PR 0,5298 | [Script](scripts/treinar_random_forest.py) |
 | XGBoost (modelo principal) | 50 tentativas executadas; AUC-PR 0,5703 após retreino completo | [Resultado da busca](reports/tuning_xgboost.json) |
+| Comparação dos três modelos | Notebook executado com tabela e análise | [Notebook 03](notebooks/03_models.ipynb) |
 | Avaliação e escolha de limiar | Implementadas em módulo único, usado por todos os modelos | [Evaluator](src/models/evaluator.py) |
 | Persistência de modelos | Implementada, com manifesto, hashes e compressão | [Persistência](src/models/persistencia.py) |
 | RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |
-| SHAP executado e interface de demonstração | Planejados | [Metodologia SHAP](reports/pessoa_2/julho/04_metodologia_shap.md) |
+| SHAP no XGBoost | Executado: importância global, VP/FP/FN/VN e fidelidade aditiva aprovada | [Entrega de julho da Pessoa 1](reports/pessoa_1/julho/README.md) |
+| Interface de demonstração | Planejada | [Arquitetura proposta](#arquitetura-proposta) |
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
 
@@ -67,6 +69,11 @@ As dependências diretas estão em [requirements.txt](requirements.txt), com lim
 
 Fixar as versões não torna a execução reprodutível bit a bit — o caminho de modelagem usa `float32` e as operações matriciais são paralelas, então a ordem das somas varia e os resultados mudam a partir da terceira casa decimal. O lockfile elimina a outra fonte de variação: não saber com que versões os números foram produzidos.
 
+O lockfile preserva o ambiente histórico do tuning (XGBoost 3.4.1). Para gerar
+os artefatos SHAP, use `requirements.txt`, que mantém XGBoost abaixo de 3.4 por
+compatibilidade com o modo interventional do SHAP 0.52; a decisão está
+documentada na [entrega de julho da Pessoa 1](reports/pessoa_1/julho/README.md).
+
 ## Dataset e autenticação Kaggle
 
 1. Acesse a competição [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection) e aceite suas [regras](https://www.kaggle.com/competitions/ieee-fraud-detection/rules) na própria conta. O acesso pode exigir verificações adicionais do Kaggle.
@@ -87,6 +94,15 @@ data/raw/
 ```
 
 O download da competição também pode trazer outros CSVs. Se os dois arquivos de treino já existirem, `carregar_dados()` os reutiliza sem baixar novamente.
+
+Para manter os arquivos grandes fora de uma pasta sincronizada, defina o caminho
+antes da execução (ou em `.env`):
+
+```powershell
+$env:TCC_DATA_RAW = "C:\dados\ieee-fraud-detection"
+```
+
+O diretório deve conter `train_transaction.csv` e `train_identity.csv`.
 
 ### Dados e segredos não vão para o Git
 
@@ -184,7 +200,7 @@ Execute a suíte na raiz do projeto:
 git diff --check
 ```
 
-Na revalidação de 10/09/2026, **30 testes** foram aprovados. Eles cobrem o laboratório LangChain, o registro de features, estatísticas sintéticas, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não medem desempenho preditivo nem substituem uma avaliação anotada da recuperação ou uma validação completa dos modelos.
+Na revalidação de 17/09/2026, **81 testes** foram aprovados. Eles cobrem modelagem, avaliação, persistência, fidelidade SHAP, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação final do modelo no conjunto de teste.
 
 Para os próximos experimentos:
 
@@ -203,12 +219,12 @@ data/raw/                CSVs originais locais — ignorados pelo Git
 data/processed/          Dados derivados locais — ignorados pelo Git
 docs/                    Guia e cronograma estático do TCC
 monografia/              LaTeX, capítulos e bibliografia BibTeX
-notebooks/               Análise exploratória
+notebooks/               EDA, pré-processamento e comparação de modelos
 reports/                 Entregas, dicionário, anotações e atas
 scripts/                 Geração de documentos e relatórios
 src/data_loader.py       Download, leitura e junção dos dados
 src/features/            Engenharia de features Pix simuladas
-src/models/              Estrutura reservada para os modelos
+src/models/              Modelos, avaliação, persistência e explicabilidade SHAP
 src/rag/                 Laboratório LangChain, ingestão, embeddings e FAISS
 tests/                   Testes das entregas de junho e julho
 ```

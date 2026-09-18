@@ -79,6 +79,22 @@ def _e_xgboost(modelo: Any) -> bool:
     return type(modelo).__module__.startswith("xgboost")
 
 
+def _garantir_tipo_sklearn_xgboost(modelo: Any) -> None:
+    """Compatibilidade do XGBoost 3.0.x com scikit-learn recente.
+
+    O wrapper 3.0.x consulta ``_estimator_type`` ao salvar/carregar, mas
+    versoes recentes do scikit-learn deixaram de expo-lo pelo mixin legado.
+    Definir o atributo no classificador restaura apenas o metadado que o
+    proprio XGBoost espera; nao altera arvores, parametros ou previsoes.
+    """
+    if (
+        _e_xgboost(modelo)
+        and type(modelo).__name__ == "XGBClassifier"
+        and not hasattr(modelo, "_estimator_type")
+    ):
+        modelo._estimator_type = "classifier"
+
+
 def salvar(
     diretorio: Path | str,
     preprocessador: Any,
@@ -100,6 +116,7 @@ def salvar(
 
     if _e_xgboost(modelo):
         nome_modelo = ARQUIVO_MODELO_NATIVO
+        _garantir_tipo_sklearn_xgboost(modelo)
         modelo.save_model(diretorio / nome_modelo)
         formato = "xgboost_nativo"
     else:
@@ -161,6 +178,7 @@ def carregar(diretorio: Path | str, verificar_hashes: bool = True) -> tuple[Any,
     if manifesto["formato_do_modelo"] == "xgboost_nativo":
         from xgboost import XGBClassifier
         modelo = XGBClassifier()
+        _garantir_tipo_sklearn_xgboost(modelo)
         modelo.load_model(diretorio / manifesto["arquivo_do_modelo"])
     else:
         modelo = joblib.load(diretorio / manifesto["arquivo_do_modelo"])

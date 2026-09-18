@@ -4,6 +4,9 @@ __pycache__/
 .venv/
 venv/
 env/
+.mplconfig/
+.ipython/
+.jupyter/
 
 # Credenciais (NUNCA versionar)
 .env

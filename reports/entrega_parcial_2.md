@@ -1,7 +1,7 @@
 <!--
 RASCUNHO INCOMPLETO — NÃO ENVIAR.
 
-Três lacunas marcadas com "A PREENCHER" dependem de resultados que ainda não
+As lacunas marcadas com "A PREENCHER" dependem de resultados que ainda não
 existem. Enquanto elas estiverem no texto, este documento não está pronto para
 o orientador. Apagar este comentário e o aviso abaixo quando estiver completo.
 -->
@@ -57,7 +57,24 @@ Os melhores parâmetros foram `learning_rate=0,2308`, `max_depth=8`, `min_child_
 
 ## 4. Explicabilidade — SHAP
 
-> ⚠️ **A PREENCHER — Camada 2.** Depende da `m3_p1_4`, ainda não iniciada, que por sua vez depende do modelo final do XGBoost. Deve trazer: a importância global das variáveis, a explicação de transações individuais, e a ressalva de que contribuição do SHAP indica influência sobre a decisão do modelo, **não causalidade** nem significado semântico para as colunas anônimas do dataset.
+O XGBoost final foi explicado com `TreeExplainer`, usando
+`feature_perturbation="interventional"`, saída em escala de probabilidade e um
+fundo de 500 linhas amostradas exclusivamente do treino (seed 42). A análise
+global usou 1.000 transações aleatórias da validação.
+
+As cinco variáveis de maior média absoluta de contribuição foram
+`TransactionAmt`, `C13`, `C1`, `C14` e `card1`. Duas proxies com semântica
+documentada também aparecem cedo no ranking: `valor_atipico_proxy` em 7º lugar
+e `frequencia_recente_proxy` em 13º. Esse resultado indica influência no
+comportamento do modelo; **não prova causalidade** e não revela o significado
+oculto das colunas anônimas.
+
+Foram produzidos force plots para um verdadeiro positivo, um falso positivo,
+um falso negativo e um verdadeiro negativo, escolhidos pela probabilidade
+mediana de cada quadrante. A fidelidade numérica foi verificada em todas as
+linhas explicadas: o erro máximo em `valor base + soma das contribuições =
+probabilidade prevista` foi 3,04 × 10⁻⁷, abaixo da tolerância 10⁻⁵. O relatório,
+o summary plot e os quatro casos estão em `reports/pessoa_1/julho/shap/`.
 
 ## 5. Avaliação final no teste
 
