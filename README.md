@@ -23,7 +23,7 @@ O [registro de features proposto no PR #2](https://github.com/LetAlves/tcc-fraud
 
 ## Estado do projeto
 
-Situação verificada localmente em **17/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4. A interface e a integração final SHAP → RAG continuam pendentes. Dependências instaladas não significam que todas as camadas já estejam implementadas.
+Situação verificada localmente em **18/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4. A interface de demonstração foi implementada, mas a integração final SHAP → RAG → LLM ainda depende do orquestrador marcado com `{{PREENCHER}}`. Dependências instaladas não significam que todas as camadas já estejam implementadas.
 
 | Componente | Situação | Evidência |
 |---|---|---|
@@ -42,7 +42,7 @@ Situação verificada localmente em **17/09/2026**. As camadas de modelagem de j
 | Persistência de modelos | Implementada, com manifesto, hashes e compressão | [Persistência](src/models/persistencia.py) |
 | RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |
 | SHAP no XGBoost | Executado: importância global, VP/FP/FN/VN e fidelidade aditiva aprovada | [Entrega de julho da Pessoa 1](reports/pessoa_1/julho/README.md) |
-| Interface de demonstração | Planejada | [Arquitetura proposta](#arquitetura-proposta) |
+| Interface de demonstração | Implementada como camada de apresentação; orquestrador final pendente | [Aplicação Streamlit](app.py) |
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
 
@@ -191,16 +191,28 @@ Os documentos oficiais, chunks e vetores são artefatos locais ignorados pelo Gi
 
 O catálogo atual usa o Guia MED 4.4 e registra separadamente as vigências de 01/09/2026 e 26/10/2026. Até a segunda data, respostas sobre alterações futuras devem conferir os metadados de vigência.
 
+### Executar a interface Streamlit
+
+O `app.py` não duplica o ML, o SHAP ou o RAG. Ele espera uma função de orquestração existente, configurada pelo nome do módulo e da função:
+
+```powershell
+$env:TCC_PIPELINE_MODULE = "{{PREENCHER}}"
+$env:TCC_PIPELINE_FUNCTION = "{{PREENCHER}}"
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+O contrato de retorno esperado está documentado em `validar_resultado_pipeline`, no próprio arquivo. Enquanto o orquestrador não estiver consolidado, a interface exibe a pendência explicitamente e não fabrica predições ou explicações.
+
 ## Testes e protocolo experimental
 
 Execute a suíte na raiz do projeto:
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest discover -v
+.\.venv\Scripts\python.exe -m pytest -q
 git diff --check
 ```
 
-Na revalidação de 17/09/2026, **81 testes** foram aprovados. Eles cobrem modelagem, avaliação, persistência, fidelidade SHAP, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação final do modelo no conjunto de teste.
+Na revalidação de 18/09/2026, **88 testes** foram aprovados. Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação final do modelo no conjunto de teste.
 
 Para os próximos experimentos:
 
@@ -215,6 +227,7 @@ Para os próximos experimentos:
 
 ```text
 config/                  Registro de features e catálogo das fontes RAG
+app.py                   Interface Streamlit e contrato do pipeline integrado
 data/raw/                CSVs originais locais — ignorados pelo Git
 data/processed/          Dados derivados locais — ignorados pelo Git
 docs/                    Guia e cronograma estático do TCC
