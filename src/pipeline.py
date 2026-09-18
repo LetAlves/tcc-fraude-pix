@@ -13,10 +13,14 @@ delas. Cada etapa vem de um módulo que já existe e já tem teste próprio:
 
 ## O formato do retorno não é escolha deste módulo
 
-`app.py` valida o resultado do pipeline e exige `predicao`, `fatores_shap` e
-`explicacao_rag`, aceitando `documentos_recuperados` como opcional. Esse
-contrato foi definido na interface de demonstração e é respeitado aqui — mudar
-o formato quebraria a tela sem aviso.
+`app.py` valida o resultado do pipeline. O contrato é aninhado, e o detalhe
+importa: `predicao` é um **objeto** com `classe`, `probabilidade` e `limiar`,
+não um texto. Devolver a classe direto em `predicao` passa por uma verificação
+superficial de chaves e falha na validação real da interface.
+
+O contrato completo está documentado em `validar_resultado_pipeline`, em
+`app.py`, e o teste deste módulo o executa de verdade em vez de reafirmar a
+suposição de quem escreveu o pipeline.
 
 ## Por que o pré-processador vem junto do modelo
 
@@ -90,15 +94,18 @@ class Pipeline:
         )
 
         return {
-            "predicao": "suspeita" if sinalizada else "não suspeita",
-            "probabilidade": probabilidade,
-            "limiar": self.limiar,
+            "predicao": {
+                "classe": "suspeita" if sinalizada else "não suspeita",
+                "probabilidade": probabilidade,
+                "limiar": self.limiar,
+            },
             "fatores_shap": fatores,
             "documentos_recuperados": [
                 {
+                    "titulo": documento.fonte,
+                    "trecho": documento.resumo(),
                     "fonte": documento.fonte,
                     "score": documento.score,
-                    "trecho": documento.resumo(),
                     "metadados": documento.metadados,
                 }
                 for documento in documentos
@@ -107,7 +114,12 @@ class Pipeline:
         }
 
     def _fatores_shap(self, matriz: Any) -> list[dict[str, Any]]:
-        """Os `TOP_FATORES` de maior contribuição absoluta, com sinal preservado."""
+        """
+        Os `TOP_FATORES` de maior contribuição absoluta, com sinal preservado.
+
+        O formato de cada fator — `feature`, `valor`, `contribuicao`, `direcao` —
+        é o que `app.py` renderiza na tabela; alterá-lo muda a interface.
+        """
         valores = np.asarray(self.explicador_shap.shap_values(matriz), dtype=float)
         if valores.ndim == 3:  # (linhas, features, classes) — usa a classe positiva
             valores = valores[..., -1]
@@ -116,9 +128,11 @@ class Pipeline:
         nomes = self.nomes_features or [f"feature_{i}" for i in range(len(contribuicoes))]
         ordem = np.argsort(np.abs(contribuicoes))[::-1][:TOP_FATORES]
 
+        valores_entrada = np.asarray(matriz)[0]
         return [
             {
                 "feature": nomes[int(indice)],
+                "valor": float(valores_entrada[int(indice)]),
                 "contribuicao": float(contribuicoes[int(indice)]),
                 "direcao": "aumenta" if contribuicoes[int(indice)] > 0 else "reduz",
             }

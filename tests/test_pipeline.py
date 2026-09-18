@@ -52,29 +52,46 @@ TRANSACAO = {"TransactionAmt": 372.5, "card1": 1234}
 
 
 class ContratoDoResultadoTest(unittest.TestCase):
-    """O formato é exigido por app.py; renomear campo aqui quebra a interface."""
+    """
+    Executa a validação real de `app.py` sobre a saída do pipeline.
+
+    A primeira versão deste teste apenas conferia se as chaves existiam no nível
+    de cima, e passava enquanto a integração quebraria: o contrato exige
+    `predicao` como objeto aninhado com `classe`, e o pipeline devolvia texto.
+    Um teste que reafirma a suposição de quem escreveu o código não verifica
+    nada — por isso aqui se importa o validador da interface.
+    """
 
     def setUp(self):
         self.resultado = _pipeline_falso().processar(TRANSACAO)
 
-    def test_campos_obrigatorios_do_app(self):
-        for campo in ("predicao", "fatores_shap", "explicacao_rag"):
-            self.assertIn(campo, self.resultado)
+    def test_passa_pela_validacao_do_app(self):
+        from app import validar_resultado_pipeline
 
-    def test_fatores_shap_e_lista_de_objetos(self):
-        fatores = self.resultado["fatores_shap"]
-        self.assertIsInstance(fatores, list)
-        self.assertTrue(all(isinstance(fator, dict) for fator in fatores))
+        validado = validar_resultado_pipeline(self.resultado)
+
+        self.assertEqual(validado["predicao"]["classe"], "suspeita")
+        self.assertAlmostEqual(validado["predicao"]["probabilidade"], 0.87)
+
+    def test_predicao_e_objeto_aninhado_nao_texto(self):
+        self.assertIsInstance(self.resultado["predicao"], dict)
+        for chave in ("classe", "probabilidade", "limiar"):
+            self.assertIn(chave, self.resultado["predicao"])
+
+    def test_fatores_trazem_os_quatro_campos_que_a_tabela_mostra(self):
+        for fator in self.resultado["fatores_shap"]:
+            for chave in ("feature", "valor", "contribuicao", "direcao"):
+                self.assertIn(chave, fator)
+
+    def test_documentos_trazem_titulo_trecho_fonte_e_score(self):
+        documento = self.resultado["documentos_recuperados"][0]
+        for chave in ("titulo", "trecho", "fonte", "score"):
+            self.assertIn(chave, documento)
+        self.assertEqual(documento["fonte"], "BCB 103/2021")
 
     def test_explicacao_e_texto_nao_vazio(self):
         self.assertIsInstance(self.resultado["explicacao_rag"], str)
         self.assertTrue(self.resultado["explicacao_rag"].strip())
-
-    def test_traz_probabilidade_e_documentos(self):
-        self.assertAlmostEqual(self.resultado["probabilidade"], 0.87)
-        self.assertEqual(len(self.resultado["documentos_recuperados"]), 1)
-        self.assertEqual(
-            self.resultado["documentos_recuperados"][0]["fonte"], "BCB 103/2021")
 
 
 class SelecaoDosFatoresTest(unittest.TestCase):
@@ -103,17 +120,17 @@ class LimiarTest(unittest.TestCase):
 
     def test_probabilidade_acima_do_limiar_e_suspeita(self):
         resultado = _pipeline_falso(probabilidade=0.80).processar(TRANSACAO)
-        self.assertEqual(resultado["predicao"], "suspeita")
+        self.assertEqual(resultado["predicao"]["classe"], "suspeita")
 
     def test_probabilidade_abaixo_do_limiar_nao_e_suspeita(self):
         resultado = _pipeline_falso(probabilidade=0.10).processar(TRANSACAO)
-        self.assertEqual(resultado["predicao"], "não suspeita")
+        self.assertEqual(resultado["predicao"]["classe"], "não suspeita")
 
     def test_limiar_configuravel_muda_a_decisao(self):
         pipeline = _pipeline_falso(probabilidade=0.30)
         pipeline.limiar = 0.20
 
-        self.assertEqual(pipeline.processar(TRANSACAO)["predicao"], "suspeita")
+        self.assertEqual(pipeline.processar(TRANSACAO)["predicao"]["classe"], "suspeita")
 
 
 class SemRagTest(unittest.TestCase):
