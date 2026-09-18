@@ -92,7 +92,11 @@ def valor_atipico_proxy(
     Risco de vazamento: nenhum — só usa observações anteriores no tempo.
     Ressalva (ata 16/08/2026): card1 é um proxy mascarado, não uma conta Pix real.
     """
-    ordenado = df.sort_values(
+    # Só as três colunas-fonte entram na ordenação. Ordenar o DataFrame inteiro
+    # por (cartão, tempo) é uma ordem nova, então o pandas materializa todas as
+    # colunas: 1,76 GiB só no bloco float64 do dataset completo, o que estoura a
+    # memória disponível antes de qualquer modelo rodar.
+    ordenado = df[[coluna_valor, coluna_cartao, coluna_tempo]].sort_values(
         [coluna_cartao, coluna_tempo],
         kind="mergesort",
         na_position="last",
@@ -260,10 +264,18 @@ def criar_features_pix(df: pd.DataFrame) -> pd.DataFrame:
     logger.info("Calculando posicao_ciclo_diario_relativa...")
     ciclo_diario = posicao_ciclo_diario_relativa(df)
 
-    df_com_features = pd.concat(
-        [df, valor_atipico, frequencia_recente, dispositivo_raro, ciclo_diario],
-        axis=1,
-    )
+    # pd.concat montaria um DataFrame novo copiando as 434 colunas existentes só
+    # para acrescentar 6 — e consolidar o bloco float64 pede 1,76 GiB de uma vez
+    # no dataset completo. Com copy-on-write (pandas >= 3), uma cópia rasa seguida
+    # de atribuição das colunas novas compartilha os blocos originais e aloca
+    # apenas o que de fato é novo.
+    df_com_features = df.copy(deep=False)
+    for bloco in (valor_atipico, frequencia_recente, dispositivo_raro, ciclo_diario):
+        if isinstance(bloco, pd.Series):
+            df_com_features[bloco.name] = bloco
+        else:
+            for coluna in bloco.columns:
+                df_com_features[coluna] = bloco[coluna]
     logger.info("Features Pix adicionadas: %s", df_com_features.shape)
     return df_com_features
 

@@ -1,0 +1,71 @@
+# Entrega parcial 1 — EDA, features Pix simuladas e baseline
+
+**TCC:** Protótipo Híbrido para Detecção e Explicação de Fraudes em Transações Pix Simuladas Utilizando Machine Learning, SHAP e RAG
+**Autores:** Letícia Alves (ML e dados) · Lucas Nogueira (RAG e escrita)
+**Data:** 11/09/2026
+
+> **Sobre os dados:** este trabalho **não utiliza dados reais do Pix** nem de instituições financeiras. Os experimentos usam o dataset público IEEE-CIS Fraud Detection (Kaggle), de transações com cartão. As variáveis inspiradas no Pix são proxies analíticos documentados, conforme a seção 4.1 da proposta aprovada.
+
+## 1. O que foi concluído
+
+Análise exploratória, as quatro features Pix simuladas, o pré-processamento completo, a divisão treino/validação/teste e o baseline treinado e avaliado sobre as 590.540 transações do dataset.
+
+O escopo previsto era EDA e features; o baseline foi incluído porque já está concluído e produziu o resultado da seção 3.
+
+**Decisões metodológicas principais:** divisão **temporal** (transações antigas no treino, recentes no teste), em vez de aleatória; exclusão de `card4` e `card6` por serem conceitos exclusivos de cartão, sem equivalente no Pix; e acurácia não reportada em momento algum, por ser inútil num problema com 3,5% de fraude. O registro completo das decisões está em `reports/anotacoes_metodologia.md`.
+
+## 2. Resultados do baseline
+
+Regressão logística, limiar 0,5. Duas estratégias de desbalanceamento comparadas em pipelines separados. A taxa de fraude é de 3,43% na validação e 3,48% no teste — como a AUC-PR de um classificador aleatório equivale à taxa base, ela é a régua de leitura.
+
+| | Validação | | Teste | |
+|---|---|---|---|---|
+| **Métrica** | Ponderação | SMOTE | Ponderação | SMOTE |
+| AUC-PR | 0,3930 | 0,3962 | 0,1850 | 0,1852 |
+| AUC-ROC | 0,8410 | 0,8391 | 0,8286 | 0,8238 |
+| Recall | 0,6772 | 0,6831 | 0,7026 | 0,7078 |
+| Precisão | 0,1350 | 0,1315 | 0,1237 | 0,1216 |
+
+**As duas estratégias empataram**, na validação e no teste — diferenças de 0,003 e 0,0002. O vencedor muda de lado conforme o recorte: em uma amostra de 50.000 linhas a ponderação vencia pela mesma ordem de margem. Quando isso acontece, a diferença é ruído.
+
+**A estratégia adotada é a ponderação de classe**, por critérios declarados antes da avaliação final e registrados em `reports/anotacoes_metodologia.md`: não fabricar dados sintéticos, não interpolar variáveis categóricas já codificadas, e custo computacional (o SMOTE levou 42 minutos de treino contra 6). O número do SMOTE no teste é reportado por transparência e não participou da escolha — selecionar a estratégia vendo o conjunto de teste o transformaria em mais um conjunto de validação.
+
+Em termos operacionais no teste: das 3.083 fraudes o modelo recupera **2.166** e perde 917, marcando **17.513 das 88.581 transações** como suspeitas — 19,8% do total, com 8 de cada 10 acusações sendo alarme falso. É o comportamento esperado de um baseline linear, e o piso que os modelos de julho precisam superar.
+
+## 3. Achado principal: degradação temporal
+
+**A AUC-PR cai pela metade entre validação e teste — de 0,3930 para 0,1850.** A queda não se explica por desbalanceamento: as taxas base são equivalentes (3,43% e 3,48%), a AUC-ROC quase não se move e o recall até sobe. O que se degrada é a pureza das previsões de maior confiança no período mais recente, comportamento compatível com envelhecimento dos padrões.
+
+No controle complementar, a diferença entre períodos desapareceu quando as linhas foram misturadas por uma divisão aleatória estratificada. O experimento usou o mesmo modelo e os mesmos dados, mudando apenas a forma de dividir:
+
+| | Corte temporal | Divisão aleatória |
+|---|---|---|
+| AUC-PR validação | 0,3933 | 0,4213 |
+| AUC-PR teste | 0,1860 | 0,4243 |
+| Variação | **−52,7%** | +0,7% |
+
+A divisão aleatória reporta **2,3 vezes** a AUC-PR no teste e não mostra degradação alguma: descreveria um modelo estável e duas vezes melhor do que ele é. *Ressalva:* ela também coloca transações do mesmo identificador de cartão nos dois lados, então a diferença combina período e identificador compartilhados, e não se atribui inteiramente ao tempo.
+
+O achado indica que um sistema assim exigiria monitoramento temporal e possivelmente retreino periódico em operação. Ele fornece evidência própria para a justificativa metodológica do Capítulo 3, sem isolar completamente o efeito do tempo do efeito de identificadores compartilhados.
+
+## 4. Limitações assumidas
+
+- **O dataset é de cartão, não de Pix** — nenhum resultado aqui indica desempenho no Pix real.
+- **Três variáveis da proposta não têm equivalente no IEEE-CIS**: tipo de chave Pix, perfil do destinatário e idade da conta.
+- **O limiar de decisão permanece em 0,5**, valor padrão, não escolhido. Ajustá-lo na validação é a próxima melhoria de menor custo.
+- **O SMOTE interpola variáveis categóricas já codificadas**, gerando combinações inexistentes no domínio.
+- **A execução não é reprodutível bit a bit**: o uso de `float32`, necessário para caber na memória disponível, faz os resultados variarem a partir da terceira casa decimal entre execuções.
+
+## 5. Observação sobre a base regulatória
+
+A proposta aprovada cita a **Resolução BCB nº 403/2023** como base de prevenção a fraudes no Pix. Ao levantar as fontes para a base documental do RAG, identificamos que o Mecanismo Especial de Devolução foi criado pela **Resolução BCB nº 103/2021**; a nº 403 é de 22/07/2024 e trata de outro ajuste. A referência será corrigida na monografia.
+
+## 6. Próxima etapa e alinhamento
+
+Julho prevê XGBoost (principal) e Random Forest (comparativo), o módulo de avaliação com matriz de confusão e curva de precisão-recall, e a aplicação do SHAP. Os modelos serão avaliados no mesmo corte temporal, para que a queda entre validação e teste seja comparável. O critério de sucesso é **melhorar a precisão sem perder recall**.
+
+Esta entrega está sendo enviada em setembro, fora do prazo originalmente previsto. Gostaríamos de alinhar o calendário das etapas seguintes antes de avançar, para que as próximas entregas tenham prazos realistas.
+
+---
+
+**Evidências:** `notebooks/02_preprocessing.ipynb` (pré-processamento e baseline executados) · `reports/anotacoes_metodologia.md` (decisões e experimentos) · `reports/pessoa_2/junho/04_entrega_parcial_eda_features.md` e `reports/eda_summary.txt` (detalhamento da EDA e registro das features) · `src/features/` (código).

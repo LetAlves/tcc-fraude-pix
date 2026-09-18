@@ -1,5 +1,7 @@
 # Entrega parcial 1 — EDA e features Pix simuladas
 
+> **Documento técnico de suporte.** A versão consolidada para envio ao orientador é [`../../entrega_parcial_1.md`](../../entrega_parcial_1.md). Este arquivo preserva a evidência detalhada de EDA e features e não deve ser enviado como um segundo relatório independente.
+
 Data de geração: **18/08/2026**.  
 Fonte dos números: CSVs locais do treino IEEE-CIS, lidos por `scripts/gerar_entrega_junho.py`.
 
@@ -65,10 +67,11 @@ O arquivo-fonte completo, incluindo fórmula, janela, tratamento de nulos, contr
 - não usa colunas `C*`, `D*`, `M*`, `V*` ou `id_*` como conceitos Pix individuais;
 - não considera o baseline concluído antes da execução dos modelos, publicação das métricas e revisão da dupla.
 
-## Pendências para concluir a entrega ao orientador
+## Evolução posterior desta entrega
 
-- [ ] decidir comparação entre peso de classe e SMOTE sem vazamento;
-- [x] definir split temporal 70/15/15, preservando empates de `TransactionDT`;
-- [ ] registrar seeds do experimento;
-- [ ] executar e revisar o baseline da Pessoa 1;
+- [x] comparar ponderação de classe e SMOTE sem vazamento;
+- [x] implementar split temporal 70/15/15, preservando empates de `TransactionDT`;
+- [x] registrar as seeds do experimento;
+- [x] executar e revisar o baseline da Pessoa 1 no dataset completo;
+- [x] consolidar EDA, features, pré-processamento e baseline em `reports/entrega_parcial_1.md`;
 - [ ] registrar a data de apresentação desta entrega ao orientador.

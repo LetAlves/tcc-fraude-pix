@@ -1,6 +1,6 @@
 # Maio de 2026 - Pessoa 2 (RAG + escrita)
 
-Este diretório reúne as evidências das tarefas de maio atribuídas à Pessoa 2 no [guia do TCC](https://letalves.github.io/tcc-fraude-cartao/). O objetivo não é apenas marcar itens: cada entrega registra o que foi estudado, as fontes usadas, os limites da evidência e como o conteúdo entra no protótipo ou na monografia.
+Este diretório reúne as evidências das tarefas de maio atribuídas à Pessoa 2 no [cronograma de tarefas](https://lunogueira-67.github.io/tcc-organizador-tarefas/). O objetivo não é apenas marcar itens: cada entrega registra o que foi estudado, as fontes usadas, os limites da evidência e como o conteúdo entra no protótipo ou na monografia.
 
 Data da revisão: **15/08/2026**.
 

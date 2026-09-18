@@ -1,0 +1,2671 @@
+{
+  "schema_version": "1.0",
+  "metodologia": {
+    "explicador": "shap.TreeExplainer",
+    "feature_perturbation": "interventional",
+    "model_output": "probability",
+    "tamanho_fundo_treino": 500,
+    "tamanho_amostra_global_validacao": 1000,
+    "semente": 42,
+    "limiar": 0.5,
+    "selecao_local": "caso mais proximo da probabilidade mediana de cada quadrante"
+  },
+  "versoes": {
+    "numpy": "2.5.3",
+    "scikit_learn": "1.9.0",
+    "xgboost": "3.0.5",
+    "shap": "0.52.0"
+  },
+  "fidelidade": {
+    "equacao": "valor_base + soma(SHAP) = probabilidade_fraude",
+    "erro_maximo": 3.039466808241187e-07,
+    "tolerancia": 1e-05,
+    "aprovada": true
+  },
+  "importancia_global": [
+    {
+      "posicao": 1,
+      "feature": "TransactionAmt",
+      "media_shap_absoluto": 0.016792014158066318
+    },
+    {
+      "posicao": 2,
+      "feature": "C13",
+      "media_shap_absoluto": 0.014697886165604215
+    },
+    {
+      "posicao": 3,
+      "feature": "C1",
+      "media_shap_absoluto": 0.01049428088398283
+    },
+    {
+      "posicao": 4,
+      "feature": "C14",
+      "media_shap_absoluto": 0.008528236456744404
+    },
+    {
+      "posicao": 5,
+      "feature": "card1",
+      "media_shap_absoluto": 0.008383135495768709
+    },
+    {
+      "posicao": 6,
+      "feature": "C5",
+      "media_shap_absoluto": 0.007558496432382498
+    },
+    {
+      "posicao": 7,
+      "feature": "valor_atipico_proxy",
+      "media_shap_absoluto": 0.006856147557725501
+    },
+    {
+      "posicao": 8,
+      "feature": "card2",
+      "media_shap_absoluto": 0.006801105730039329
+    },
+    {
+      "posicao": 9,
+      "feature": "D1",
+      "media_shap_absoluto": 0.006671144056769928
+    },
+    {
+      "posicao": 10,
+      "feature": "P_emaildomain",
+      "media_shap_absoluto": 0.006518735761153839
+    },
+    {
+      "posicao": 11,
+      "feature": "C11",
+      "media_shap_absoluto": 0.006150169763377502
+    },
+    {
+      "posicao": 12,
+      "feature": "C2",
+      "media_shap_absoluto": 0.005768850571921083
+    },
+    {
+      "posicao": 13,
+      "feature": "frequencia_recente_proxy",
+      "media_shap_absoluto": 0.0057674567581680256
+    },
+    {
+      "posicao": 14,
+      "feature": "addr1",
+      "media_shap_absoluto": 0.005722875388151392
+    },
+    {
+      "posicao": 15,
+      "feature": "dist1",
+      "media_shap_absoluto": 0.005507019921258645
+    },
+    {
+      "posicao": 16,
+      "feature": "card5",
+      "media_shap_absoluto": 0.005504773453653129
+    },
+    {
+      "posicao": 17,
+      "feature": "D4",
+      "media_shap_absoluto": 0.0054993798049080824
+    },
+    {
+      "posicao": 18,
+      "feature": "posicao_ciclo_diario_sen",
+      "media_shap_absoluto": 0.005258322572609819
+    },
+    {
+      "posicao": 19,
+      "feature": "V70",
+      "media_shap_absoluto": 0.0049946941484907345
+    },
+    {
+      "posicao": 20,
+      "feature": "D10",
+      "media_shap_absoluto": 0.004931559648180591
+    },
+    {
+      "posicao": 21,
+      "feature": "ProductCD_R",
+      "media_shap_absoluto": 0.004431674371222371
+    },
+    {
+      "posicao": 22,
+      "feature": "D15",
+      "media_shap_absoluto": 0.004140952302999163
+    },
+    {
+      "posicao": 23,
+      "feature": "posicao_ciclo_diario_relativa",
+      "media_shap_absoluto": 0.0038958181394848513
+    },
+    {
+      "posicao": 24,
+      "feature": "M5_F",
+      "media_shap_absoluto": 0.003777729959894734
+    },
+    {
+      "posicao": 25,
+      "feature": "D2",
+      "media_shap_absoluto": 0.0037374983053770406
+    },
+    {
+      "posicao": 26,
+      "feature": "posicao_ciclo_diario_cos",
+      "media_shap_absoluto": 0.003525758531655662
+    },
+    {
+      "posicao": 27,
+      "feature": "D3",
+      "media_shap_absoluto": 0.0033898806575815006
+    },
+    {
+      "posicao": 28,
+      "feature": "C6",
+      "media_shap_absoluto": 0.003134628300629457
+    },
+    {
+      "posicao": 29,
+      "feature": "V91",
+      "media_shap_absoluto": 0.0029199284079104637
+    },
+    {
+      "posicao": 30,
+      "feature": "V53",
+      "media_shap_absoluto": 0.0028095743879176295
+    },
+    {
+      "posicao": 31,
+      "feature": "V258",
+      "media_shap_absoluto": 0.002748751078970425
+    },
+    {
+      "posicao": 32,
+      "feature": "C8",
+      "media_shap_absoluto": 0.002743150183002679
+    },
+    {
+      "posicao": 33,
+      "feature": "V294",
+      "media_shap_absoluto": 0.0026418909005249693
+    },
+    {
+      "posicao": 34,
+      "feature": "R_emaildomain",
+      "media_shap_absoluto": 0.0026136393020818227
+    },
+    {
+      "posicao": 35,
+      "feature": "D11",
+      "media_shap_absoluto": 0.002608676347398385
+    },
+    {
+      "posicao": 36,
+      "feature": "card3",
+      "media_shap_absoluto": 0.0025896340874183538
+    },
+    {
+      "posicao": 37,
+      "feature": "C10",
+      "media_shap_absoluto": 0.0025532328959361862
+    },
+    {
+      "posicao": 38,
+      "feature": "M4_ausente",
+      "media_shap_absoluto": 0.0025141119453091507
+    },
+    {
+      "posicao": 39,
+      "feature": "id_02",
+      "media_shap_absoluto": 0.0024901467637430527
+    },
+    {
+      "posicao": 40,
+      "feature": "M6_F",
+      "media_shap_absoluto": 0.0022371038355579603
+    },
+    {
+      "posicao": 41,
+      "feature": "id_38",
+      "media_shap_absoluto": 0.0020898715100839994
+    },
+    {
+      "posicao": 42,
+      "feature": "D8",
+      "media_shap_absoluto": 0.002017847742028553
+    },
+    {
+      "posicao": 43,
+      "feature": "M3_T",
+      "media_shap_absoluto": 0.0019396575751454406
+    },
+    {
+      "posicao": 44,
+      "feature": "id_20",
+      "media_shap_absoluto": 0.0018842887330143118
+    },
+    {
+      "posicao": 45,
+      "feature": "M9_T",
+      "media_shap_absoluto": 0.0018298384771815528
+    },
+    {
+      "posicao": 46,
+      "feature": "V130",
+      "media_shap_absoluto": 0.001771073783627898
+    },
+    {
+      "posicao": 47,
+      "feature": "C9",
+      "media_shap_absoluto": 0.001724659176411251
+    },
+    {
+      "posicao": 48,
+      "feature": "M6_T",
+      "media_shap_absoluto": 0.001620866545773688
+    },
+    {
+      "posicao": 49,
+      "feature": "M4_M2",
+      "media_shap_absoluto": 0.00161788462552221
+    },
+    {
+      "posicao": 50,
+      "feature": "M5_T",
+      "media_shap_absoluto": 0.001492117664883504
+    },
+    {
+      "posicao": 51,
+      "feature": "M6_ausente",
+      "media_shap_absoluto": 0.0014806337649106098
+    },
+    {
+      "posicao": 52,
+      "feature": "id_31",
+      "media_shap_absoluto": 0.0014767123210965285
+    },
+    {
+      "posicao": 53,
+      "feature": "DeviceInfo",
+      "media_shap_absoluto": 0.0014331222862490505
+    },
+    {
+      "posicao": 54,
+      "feature": "D5",
+      "media_shap_absoluto": 0.0014317974774972434
+    },
+    {
+      "posicao": 55,
+      "feature": "V307",
+      "media_shap_absoluto": 0.0014071224312719242
+    },
+    {
+      "posicao": 56,
+      "feature": "dispositivo_raro_proxy",
+      "media_shap_absoluto": 0.001403872032952107
+    },
+    {
+      "posicao": 57,
+      "feature": "M4_M1",
+      "media_shap_absoluto": 0.0014013865433774924
+    },
+    {
+      "posicao": 58,
+      "feature": "dist2",
+      "media_shap_absoluto": 0.0013789938210620628
+    },
+    {
+      "posicao": 59,
+      "feature": "V310",
+      "media_shap_absoluto": 0.0013706355074212923
+    },
+    {
+      "posicao": 60,
+      "feature": "V83",
+      "media_shap_absoluto": 0.001362295306212013
+    },
+    {
+      "posicao": 61,
+      "feature": "V313",
+      "media_shap_absoluto": 0.0013501609071185708
+    },
+    {
+      "posicao": 62,
+      "feature": "M3_F",
+      "media_shap_absoluto": 0.0013413313042181995
+    },
+    {
+      "posicao": 63,
+      "feature": "V285",
+      "media_shap_absoluto": 0.0013403529780597915
+    },
+    {
+      "posicao": 64,
+      "feature": "M4_M0",
+      "media_shap_absoluto": 0.0013393635016364053
+    },
+    {
+      "posicao": 65,
+      "feature": "V82",
+      "media_shap_absoluto": 0.0013271545980460622
+    },
+    {
+      "posicao": 66,
+      "feature": "C12",
+      "media_shap_absoluto": 0.0012998459085167145
+    },
+    {
+      "posicao": 67,
+      "feature": "V308",
+      "media_shap_absoluto": 0.001269931022540483
+    },
+    {
+      "posicao": 68,
+      "feature": "M7_F",
+      "media_shap_absoluto": 0.0012360441666326874
+    },
+    {
+      "posicao": 69,
+      "feature": "D13",
+      "media_shap_absoluto": 0.001176610358970927
+    },
+    {
+      "posicao": 70,
+      "feature": "id_19",
+      "media_shap_absoluto": 0.001120333727565945
+    },
+    {
+      "posicao": 71,
+      "feature": "V187",
+      "media_shap_absoluto": 0.0010983969457338254
+    },
+    {
+      "posicao": 72,
+      "feature": "V316",
+      "media_shap_absoluto": 0.001083539692010955
+    },
+    {
+      "posicao": 73,
+      "feature": "V315",
+      "media_shap_absoluto": 0.0010558462162915234
+    },
+    {
+      "posicao": 74,
+      "feature": "id_15",
+      "media_shap_absoluto": 0.001055446197014714
+    },
+    {
+      "posicao": 75,
+      "feature": "V312",
+      "media_shap_absoluto": 0.0010510663596578708
+    },
+    {
+      "posicao": 76,
+      "feature": "id_17",
+      "media_shap_absoluto": 0.0010208254799879764
+    },
+    {
+      "posicao": 77,
+      "feature": "id_05",
+      "media_shap_absoluto": 0.001005424512106201
+    },
+    {
+      "posicao": 78,
+      "feature": "V12",
+      "media_shap_absoluto": 0.0009828632667324075
+    },
+    {
+      "posicao": 79,
+      "feature": "V33",
+      "media_shap_absoluto": 0.0009813923041786898
+    },
+    {
+      "posicao": 80,
+      "feature": "id_13",
+      "media_shap_absoluto": 0.0009597631078364539
+    },
+    {
+      "posicao": 81,
+      "feature": "id_29",
+      "media_shap_absoluto": 0.0009570140657463051
+    },
+    {
+      "posicao": 82,
+      "feature": "V49",
+      "media_shap_absoluto": 0.0009540495294644021
+    },
+    {
+      "posicao": 83,
+      "feature": "M5_ausente",
+      "media_shap_absoluto": 0.0009538347592058477
+    },
+    {
+      "posicao": 84,
+      "feature": "V165",
+      "media_shap_absoluto": 0.0009509535541344023
+    },
+    {
+      "posicao": 85,
+      "feature": "V314",
+      "media_shap_absoluto": 0.0009264438418478127
+    },
+    {
+      "posicao": 86,
+      "feature": "V87",
+      "media_shap_absoluto": 0.0009110398202432587
+    },
+    {
+      "posicao": 87,
+      "feature": "V11",
+      "media_shap_absoluto": 0.0009100921704583138
+    },
+    {
+      "posicao": 88,
+      "feature": "V62",
+      "media_shap_absoluto": 0.0009088682239050357
+    },
+    {
+      "posicao": 89,
+      "feature": "V54",
+      "media_shap_absoluto": 0.0008851034558541408
+    },
+    {
+      "posicao": 90,
+      "feature": "V189",
+      "media_shap_absoluto": 0.0008463425359976336
+    },
+    {
+      "posicao": 91,
+      "feature": "V99",
+      "media_shap_absoluto": 0.0008097088458968092
+    },
+    {
+      "posicao": 92,
+      "feature": "V34",
+      "media_shap_absoluto": 0.0007944074876169694
+    },
+    {
+      "posicao": 93,
+      "feature": "id_06",
+      "media_shap_absoluto": 0.000783674836013988
+    },
+    {
+      "posicao": 94,
+      "feature": "V127",
+      "media_shap_absoluto": 0.0007799194434989502
+    },
+    {
+      "posicao": 95,
+      "feature": "V75",
+      "media_shap_absoluto": 0.0007711765667344704
+    },
+    {
+      "posicao": 96,
+      "feature": "id_30",
+      "media_shap_absoluto": 0.0007595000153248089
+    },
+    {
+      "posicao": 97,
+      "feature": "V52",
+      "media_shap_absoluto": 0.0007400605749698466
+    },
+    {
+      "posicao": 98,
+      "feature": "V281",
+      "media_shap_absoluto": 0.0007391044391115701
+    },
+    {
+      "posicao": 99,
+      "feature": "id_01",
+      "media_shap_absoluto": 0.0007336059452996684
+    },
+    {
+      "posicao": 100,
+      "feature": "V94",
+      "media_shap_absoluto": 0.0007136671275333536
+    },
+    {
+      "posicao": 101,
+      "feature": "V61",
+      "media_shap_absoluto": 0.0007090472721371662
+    },
+    {
+      "posicao": 102,
+      "feature": "V35",
+      "media_shap_absoluto": 0.0006897093648770206
+    },
+    {
+      "posicao": 103,
+      "feature": "V5",
+      "media_shap_absoluto": 0.0006800906405809021
+    },
+    {
+      "posicao": 104,
+      "feature": "id_33",
+      "media_shap_absoluto": 0.0006727940814935071
+    },
+    {
+      "posicao": 105,
+      "feature": "V2",
+      "media_shap_absoluto": 0.0006498870046827151
+    },
+    {
+      "posicao": 106,
+      "feature": "M2_T",
+      "media_shap_absoluto": 0.000644974520860214
+    },
+    {
+      "posicao": 107,
+      "feature": "V71",
+      "media_shap_absoluto": 0.0006200353106903954
+    },
+    {
+      "posicao": 108,
+      "feature": "V45",
+      "media_shap_absoluto": 0.0006145946689790091
+    },
+    {
+      "posicao": 109,
+      "feature": "C4",
+      "media_shap_absoluto": 0.0006032576924593727
+    },
+    {
+      "posicao": 110,
+      "feature": "V317",
+      "media_shap_absoluto": 0.0005978550426883418
+    },
+    {
+      "posicao": 111,
+      "feature": "DeviceType_mobile",
+      "media_shap_absoluto": 0.0005975734733259282
+    },
+    {
+      "posicao": 112,
+      "feature": "V135",
+      "media_shap_absoluto": 0.0005925480008142668
+    },
+    {
+      "posicao": 113,
+      "feature": "ProductCD_C",
+      "media_shap_absoluto": 0.0005860129692817672
+    },
+    {
+      "posicao": 114,
+      "feature": "D9",
+      "media_shap_absoluto": 0.000585176845813675
+    },
+    {
+      "posicao": 115,
+      "feature": "M8_T",
+      "media_shap_absoluto": 0.0005849357020455352
+    },
+    {
+      "posicao": 116,
+      "feature": "V126",
+      "media_shap_absoluto": 0.0005807742320319542
+    },
+    {
+      "posicao": 117,
+      "feature": "V50",
+      "media_shap_absoluto": 0.0005568507632014442
+    },
+    {
+      "posicao": 118,
+      "feature": "V100",
+      "media_shap_absoluto": 0.0005551800926658962
+    },
+    {
+      "posicao": 119,
+      "feature": "V29",
+      "media_shap_absoluto": 0.0005484571116355419
+    },
+    {
+      "posicao": 120,
+      "feature": "V13",
+      "media_shap_absoluto": 0.0005378734008067907
+    },
+    {
+      "posicao": 121,
+      "feature": "V283",
+      "media_shap_absoluto": 0.0005365594215882544
+    },
+    {
+      "posicao": 122,
+      "feature": "V73",
+      "media_shap_absoluto": 0.0005326822662506385
+    },
+    {
+      "posicao": 123,
+      "feature": "V291",
+      "media_shap_absoluto": 0.0005272956680424999
+    },
+    {
+      "posicao": 124,
+      "feature": "M9_F",
+      "media_shap_absoluto": 0.0005232363500686378
+    },
+    {
+      "posicao": 125,
+      "feature": "V30",
+      "media_shap_absoluto": 0.0005179001753922471
+    },
+    {
+      "posicao": 126,
+      "feature": "V77",
+      "media_shap_absoluto": 0.0005099021950812364
+    },
+    {
+      "posicao": 127,
+      "feature": "M8_F",
+      "media_shap_absoluto": 0.0005097341387360734
+    },
+    {
+      "posicao": 128,
+      "feature": "V201",
+      "media_shap_absoluto": 0.0005043641376695074
+    },
+    {
+      "posicao": 129,
+      "feature": "V56",
+      "media_shap_absoluto": 0.000496677419926189
+    },
+    {
+      "posicao": 130,
+      "feature": "V131",
+      "media_shap_absoluto": 0.0004966198838583818
+    },
+    {
+      "posicao": 131,
+      "feature": "V10",
+      "media_shap_absoluto": 0.0004955119820098093
+    },
+    {
+      "posicao": 132,
+      "feature": "V76",
+      "media_shap_absoluto": 0.0004910988903881598
+    },
+    {
+      "posicao": 133,
+      "feature": "ProductCD_H",
+      "media_shap_absoluto": 0.00047716530000322093
+    },
+    {
+      "posicao": 134,
+      "feature": "V38",
+      "media_shap_absoluto": 0.0004661672038417418
+    },
+    {
+      "posicao": 135,
+      "feature": "M7_T",
+      "media_shap_absoluto": 0.0004647427829365409
+    },
+    {
+      "posicao": 136,
+      "feature": "V4",
+      "media_shap_absoluto": 0.00045158515597086134
+    },
+    {
+      "posicao": 137,
+      "feature": "V25",
+      "media_shap_absoluto": 0.0004499777070675562
+    },
+    {
+      "posicao": 138,
+      "feature": "V66",
+      "media_shap_absoluto": 0.0004456690804014569
+    },
+    {
+      "posicao": 139,
+      "feature": "V293",
+      "media_shap_absoluto": 0.0004306514796623702
+    },
+    {
+      "posicao": 140,
+      "feature": "V26",
+      "media_shap_absoluto": 0.000430120412244196
+    },
+    {
+      "posicao": 141,
+      "feature": "V51",
+      "media_shap_absoluto": 0.00042718846633352177
+    },
+    {
+      "posicao": 142,
+      "feature": "V124",
+      "media_shap_absoluto": 0.00042406307592836025
+    },
+    {
+      "posicao": 143,
+      "feature": "V55",
+      "media_shap_absoluto": 0.00042343042675758964
+    },
+    {
+      "posicao": 144,
+      "feature": "V69",
+      "media_shap_absoluto": 0.0004106055309537302
+    },
+    {
+      "posicao": 145,
+      "feature": "V136",
+      "media_shap_absoluto": 0.0004053158162108264
+    },
+    {
+      "posicao": 146,
+      "feature": "V170",
+      "media_shap_absoluto": 0.0003958591355121277
+    },
+    {
+      "posicao": 147,
+      "feature": "V20",
+      "media_shap_absoluto": 0.00039260902303987115
+    },
+    {
+      "posicao": 148,
+      "feature": "V19",
+      "media_shap_absoluto": 0.0003847538747939837
+    },
+    {
+      "posicao": 149,
+      "feature": "V67",
+      "media_shap_absoluto": 0.0003756836969140804
+    },
+    {
+      "posicao": 150,
+      "feature": "V48",
+      "media_shap_absoluto": 0.00037503132114654594
+    },
+    {
+      "posicao": 151,
+      "feature": "C7",
+      "media_shap_absoluto": 0.00036982310699872257
+    },
+    {
+      "posicao": 152,
+      "feature": "V102",
+      "media_shap_absoluto": 0.00036655422026051767
+    },
+    {
+      "posicao": 153,
+      "feature": "V309",
+      "media_shap_absoluto": 0.0003640893715420479
+    },
+    {
+      "posicao": 154,
+      "feature": "V74",
+      "media_shap_absoluto": 0.0003632856477105366
+    },
+    {
+      "posicao": 155,
+      "feature": "V90",
+      "media_shap_absoluto": 0.00036270142722110164
+    },
+    {
+      "posicao": 156,
+      "feature": "id_14",
+      "media_shap_absoluto": 0.00035645130371555
+    },
+    {
+      "posicao": 157,
+      "feature": "V320",
+      "media_shap_absoluto": 0.00035426465887969025
+    },
+    {
+      "posicao": 158,
+      "feature": "C3",
+      "media_shap_absoluto": 0.0003437341708264262
+    },
+    {
+      "posicao": 159,
+      "feature": "V152",
+      "media_shap_absoluto": 0.00033587853048114703
+    },
+    {
+      "posicao": 160,
+      "feature": "V40",
+      "media_shap_absoluto": 0.00030872071276536513
+    },
+    {
+      "posicao": 161,
+      "feature": "V86",
+      "media_shap_absoluto": 0.00030819500648192474
+    },
+    {
+      "posicao": 162,
+      "feature": "id_36",
+      "media_shap_absoluto": 0.00030165465423377533
+    },
+    {
+      "posicao": 163,
+      "feature": "V221",
+      "media_shap_absoluto": 0.0002947828159138647
+    },
+    {
+      "posicao": 164,
+      "feature": "M1_ausente",
+      "media_shap_absoluto": 0.00029238462732369573
+    },
+    {
+      "posicao": 165,
+      "feature": "V219",
+      "media_shap_absoluto": 0.0002861396210084503
+    },
+    {
+      "posicao": 166,
+      "feature": "V95",
+      "media_shap_absoluto": 0.00028273381785479676
+    },
+    {
+      "posicao": 167,
+      "feature": "V128",
+      "media_shap_absoluto": 0.0002806179598739252
+    },
+    {
+      "posicao": 168,
+      "feature": "V133",
+      "media_shap_absoluto": 0.00027690363225840096
+    },
+    {
+      "posicao": 169,
+      "feature": "V78",
+      "media_shap_absoluto": 0.00027678898473482746
+    },
+    {
+      "posicao": 170,
+      "feature": "M7_ausente",
+      "media_shap_absoluto": 0.0002762810383754989
+    },
+    {
+      "posicao": 171,
+      "feature": "V302",
+      "media_shap_absoluto": 0.00027473526035711767
+    },
+    {
+      "posicao": 172,
+      "feature": "V306",
+      "media_shap_absoluto": 0.0002716104130310074
+    },
+    {
+      "posicao": 173,
+      "feature": "M2_F",
+      "media_shap_absoluto": 0.0002701317951285058
+    },
+    {
+      "posicao": 174,
+      "feature": "V36",
+      "media_shap_absoluto": 0.0002665876695567414
+    },
+    {
+      "posicao": 175,
+      "feature": "V282",
+      "media_shap_absoluto": 0.00025752159230113856
+    },
+    {
+      "posicao": 176,
+      "feature": "V58",
+      "media_shap_absoluto": 0.0002494505654826293
+    },
+    {
+      "posicao": 177,
+      "feature": "V44",
+      "media_shap_absoluto": 0.00024645632020517757
+    },
+    {
+      "posicao": 178,
+      "feature": "V63",
+      "media_shap_absoluto": 0.00024361320074880555
+    },
+    {
+      "posicao": 179,
+      "feature": "V203",
+      "media_shap_absoluto": 0.00024347810712398204
+    },
+    {
+      "posicao": 180,
+      "feature": "V333",
+      "media_shap_absoluto": 0.00023513020202801154
+    },
+    {
+      "posicao": 181,
+      "feature": "V7",
+      "media_shap_absoluto": 0.00023391443885312278
+    },
+    {
+      "posicao": 182,
+      "feature": "V46",
+      "media_shap_absoluto": 0.00023224060618784765
+    },
+    {
+      "posicao": 183,
+      "feature": "V132",
+      "media_shap_absoluto": 0.0002316034366563571
+    },
+    {
+      "posicao": 184,
+      "feature": "V296",
+      "media_shap_absoluto": 0.0002307054425135962
+    },
+    {
+      "posicao": 185,
+      "feature": "V321",
+      "media_shap_absoluto": 0.00022176683008076257
+    },
+    {
+      "posicao": 186,
+      "feature": "V319",
+      "media_shap_absoluto": 0.0002163079645090551
+    },
+    {
+      "posicao": 187,
+      "feature": "V265",
+      "media_shap_absoluto": 0.00021547558607702685
+    },
+    {
+      "posicao": 188,
+      "feature": "V261",
+      "media_shap_absoluto": 0.00021184101405361807
+    },
+    {
+      "posicao": 189,
+      "feature": "V260",
+      "media_shap_absoluto": 0.00021067337470451422
+    },
+    {
+      "posicao": 190,
+      "feature": "V264",
+      "media_shap_absoluto": 0.00020651673711399087
+    },
+    {
+      "posicao": 191,
+      "feature": "V139",
+      "media_shap_absoluto": 0.00020578191653190843
+    },
+    {
+      "posicao": 192,
+      "feature": "V101",
+      "media_shap_absoluto": 0.00020310380507369206
+    },
+    {
+      "posicao": 193,
+      "feature": "V257",
+      "media_shap_absoluto": 0.0002026130670851542
+    },
+    {
+      "posicao": 194,
+      "feature": "V64",
+      "media_shap_absoluto": 0.00020236782224041113
+    },
+    {
+      "posicao": 195,
+      "feature": "M1_T",
+      "media_shap_absoluto": 0.000200915326831787
+    },
+    {
+      "posicao": 196,
+      "feature": "V303",
+      "media_shap_absoluto": 0.00019864120567400801
+    },
+    {
+      "posicao": 197,
+      "feature": "V271",
+      "media_shap_absoluto": 0.0001957436128072835
+    },
+    {
+      "posicao": 198,
+      "feature": "V311",
+      "media_shap_absoluto": 0.00019219812828801992
+    },
+    {
+      "posicao": 199,
+      "feature": "id_16",
+      "media_shap_absoluto": 0.00019196947510707077
+    },
+    {
+      "posicao": 200,
+      "feature": "ProductCD_S",
+      "media_shap_absoluto": 0.00019157411821110585
+    },
+    {
+      "posicao": 201,
+      "feature": "id_35",
+      "media_shap_absoluto": 0.0001894449747495891
+    },
+    {
+      "posicao": 202,
+      "feature": "V287",
+      "media_shap_absoluto": 0.000186354101893781
+    },
+    {
+      "posicao": 203,
+      "feature": "V272",
+      "media_shap_absoluto": 0.00018306332524755346
+    },
+    {
+      "posicao": 204,
+      "feature": "V24",
+      "media_shap_absoluto": 0.00018235091509650114
+    },
+    {
+      "posicao": 205,
+      "feature": "V204",
+      "media_shap_absoluto": 0.00018179482839157426
+    },
+    {
+      "posicao": 206,
+      "feature": "id_09",
+      "media_shap_absoluto": 0.00017906266715800973
+    },
+    {
+      "posicao": 207,
+      "feature": "id_03",
+      "media_shap_absoluto": 0.00017655543192934722
+    },
+    {
+      "posicao": 208,
+      "feature": "V297",
+      "media_shap_absoluto": 0.00017507174309061197
+    },
+    {
+      "posicao": 209,
+      "feature": "V23",
+      "media_shap_absoluto": 0.0001722547475640476
+    },
+    {
+      "posicao": 210,
+      "feature": "D14",
+      "media_shap_absoluto": 0.0001703406939703849
+    },
+    {
+      "posicao": 211,
+      "feature": "V266",
+      "media_shap_absoluto": 0.00016967056390557346
+    },
+    {
+      "posicao": 212,
+      "feature": "V276",
+      "media_shap_absoluto": 0.0001667543700495825
+    },
+    {
+      "posicao": 213,
+      "feature": "V259",
+      "media_shap_absoluto": 0.0001661411967186441
+    },
+    {
+      "posicao": 214,
+      "feature": "DeviceType_desktop",
+      "media_shap_absoluto": 0.00016592708429658546
+    },
+    {
+      "posicao": 215,
+      "feature": "V96",
+      "media_shap_absoluto": 0.00016301639920328402
+    },
+    {
+      "posicao": 216,
+      "feature": "ProductCD_W",
+      "media_shap_absoluto": 0.00016216453446996196
+    },
+    {
+      "posicao": 217,
+      "feature": "V318",
+      "media_shap_absoluto": 0.00016175669763238926
+    },
+    {
+      "posicao": 218,
+      "feature": "V270",
+      "media_shap_absoluto": 0.00016122121243884022
+    },
+    {
+      "posicao": 219,
+      "feature": "V125",
+      "media_shap_absoluto": 0.00015978279588380897
+    },
+    {
+      "posicao": 220,
+      "feature": "V267",
+      "media_shap_absoluto": 0.00015855852561639974
+    },
+    {
+      "posicao": 221,
+      "feature": "V84",
+      "media_shap_absoluto": 0.00015676849342818864
+    },
+    {
+      "posicao": 222,
+      "feature": "V208",
+      "media_shap_absoluto": 0.0001558635852720643
+    },
+    {
+      "posicao": 223,
+      "feature": "V160",
+      "media_shap_absoluto": 0.0001557850369531905
+    },
+    {
+      "posicao": 224,
+      "feature": "V243",
+      "media_shap_absoluto": 0.00015576659773462986
+    },
+    {
+      "posicao": 225,
+      "feature": "V37",
+      "media_shap_absoluto": 0.0001494653515064771
+    },
+    {
+      "posicao": 226,
+      "feature": "V59",
+      "media_shap_absoluto": 0.00014913909239186918
+    },
+    {
+      "posicao": 227,
+      "feature": "V43",
+      "media_shap_absoluto": 0.00014610882878862388
+    },
+    {
+      "posicao": 228,
+      "feature": "V278",
+      "media_shap_absoluto": 0.00014152653714295745
+    },
+    {
+      "posicao": 229,
+      "feature": "V245",
+      "media_shap_absoluto": 0.00014107083848474575
+    },
+    {
+      "posicao": 230,
+      "feature": "id_12",
+      "media_shap_absoluto": 0.00014100699912243387
+    },
+    {
+      "posicao": 231,
+      "feature": "V169",
+      "media_shap_absoluto": 0.0001403724268150786
+    },
+    {
+      "posicao": 232,
+      "feature": "V137",
+      "media_shap_absoluto": 0.00013940271259659973
+    },
+    {
+      "posicao": 233,
+      "feature": "V220",
+      "media_shap_absoluto": 0.00013691494035294652
+    },
+    {
+      "posicao": 234,
+      "feature": "id_37",
+      "media_shap_absoluto": 0.000135882507122785
+    },
+    {
+      "posicao": 235,
+      "feature": "V151",
+      "media_shap_absoluto": 0.00013457884705733952
+    },
+    {
+      "posicao": 236,
+      "feature": "V149",
+      "media_shap_absoluto": 0.0001344968899712446
+    },
+    {
+      "posicao": 237,
+      "feature": "V80",
+      "media_shap_absoluto": 0.00013237759405314165
+    },
+    {
+      "posicao": 238,
+      "feature": "V222",
+      "media_shap_absoluto": 0.0001310060100109255
+    },
+    {
+      "posicao": 239,
+      "feature": "id_34",
+      "media_shap_absoluto": 0.00013023029770496293
+    },
+    {
+      "posicao": 240,
+      "feature": "V97",
+      "media_shap_absoluto": 0.0001275005333639028
+    },
+    {
+      "posicao": 241,
+      "feature": "V103",
+      "media_shap_absoluto": 0.00012679071131125225
+    },
+    {
+      "posicao": 242,
+      "feature": "V323",
+      "media_shap_absoluto": 0.00012549906398210553
+    },
+    {
+      "posicao": 243,
+      "feature": "V81",
+      "media_shap_absoluto": 0.00012430675785986183
+    },
+    {
+      "posicao": 244,
+      "feature": "V268",
+      "media_shap_absoluto": 0.00012211624251601017
+    },
+    {
+      "posicao": 245,
+      "feature": "V159",
+      "media_shap_absoluto": 0.00012138586628245514
+    },
+    {
+      "posicao": 246,
+      "feature": "DeviceType_ausente",
+      "media_shap_absoluto": 0.00012103068193257975
+    },
+    {
+      "posicao": 247,
+      "feature": "V156",
+      "media_shap_absoluto": 0.00012040224256287605
+    },
+    {
+      "posicao": 248,
+      "feature": "V190",
+      "media_shap_absoluto": 0.00012037155957608128
+    },
+    {
+      "posicao": 249,
+      "feature": "V274",
+      "media_shap_absoluto": 0.00011934143592576412
+    },
+    {
+      "posicao": 250,
+      "feature": "V275",
+      "media_shap_absoluto": 0.00011807314316125387
+    },
+    {
+      "posicao": 251,
+      "feature": "V108",
+      "media_shap_absoluto": 0.00011680770735058682
+    },
+    {
+      "posicao": 252,
+      "feature": "V263",
+      "media_shap_absoluto": 0.0001162710870674139
+    },
+    {
+      "posicao": 253,
+      "feature": "V129",
+      "media_shap_absoluto": 0.00011500478172163692
+    },
+    {
+      "posicao": 254,
+      "feature": "addr2",
+      "media_shap_absoluto": 0.00010975561047246252
+    },
+    {
+      "posicao": 255,
+      "feature": "V229",
+      "media_shap_absoluto": 0.00010874496190963814
+    },
+    {
+      "posicao": 256,
+      "feature": "id_04",
+      "media_shap_absoluto": 0.00010874451713852646
+    },
+    {
+      "posicao": 257,
+      "feature": "id_26",
+      "media_shap_absoluto": 0.00010858062840765544
+    },
+    {
+      "posicao": 258,
+      "feature": "D7",
+      "media_shap_absoluto": 0.00010801934755544845
+    },
+    {
+      "posicao": 259,
+      "feature": "V134",
+      "media_shap_absoluto": 0.00010638757830159576
+    },
+    {
+      "posicao": 260,
+      "feature": "V47",
+      "media_shap_absoluto": 0.00010421789464448838
+    },
+    {
+      "posicao": 261,
+      "feature": "V177",
+      "media_shap_absoluto": 0.00010177970373757573
+    },
+    {
+      "posicao": 262,
+      "feature": "V338",
+      "media_shap_absoluto": 9.987547834415244e-05
+    },
+    {
+      "posicao": 263,
+      "feature": "id_18",
+      "media_shap_absoluto": 9.934575819296836e-05
+    },
+    {
+      "posicao": 264,
+      "feature": "V85",
+      "media_shap_absoluto": 9.801797441268187e-05
+    },
+    {
+      "posicao": 265,
+      "feature": "V277",
+      "media_shap_absoluto": 9.620140336466755e-05
+    },
+    {
+      "posicao": 266,
+      "feature": "V292",
+      "media_shap_absoluto": 9.471795927424421e-05
+    },
+    {
+      "posicao": 267,
+      "feature": "V6",
+      "media_shap_absoluto": 9.446480336186674e-05
+    },
+    {
+      "posicao": 268,
+      "feature": "V115",
+      "media_shap_absoluto": 9.427892356402816e-05
+    },
+    {
+      "posicao": 269,
+      "feature": "V280",
+      "media_shap_absoluto": 9.25346604158925e-05
+    },
+    {
+      "posicao": 270,
+      "feature": "V164",
+      "media_shap_absoluto": 9.112149245293749e-05
+    },
+    {
+      "posicao": 271,
+      "feature": "V31",
+      "media_shap_absoluto": 8.955624436351164e-05
+    },
+    {
+      "posicao": 272,
+      "feature": "V143",
+      "media_shap_absoluto": 8.894117041127813e-05
+    },
+    {
+      "posicao": 273,
+      "feature": "id_28",
+      "media_shap_absoluto": 8.842699476621458e-05
+    },
+    {
+      "posicao": 274,
+      "feature": "V206",
+      "media_shap_absoluto": 8.600270125129714e-05
+    },
+    {
+      "posicao": 275,
+      "feature": "V251",
+      "media_shap_absoluto": 8.491226748820334e-05
+    },
+    {
+      "posicao": 276,
+      "feature": "V209",
+      "media_shap_absoluto": 8.485607001334803e-05
+    },
+    {
+      "posicao": 277,
+      "feature": "V273",
+      "media_shap_absoluto": 8.43291021098657e-05
+    },
+    {
+      "posicao": 278,
+      "feature": "D6",
+      "media_shap_absoluto": 8.394250995821466e-05
+    },
+    {
+      "posicao": 279,
+      "feature": "V176",
+      "media_shap_absoluto": 8.378906338098807e-05
+    },
+    {
+      "posicao": 280,
+      "feature": "V210",
+      "media_shap_absoluto": 8.280026039394208e-05
+    },
+    {
+      "posicao": 281,
+      "feature": "V289",
+      "media_shap_absoluto": 8.033955281231283e-05
+    },
+    {
+      "posicao": 282,
+      "feature": "V205",
+      "media_shap_absoluto": 7.845593601405219e-05
+    },
+    {
+      "posicao": 283,
+      "feature": "V60",
+      "media_shap_absoluto": 7.672464113608527e-05
+    },
+    {
+      "posicao": 284,
+      "feature": "V140",
+      "media_shap_absoluto": 7.639074202517235e-05
+    },
+    {
+      "posicao": 285,
+      "feature": "V213",
+      "media_shap_absoluto": 7.636889882772e-05
+    },
+    {
+      "posicao": 286,
+      "feature": "V198",
+      "media_shap_absoluto": 7.328911988983468e-05
+    },
+    {
+      "posicao": 287,
+      "feature": "V166",
+      "media_shap_absoluto": 6.947107955951971e-05
+    },
+    {
+      "posicao": 288,
+      "feature": "V244",
+      "media_shap_absoluto": 6.909929282321542e-05
+    },
+    {
+      "posicao": 289,
+      "feature": "V336",
+      "media_shap_absoluto": 6.872035892508152e-05
+    },
+    {
+      "posicao": 290,
+      "feature": "V212",
+      "media_shap_absoluto": 6.770541381992744e-05
+    },
+    {
+      "posicao": 291,
+      "feature": "V112",
+      "media_shap_absoluto": 6.734467316410669e-05
+    },
+    {
+      "posicao": 292,
+      "feature": "id_11",
+      "media_shap_absoluto": 6.630397213414887e-05
+    },
+    {
+      "posicao": 293,
+      "feature": "V227",
+      "media_shap_absoluto": 6.580742019051926e-05
+    },
+    {
+      "posicao": 294,
+      "feature": "id_32",
+      "media_shap_absoluto": 6.579077216088336e-05
+    },
+    {
+      "posicao": 295,
+      "feature": "V215",
+      "media_shap_absoluto": 6.575114777929046e-05
+    },
+    {
+      "posicao": 296,
+      "feature": "V298",
+      "media_shap_absoluto": 6.55315580869302e-05
+    },
+    {
+      "posicao": 297,
+      "feature": "V335",
+      "media_shap_absoluto": 6.489344115294689e-05
+    },
+    {
+      "posicao": 298,
+      "feature": "V182",
+      "media_shap_absoluto": 6.194583376644954e-05
+    },
+    {
+      "posicao": 299,
+      "feature": "V295",
+      "media_shap_absoluto": 6.030356494827134e-05
+    },
+    {
+      "posicao": 300,
+      "feature": "V202",
+      "media_shap_absoluto": 5.9963799039763874e-05
+    },
+    {
+      "posicao": 301,
+      "feature": "V234",
+      "media_shap_absoluto": 5.759282532877103e-05
+    },
+    {
+      "posicao": 302,
+      "feature": "V262",
+      "media_shap_absoluto": 5.735924115364476e-05
+    },
+    {
+      "posicao": 303,
+      "feature": "V304",
+      "media_shap_absoluto": 5.650296416389253e-05
+    },
+    {
+      "posicao": 304,
+      "feature": "V178",
+      "media_shap_absoluto": 5.567555554537621e-05
+    },
+    {
+      "posicao": 305,
+      "feature": "V286",
+      "media_shap_absoluto": 5.031949431257697e-05
+    },
+    {
+      "posicao": 306,
+      "feature": "V300",
+      "media_shap_absoluto": 5.0187222323299824e-05
+    },
+    {
+      "posicao": 307,
+      "feature": "V211",
+      "media_shap_absoluto": 4.8212160651296274e-05
+    },
+    {
+      "posicao": 308,
+      "feature": "V145",
+      "media_shap_absoluto": 4.531885439151826e-05
+    },
+    {
+      "posicao": 309,
+      "feature": "id_07",
+      "media_shap_absoluto": 4.525219630424844e-05
+    },
+    {
+      "posicao": 310,
+      "feature": "V144",
+      "media_shap_absoluto": 4.411592772786886e-05
+    },
+    {
+      "posicao": 311,
+      "feature": "V288",
+      "media_shap_absoluto": 4.168266826790815e-05
+    },
+    {
+      "posicao": 312,
+      "feature": "V232",
+      "media_shap_absoluto": 4.110620948498087e-05
+    },
+    {
+      "posicao": 313,
+      "feature": "V224",
+      "media_shap_absoluto": 3.961151199589321e-05
+    },
+    {
+      "posicao": 314,
+      "feature": "V218",
+      "media_shap_absoluto": 3.893005163979947e-05
+    },
+    {
+      "posicao": 315,
+      "feature": "V301",
+      "media_shap_absoluto": 3.8855471168339865e-05
+    },
+    {
+      "posicao": 316,
+      "feature": "V256",
+      "media_shap_absoluto": 3.869630679844277e-05
+    },
+    {
+      "posicao": 317,
+      "feature": "V150",
+      "media_shap_absoluto": 3.864514660694778e-05
+    },
+    {
+      "posicao": 318,
+      "feature": "V172",
+      "media_shap_absoluto": 3.8122844587290464e-05
+    },
+    {
+      "posicao": 319,
+      "feature": "V226",
+      "media_shap_absoluto": 3.728993040078749e-05
+    },
+    {
+      "posicao": 320,
+      "feature": "V3",
+      "media_shap_absoluto": 3.656707526007644e-05
+    },
+    {
+      "posicao": 321,
+      "feature": "V279",
+      "media_shap_absoluto": 3.635307311673905e-05
+    },
+    {
+      "posicao": 322,
+      "feature": "V72",
+      "media_shap_absoluto": 3.627030296605882e-05
+    },
+    {
+      "posicao": 323,
+      "feature": "V246",
+      "media_shap_absoluto": 3.560599340119842e-05
+    },
+    {
+      "posicao": 324,
+      "feature": "V15",
+      "media_shap_absoluto": 3.50562294177553e-05
+    },
+    {
+      "posicao": 325,
+      "feature": "M8_ausente",
+      "media_shap_absoluto": 3.494314175621805e-05
+    },
+    {
+      "posicao": 326,
+      "feature": "V188",
+      "media_shap_absoluto": 3.466376450268098e-05
+    },
+    {
+      "posicao": 327,
+      "feature": "V93",
+      "media_shap_absoluto": 3.419805380943375e-05
+    },
+    {
+      "posicao": 328,
+      "feature": "V207",
+      "media_shap_absoluto": 3.365226875656185e-05
+    },
+    {
+      "posicao": 329,
+      "feature": "V105",
+      "media_shap_absoluto": 3.3161120743180004e-05
+    },
+    {
+      "posicao": 330,
+      "feature": "V217",
+      "media_shap_absoluto": 3.153660498963899e-05
+    },
+    {
+      "posicao": 331,
+      "feature": "V242",
+      "media_shap_absoluto": 3.15072871705855e-05
+    },
+    {
+      "posicao": 332,
+      "feature": "V8",
+      "media_shap_absoluto": 3.1052168405646206e-05
+    },
+    {
+      "posicao": 333,
+      "feature": "V114",
+      "media_shap_absoluto": 3.0241731039549178e-05
+    },
+    {
+      "posicao": 334,
+      "feature": "V168",
+      "media_shap_absoluto": 3.003241775078375e-05
+    },
+    {
+      "posicao": 335,
+      "feature": "V239",
+      "media_shap_absoluto": 2.9907371642036556e-05
+    },
+    {
+      "posicao": 336,
+      "feature": "id_10",
+      "media_shap_absoluto": 2.9402272641534645e-05
+    },
+    {
+      "posicao": 337,
+      "feature": "D12",
+      "media_shap_absoluto": 2.8839365935026353e-05
+    },
+    {
+      "posicao": 338,
+      "feature": "V147",
+      "media_shap_absoluto": 2.8627686735594245e-05
+    },
+    {
+      "posicao": 339,
+      "feature": "V109",
+      "media_shap_absoluto": 2.822483435679801e-05
+    },
+    {
+      "posicao": 340,
+      "feature": "V42",
+      "media_shap_absoluto": 2.7132769967745057e-05
+    },
+    {
+      "posicao": 341,
+      "feature": "V79",
+      "media_shap_absoluto": 2.4443284385588957e-05
+    },
+    {
+      "posicao": 342,
+      "feature": "V171",
+      "media_shap_absoluto": 2.329714987643576e-05
+    },
+    {
+      "posicao": 343,
+      "feature": "V184",
+      "media_shap_absoluto": 2.2723490748045177e-05
+    },
+    {
+      "posicao": 344,
+      "feature": "V183",
+      "media_shap_absoluto": 2.2546226776130213e-05
+    },
+    {
+      "posicao": 345,
+      "feature": "V225",
+      "media_shap_absoluto": 2.237067589212014e-05
+    },
+    {
+      "posicao": 346,
+      "feature": "V118",
+      "media_shap_absoluto": 2.1452334102546326e-05
+    },
+    {
+      "posicao": 347,
+      "feature": "V175",
+      "media_shap_absoluto": 2.1164778681117405e-05
+    },
+    {
+      "posicao": 348,
+      "feature": "V299",
+      "media_shap_absoluto": 2.089843513296593e-05
+    },
+    {
+      "posicao": 349,
+      "feature": "V237",
+      "media_shap_absoluto": 2.0852829171014255e-05
+    },
+    {
+      "posicao": 350,
+      "feature": "V199",
+      "media_shap_absoluto": 2.0394134681854866e-05
+    },
+    {
+      "posicao": 351,
+      "feature": "V290",
+      "media_shap_absoluto": 1.9655854792611955e-05
+    },
+    {
+      "posicao": 352,
+      "feature": "V123",
+      "media_shap_absoluto": 1.9295419825124888e-05
+    },
+    {
+      "posicao": 353,
+      "feature": "V230",
+      "media_shap_absoluto": 1.857259106573397e-05
+    },
+    {
+      "posicao": 354,
+      "feature": "V332",
+      "media_shap_absoluto": 1.7639315940375117e-05
+    },
+    {
+      "posicao": 355,
+      "feature": "V9",
+      "media_shap_absoluto": 1.7074767072056328e-05
+    },
+    {
+      "posicao": 356,
+      "feature": "id_08",
+      "media_shap_absoluto": 1.4891385357873751e-05
+    },
+    {
+      "posicao": 357,
+      "feature": "V98",
+      "media_shap_absoluto": 1.4841886332580937e-05
+    },
+    {
+      "posicao": 358,
+      "feature": "V21",
+      "media_shap_absoluto": 1.484160258618974e-05
+    },
+    {
+      "posicao": 359,
+      "feature": "V180",
+      "media_shap_absoluto": 1.318995612117205e-05
+    },
+    {
+      "posicao": 360,
+      "feature": "V214",
+      "media_shap_absoluto": 1.3189088102058572e-05
+    },
+    {
+      "posicao": 361,
+      "feature": "id_23",
+      "media_shap_absoluto": 1.2504788386517348e-05
+    },
+    {
+      "posicao": 362,
+      "feature": "V39",
+      "media_shap_absoluto": 1.2489800979344659e-05
+    },
+    {
+      "posicao": 363,
+      "feature": "V167",
+      "media_shap_absoluto": 1.1795993769961446e-05
+    },
+    {
+      "posicao": 364,
+      "feature": "V32",
+      "media_shap_absoluto": 1.1545371380847323e-05
+    },
+    {
+      "posicao": 365,
+      "feature": "V324",
+      "media_shap_absoluto": 1.0351780380095347e-05
+    },
+    {
+      "posicao": 366,
+      "feature": "V223",
+      "media_shap_absoluto": 9.977522752612161e-06
+    },
+    {
+      "posicao": 367,
+      "feature": "V329",
+      "media_shap_absoluto": 9.448352319029115e-06
+    },
+    {
+      "posicao": 368,
+      "feature": "V92",
+      "media_shap_absoluto": 9.394669210154187e-06
+    },
+    {
+      "posicao": 369,
+      "feature": "V17",
+      "media_shap_absoluto": 9.168904483300883e-06
+    },
+    {
+      "posicao": 370,
+      "feature": "V106",
+      "media_shap_absoluto": 9.118638607498764e-06
+    },
+    {
+      "posicao": 371,
+      "feature": "V162",
+      "media_shap_absoluto": 8.797604168054687e-06
+    },
+    {
+      "posicao": 372,
+      "feature": "V235",
+      "media_shap_absoluto": 8.494126623980587e-06
+    },
+    {
+      "posicao": 373,
+      "feature": "V57",
+      "media_shap_absoluto": 8.381016159067648e-06
+    },
+    {
+      "posicao": 374,
+      "feature": "V248",
+      "media_shap_absoluto": 7.975844842421818e-06
+    },
+    {
+      "posicao": 375,
+      "feature": "V148",
+      "media_shap_absoluto": 7.965041140206816e-06
+    },
+    {
+      "posicao": 376,
+      "feature": "V216",
+      "media_shap_absoluto": 7.503830630621017e-06
+    },
+    {
+      "posicao": 377,
+      "feature": "V250",
+      "media_shap_absoluto": 7.21341010300123e-06
+    },
+    {
+      "posicao": 378,
+      "feature": "V334",
+      "media_shap_absoluto": 7.022545723029637e-06
+    },
+    {
+      "posicao": 379,
+      "feature": "V163",
+      "media_shap_absoluto": 6.900049432332813e-06
+    },
+    {
+      "posicao": 380,
+      "feature": "V146",
+      "media_shap_absoluto": 6.51590004505458e-06
+    },
+    {
+      "posicao": 381,
+      "feature": "V194",
+      "media_shap_absoluto": 6.3171773655769796e-06
+    },
+    {
+      "posicao": 382,
+      "feature": "id_25",
+      "media_shap_absoluto": 5.5732163147308445e-06
+    },
+    {
+      "posicao": 383,
+      "feature": "V228",
+      "media_shap_absoluto": 5.534185932364072e-06
+    },
+    {
+      "posicao": 384,
+      "feature": "V116",
+      "media_shap_absoluto": 5.309304464080351e-06
+    },
+    {
+      "posicao": 385,
+      "feature": "V331",
+      "media_shap_absoluto": 4.974500240492828e-06
+    },
+    {
+      "posicao": 386,
+      "feature": "V22",
+      "media_shap_absoluto": 4.272812706519232e-06
+    },
+    {
+      "posicao": 387,
+      "feature": "V253",
+      "media_shap_absoluto": 3.604735177042113e-06
+    },
+    {
+      "posicao": 388,
+      "feature": "V325",
+      "media_shap_absoluto": 3.5509313757366016e-06
+    },
+    {
+      "posicao": 389,
+      "feature": "V161",
+      "media_shap_absoluto": 3.346774696013983e-06
+    },
+    {
+      "posicao": 390,
+      "feature": "V231",
+      "media_shap_absoluto": 2.9840274629936074e-06
+    },
+    {
+      "posicao": 391,
+      "feature": "V192",
+      "media_shap_absoluto": 2.4685178771487687e-06
+    },
+    {
+      "posicao": 392,
+      "feature": "V142",
+      "media_shap_absoluto": 2.396124349947055e-06
+    },
+    {
+      "posicao": 393,
+      "feature": "V284",
+      "media_shap_absoluto": 2.3770155714188965e-06
+    },
+    {
+      "posicao": 394,
+      "feature": "V236",
+      "media_shap_absoluto": 2.1317982164403703e-06
+    },
+    {
+      "posicao": 395,
+      "feature": "V337",
+      "media_shap_absoluto": 2.1070079349305975e-06
+    },
+    {
+      "posicao": 396,
+      "feature": "V173",
+      "media_shap_absoluto": 1.8924067256196387e-06
+    },
+    {
+      "posicao": 397,
+      "feature": "V196",
+      "media_shap_absoluto": 1.5492056317868592e-06
+    },
+    {
+      "posicao": 398,
+      "feature": "V238",
+      "media_shap_absoluto": 1.4622472326885541e-06
+    },
+    {
+      "posicao": 399,
+      "feature": "V104",
+      "media_shap_absoluto": 1.454773859239139e-06
+    },
+    {
+      "posicao": 400,
+      "feature": "V158",
+      "media_shap_absoluto": 1.417251370627699e-06
+    },
+    {
+      "posicao": 401,
+      "feature": "V326",
+      "media_shap_absoluto": 1.3038381748288845e-06
+    },
+    {
+      "posicao": 402,
+      "feature": "V322",
+      "media_shap_absoluto": 1.190556191870217e-06
+    },
+    {
+      "posicao": 403,
+      "feature": "V110",
+      "media_shap_absoluto": 9.731660205927406e-07
+    },
+    {
+      "posicao": 404,
+      "feature": "V18",
+      "media_shap_absoluto": 2.1780838076000255e-07
+    },
+    {
+      "posicao": 405,
+      "feature": "V157",
+      "media_shap_absoluto": 2.0736840502992008e-07
+    },
+    {
+      "posicao": 406,
+      "feature": "V247",
+      "media_shap_absoluto": 1.8966784462828713e-07
+    },
+    {
+      "posicao": 407,
+      "feature": "V233",
+      "media_shap_absoluto": 1.8340633211679156e-07
+    },
+    {
+      "posicao": 408,
+      "feature": "id_22",
+      "media_shap_absoluto": 1.2145096374446302e-07
+    },
+    {
+      "posicao": 409,
+      "feature": "V197",
+      "media_shap_absoluto": 1.302260947238417e-08
+    },
+    {
+      "posicao": 410,
+      "feature": "V191",
+      "media_shap_absoluto": 9.439318392019217e-09
+    },
+    {
+      "posicao": 411,
+      "feature": "V186",
+      "media_shap_absoluto": 3.3952827191004576e-09
+    },
+    {
+      "posicao": 412,
+      "feature": "V330",
+      "media_shap_absoluto": 5.603796829213644e-10
+    },
+    {
+      "posicao": 413,
+      "feature": "V1",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 414,
+      "feature": "V14",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 415,
+      "feature": "V16",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 416,
+      "feature": "V27",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 417,
+      "feature": "V28",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 418,
+      "feature": "V41",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 419,
+      "feature": "V65",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 420,
+      "feature": "V68",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 421,
+      "feature": "V88",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 422,
+      "feature": "V89",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 423,
+      "feature": "V107",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 424,
+      "feature": "V111",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 425,
+      "feature": "V113",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 426,
+      "feature": "V117",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 427,
+      "feature": "V119",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 428,
+      "feature": "V120",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 429,
+      "feature": "V121",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 430,
+      "feature": "V122",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 431,
+      "feature": "V138",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 432,
+      "feature": "V141",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 433,
+      "feature": "V153",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 434,
+      "feature": "V154",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 435,
+      "feature": "V155",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 436,
+      "feature": "V174",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 437,
+      "feature": "V179",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 438,
+      "feature": "V181",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 439,
+      "feature": "V185",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 440,
+      "feature": "V193",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 441,
+      "feature": "V195",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 442,
+      "feature": "V200",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 443,
+      "feature": "V240",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 444,
+      "feature": "V241",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 445,
+      "feature": "V249",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 446,
+      "feature": "V252",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 447,
+      "feature": "V254",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 448,
+      "feature": "V255",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 449,
+      "feature": "V269",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 450,
+      "feature": "V305",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 451,
+      "feature": "V327",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 452,
+      "feature": "V328",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 453,
+      "feature": "V339",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 454,
+      "feature": "id_21",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 455,
+      "feature": "id_24",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 456,
+      "feature": "M1_F",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 457,
+      "feature": "M2_ausente",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 458,
+      "feature": "M3_ausente",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 459,
+      "feature": "M9_ausente",
+      "media_shap_absoluto": 0.0
+    },
+    {
+      "posicao": 460,
+      "feature": "id_27",
+      "media_shap_absoluto": 0.0
+    }
+  ],
+  "casos_locais": [
+    {
+      "tipo": "verdadeiro_positivo",
+      "posicao_na_validacao": 5102,
+      "classe_real": 1,
+      "classe_predita": 1,
+      "probabilidade_fraude": 0.9624301791191101,
+      "valor_base": 0.06624922490128618,
+      "force_plot_png": "shap_force_verdadeiro_positivo.png",
+      "force_plot_html": "shap_force_verdadeiro_positivo.html",
+      "principais_contribuicoes": [
+        {
+          "feature": "C14",
+          "valor_transformado": -0.15962661802768707,
+          "shap": 0.16834705267271158,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "V258",
+          "valor_transformado": 0.8938453197479248,
+          "shap": 0.10876457857682074,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "C13",
+          "valor_transformado": -0.2361569106578827,
+          "shap": 0.08699623815799758,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "D10",
+          "valor_transformado": -0.6070437431335449,
+          "shap": 0.047541538298643576,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "id_20",
+          "valor_transformado": -1.5406140089035034,
+          "shap": 0.045232479290759686,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "card2",
+          "valor_transformado": 0.8698509335517883,
+          "shap": 0.04431671833422817,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "D1",
+          "valor_transformado": -0.584377110004425,
+          "shap": 0.03153101294683305,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "C8",
+          "valor_transformado": -0.05069410055875778,
+          "shap": -0.029942758092447664,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "C5",
+          "valor_transformado": -0.21323660016059875,
+          "shap": 0.028244168605038932,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "D8",
+          "valor_transformado": -0.5871108174324036,
+          "shap": -0.026467620862290406,
+          "direcao": "reduz_risco"
+        }
+      ]
+    },
+    {
+      "tipo": "falso_positivo",
+      "posicao_na_validacao": 16419,
+      "classe_real": 0,
+      "classe_predita": 1,
+      "probabilidade_fraude": 0.6691853404045105,
+      "valor_base": 0.06624922490128618,
+      "force_plot_png": "shap_force_falso_positivo.png",
+      "force_plot_html": "shap_force_falso_positivo.html",
+      "principais_contribuicoes": [
+        {
+          "feature": "card1",
+          "valor_transformado": 1.060541033744812,
+          "shap": 0.07930183188101929,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "C13",
+          "valor_transformado": -0.2289000302553177,
+          "shap": 0.052194095920693954,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "posicao_ciclo_diario_sen",
+          "valor_transformado": -1.052391529083252,
+          "shap": -0.04690161756096651,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "card5",
+          "valor_transformado": -2.4048781394958496,
+          "shap": 0.04340159770102213,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "card2",
+          "valor_transformado": -1.2334648370742798,
+          "shap": 0.04297002448171267,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "V94",
+          "valor_transformado": 2.716681957244873,
+          "shap": 0.03170026519920735,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "C5",
+          "valor_transformado": -0.21323660016059875,
+          "shap": 0.03116327056032641,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "M6_F",
+          "valor_transformado": 1,
+          "shap": 0.029351792248875484,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "D10",
+          "valor_transformado": -0.6070437431335449,
+          "shap": 0.028606588883167403,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "M5_F",
+          "valor_transformado": 1,
+          "shap": -0.02813435969085198,
+          "direcao": "reduz_risco"
+        }
+      ]
+    },
+    {
+      "tipo": "falso_negativo",
+      "posicao_na_validacao": 16439,
+      "classe_real": 1,
+      "classe_predita": 0,
+      "probabilidade_fraude": 0.12104532867670059,
+      "valor_base": 0.06624922490128618,
+      "force_plot_png": "shap_force_falso_negativo.png",
+      "force_plot_html": "shap_force_falso_negativo.html",
+      "principais_contribuicoes": [
+        {
+          "feature": "TransactionAmt",
+          "valor_transformado": 0.6949158310890198,
+          "shap": 0.08980726952441176,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "id_30",
+          "valor_transformado": 0.002283624140545726,
+          "shap": 0.057071996293795196,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "card5",
+          "valor_transformado": -2.454014778137207,
+          "shap": -0.04881458798640136,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "V258",
+          "valor_transformado": 0.8938453197479248,
+          "shap": -0.02762609468391336,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "C2",
+          "valor_transformado": -0.0909680649638176,
+          "shap": -0.024091604266945132,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "card1",
+          "valor_transformado": -0.6705451011657715,
+          "shap": -0.022159094167713802,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "id_20",
+          "valor_transformado": -2.7968032360076904,
+          "shap": -0.021066006274177578,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "posicao_ciclo_diario_sen",
+          "valor_transformado": -1.0495989322662354,
+          "shap": -0.02038383948918819,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "D8",
+          "valor_transformado": -0.5853585600852966,
+          "shap": 0.020049705553425626,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "id_02",
+          "valor_transformado": -1.2317415475845337,
+          "shap": 0.019700256558813623,
+          "direcao": "aumenta_risco"
+        }
+      ]
+    },
+    {
+      "tipo": "verdadeiro_negativo",
+      "posicao_na_validacao": 12694,
+      "classe_real": 0,
+      "classe_predita": 0,
+      "probabilidade_fraude": 0.009849266149103642,
+      "valor_base": 0.06624922490128618,
+      "force_plot_png": "shap_force_verdadeiro_negativo.png",
+      "force_plot_html": "shap_force_verdadeiro_negativo.html",
+      "principais_contribuicoes": [
+        {
+          "feature": "posicao_ciclo_diario_sen",
+          "valor_transformado": -1.0540987253189087,
+          "shap": -0.012286610299571739,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "card2",
+          "valor_transformado": -1.507533311843872,
+          "shap": -0.010482857365880177,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "C5",
+          "valor_transformado": -0.17295759916305542,
+          "shap": -0.00928695722498647,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "card1",
+          "valor_transformado": 1.0723726749420166,
+          "shap": -0.009180081559159376,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "V70",
+          "valor_transformado": 1.2440539598464966,
+          "shap": -0.007855296809598514,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "C1",
+          "valor_transformado": -0.09595061838626862,
+          "shap": -0.004503763185195959,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "C13",
+          "valor_transformado": -0.2289000302553177,
+          "shap": 0.004480070428976906,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "V91",
+          "valor_transformado": 1.2300559282302856,
+          "shap": -0.004428254863727279,
+          "direcao": "reduz_risco"
+        },
+        {
+          "feature": "dist1",
+          "valor_transformado": -0.18239730596542358,
+          "shap": 0.003241973292851203,
+          "direcao": "aumenta_risco"
+        },
+        {
+          "feature": "M4_ausente",
+          "valor_transformado": 1,
+          "shap": -0.0028447361056125075,
+          "direcao": "reduz_risco"
+        }
+      ]
+    }
+  ],
+  "artefatos": {
+    "summary_plot": "shap_summary_xgboost.png",
+    "force_plots": [
+      {
+        "tipo": "verdadeiro_positivo",
+        "png": "shap_force_verdadeiro_positivo.png",
+        "html": "shap_force_verdadeiro_positivo.html"
+      },
+      {
+        "tipo": "falso_positivo",
+        "png": "shap_force_falso_positivo.png",
+        "html": "shap_force_falso_positivo.html"
+      },
+      {
+        "tipo": "falso_negativo",
+        "png": "shap_force_falso_negativo.png",
+        "html": "shap_force_falso_negativo.html"
+      },
+      {
+        "tipo": "verdadeiro_negativo",
+        "png": "shap_force_verdadeiro_negativo.png",
+        "html": "shap_force_verdadeiro_negativo.html"
+      }
+    ]
+  },
+  "ressalvas": [
+    "Contribuicao SHAP descreve influencia sobre o modelo, nao causalidade.",
+    "Colunas V e outras features anonimizadas nao recebem significado Pix.",
+    "O IEEE-CIS representa comercio eletronico/cartao, nao transacoes Pix reais.",
+    "Uma explicacao fiel ao modelo nao garante que a classificacao esteja correta."
+  ],
+  "modelo": {
+    "origem": "artefato local reutilizado",
+    "tipo": "XGBClassifier",
+    "formato": "xgboost_nativo",
+    "hash_modelo": "c770c6c073096b62cd9a5efb3737ed6871c472fa6c4c98e974aba00e7a7c0f6b",
+    "hash_preprocessador": "f409932c8d376823fd40530a0a29e26a2b9e7079842645fc1cada4e90f450b53",
+    "metricas_validacao_reconstrucao": {
+      "auc_roc": 0.9067240161181116,
+      "auc_pr": 0.5719491001065327,
+      "recall": 0.5548980933596318,
+      "precisao": 0.5211485026242667,
+      "f1": 0.537494029613119,
+      "limiar": 0.5,
+      "n": 88581,
+      "n_fraudes": 3042,
+      "taxa_base": 0.03434145019812375,
+      "auc_pr_relativo": 16.654774239492692
+    }
+  },
+  "execucao": {
+    "segundos_total": 84,
+    "pico_memoria_mb": 3328
+  }
+}

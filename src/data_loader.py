@@ -30,9 +30,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Caminhos base do projeto (relativo a este arquivo: src/ → raiz → data/raw/)
+# Caminhos base do projeto. ``TCC_DATA_RAW`` permite manter os CSVs grandes
+# fora de pastas sincronizadas (como OneDrive) sem alterar codigo ou copiar o
+# dataset. Quando ausente, o comportamento historico ``data/raw`` e preservado.
 PROJETO_RAIZ = Path(__file__).resolve().parent.parent
-DATA_RAW = PROJETO_RAIZ / "data" / "raw"
+DATA_RAW = Path(
+    os.getenv("TCC_DATA_RAW", PROJETO_RAIZ / "data" / "raw")
+).expanduser().resolve()
 
 # Nome da competição Kaggle
 KAGGLE_COMPETICAO = "ieee-fraud-detection"
