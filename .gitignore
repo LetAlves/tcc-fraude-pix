@@ -61,3 +61,11 @@ notebooks/Untitled*.ipynb
 # A barra inicial ancora na raiz: sem ela, o padrão casaria também com
 # src/models/, tornando invisível todo arquivo novo do pacote de modelos.
 /models/
+
+# Exemplos exportados para a interface (linhas do IEEE-CIS; a competicao
+# nao autoriza redistribuicao). Regenere com scripts/exportar_exemplos_interface.py
+data/exemplos_interface.json
+
+# Dados de cobertura (gerados a cada execucao)
+.coverage
+htmlcov/
