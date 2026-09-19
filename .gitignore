@@ -69,3 +69,4 @@ data/exemplos_interface.json
 # Dados de cobertura (gerados a cada execucao)
 .coverage
 htmlcov/
+data/fundo_shap.npy

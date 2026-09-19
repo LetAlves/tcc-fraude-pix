@@ -205,21 +205,98 @@ def construir_pipeline(
     )
 
 
+ARQUIVO_FUNDO_SHAP = RAIZ / "data" / "fundo_shap.npy"
+_PIPELINE_EM_CACHE: Pipeline | None = None
+
+
+def _mensagem_sem_llm() -> str:
+    """Texto usado quando não há cliente de LLM configurado.
+
+    A interface exige `explicacao_rag` não vazio. Preencher com uma explicação
+    inventada seria o pior desfecho possível num trabalho sobre explicabilidade,
+    então o campo declara a ausência em vez de simulá-la, e o resultado traz
+    `explicacao_disponivel=False` para a tela distinguir os dois casos.
+    """
+    return (
+        "Explicação em linguagem natural indisponível: nenhum cliente de modelo "
+        "de linguagem está configurado. Os fatores do SHAP e a probabilidade "
+        "acima foram calculados normalmente e são resultados reais do modelo."
+    )
+
+
+def obter_pipeline(
+    diretorio_modelo: Path | str = DIRETORIO_MODELO_PADRAO,
+    cliente_llm: Callable[[str], str] | None = None,
+) -> Pipeline:
+    """
+    Monta o pipeline com os artefatos disponíveis, reaproveitando entre chamadas.
+
+    Cada componente é opcional de forma diferente:
+
+    - **modelo**: obrigatório. Sem ele não há análise.
+    - **matriz de fundo do SHAP**: exportada por
+      `scripts/exportar_exemplos_interface.py`. Sem ela o explicador cai em
+      `tree_path_dependent`, que é outra configuração metodológica — o pipeline
+      avisa, mas não finge que é equivalente.
+    - **índice vetorial**: sem ele não há recuperação documental, e a explicação
+      fica apoiada apenas nos fatores do modelo.
+    """
+    global _PIPELINE_EM_CACHE
+    if _PIPELINE_EM_CACHE is not None:
+        return _PIPELINE_EM_CACHE
+
+    fundo = None
+    if ARQUIVO_FUNDO_SHAP.exists():
+        fundo = np.load(ARQUIVO_FUNDO_SHAP)
+        logger.info("matriz de fundo do SHAP carregada: %s", fundo.shape)
+    else:
+        logger.warning(
+            "matriz de fundo ausente em %s; rode "
+            "scripts/exportar_exemplos_interface.py para gerá-la",
+            ARQUIVO_FUNDO_SHAP,
+        )
+
+    recuperador = None
+    try:
+        recuperador = RecuperadorDocumentos.a_partir_do_disco()
+    except Exception as erro:  # índice ausente ou corrompido
+        logger.warning("recuperação documental indisponível: %s", erro)
+
+    _PIPELINE_EM_CACHE = construir_pipeline(
+        diretorio_modelo=diretorio_modelo,
+        matriz_fundo=fundo,
+        recuperador=recuperador,
+        cliente_llm=cliente_llm,
+    )
+    return _PIPELINE_EM_CACHE
+
+
 def explicar_transacao(transacao: dict[str, Any]) -> dict[str, Any]:
     """
     Ponto de entrada usado pela interface Streamlit.
 
     `app.py` carrega esta função por `TCC_PIPELINE_MODULE=src.pipeline` e
-    `TCC_PIPELINE_FUNCTION=explicar_transacao`. Constrói o pipeline a cada
-    chamada, o que é caro: para uso repetido, construa uma vez com
-    `construir_pipeline` e reutilize `Pipeline.processar`.
+    `TCC_PIPELINE_FUNCTION=explicar_transacao`.
 
-    {{PREENCHER}}: a matriz de fundo do SHAP e o índice vetorial precisam ser
-    resolvidos aqui quando os caminhos de produção estiverem definidos. Enquanto
-    isso, esta função exige que ambos venham prontos por `construir_pipeline`.
+    Devolve resultado parcial quando alguma camada não está disponível, sempre
+    declarando o que faltou. Um resultado que omite a ausência é
+    indistinguível de um resultado completo.
     """
-    raise NotImplementedError(
-        "{{PREENCHER}}: defina a origem da matriz de fundo do SHAP e do índice "
-        "vetorial para uso pela interface. Use construir_pipeline(...) e "
-        "Pipeline.processar(...) diretamente enquanto isso não estiver resolvido."
-    )
+    pipeline = obter_pipeline()
+
+    sem_llm = pipeline.cliente_llm is None
+    if sem_llm:
+        # Cliente que devolve o próprio prompt: preserva o que seria enviado ao
+        # modelo, sem inventar a resposta que ele daria.
+        pipeline.cliente_llm = lambda prompt: prompt
+
+    resultado = pipeline.processar(transacao)
+
+    if sem_llm:
+        resultado["prompt_montado"] = resultado["explicacao_rag"]
+        resultado["explicacao_rag"] = _mensagem_sem_llm()
+
+    resultado["explicacao_disponivel"] = not sem_llm
+    resultado["rag_disponivel"] = pipeline.recuperador is not None
+    resultado["shap_interventional"] = ARQUIVO_FUNDO_SHAP.exists()
+    return resultado

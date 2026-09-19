@@ -43,6 +43,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 SAIDA = RAIZ / "data" / "exemplos_interface.json"
+SAIDA_FUNDO = RAIZ / "data" / "fundo_shap.npy"
+TAMANHO_FUNDO = 500
 POR_QUADRANTE = 3
 SEMENTE = 42
 
@@ -72,12 +74,26 @@ def main(diretorio_modelo: Path = RAIZ / "models" / "xgboost") -> None:
     df = reduzir_precisao(criar_features_pix(dados[2]))
     del dados
 
-    _, _, teste = dividir_temporal(df)
+    treino, _, teste = dividir_temporal(df)
+    X_treino = treino.drop(columns=[COLUNA_ALVO])
+    del treino
     X_teste, y_teste = teste.drop(columns=[COLUNA_ALVO]), teste[COLUNA_ALVO]
     del df, teste
 
     preprocessador, modelo, manifesto = carregar(diretorio_modelo)
     logger.info("modelo: %s", manifesto["tipo_do_modelo"])
+
+    # Matriz de fundo do SHAP: 500 linhas amostradas SOMENTE do treino, conforme
+    # o protocolo em reports/pessoa_2/julho/04_metodologia_shap.md. Exportada
+    # porque reconstruí-la exigiria carregar o dataset inteiro a cada execução da
+    # interface -- minutos por clique.
+    rng_fundo = np.random.default_rng(SEMENTE)
+    M_treino = preprocessador.transform(X_treino)
+    indices_fundo = rng_fundo.choice(len(M_treino), TAMANHO_FUNDO, replace=False)
+    np.save(SAIDA_FUNDO, np.asarray(M_treino[indices_fundo], dtype="float32"))
+    logger.info("matriz de fundo do SHAP gravada em %s (%d x %d)",
+                SAIDA_FUNDO, TAMANHO_FUNDO, M_treino.shape[1])
+    del M_treino, X_treino
 
     probabilidades = modelo.predict_proba(preprocessador.transform(X_teste))[:, 1]
     sinalizada = probabilidades >= 0.5

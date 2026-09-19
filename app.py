@@ -389,12 +389,33 @@ def _mostrar_resultado(resultado: Mapping[str, Any]) -> None:
     ui.fatores_shap(resultado["fatores_shap"])
     ui.fechar_card()
 
-    ui.abrir_card("✦ Explicação da IA", "Gerada a partir dos fatores e dos documentos recuperados")
-    ui.explicacao(resultado["explicacao_rag"])
-    ui.fechar_card()
+    if resultado.get("explicacao_disponivel", True):
+        ui.abrir_card("✦ Explicação da IA",
+                      "Gerada a partir dos fatores e dos documentos recuperados")
+        ui.explicacao(resultado["explicacao_rag"])
+        ui.fechar_card()
+    else:
+        ui.aviso(
+            "<b>Explicação em linguagem natural indisponível.</b> Nenhum cliente "
+            "de modelo de linguagem está configurado. A probabilidade e os "
+            "fatores acima são resultados reais do modelo; apenas o texto final "
+            "não pôde ser gerado."
+        )
+        if resultado.get("prompt_montado"):
+            with st.expander("Ver o conteúdo que seria enviado ao modelo de linguagem"):
+                st.caption(
+                    "É a evidência que sustentaria a explicação: os fatores do "
+                    "SHAP e os trechos recuperados, com as restrições impostas ao modelo."
+                )
+                st.code(resultado["prompt_montado"], language="text")
 
     documentos = resultado.get("documentos_recuperados", [])
     st.markdown(f"### Evidências consultadas ({len(documentos)} documentos)")
+    if not resultado.get("rag_disponivel", True):
+        ui.aviso(
+            "<b>Base documental indisponível.</b> O índice vetorial não foi "
+            "encontrado, então nenhuma norma foi consultada para este caso."
+        )
     ui.documentos(documentos)
 
     duracao = st.session_state.get("duracao")
@@ -404,6 +425,11 @@ def _mostrar_resultado(resultado: Mapping[str, Any]) -> None:
         "Limiar de decisão": _formatar_proporcao(predicao.get("limiar")),
         "Fatores retornados": len(resultado["fatores_shap"]),
         "Documentos recuperados": len(documentos),
+        "Configuração do SHAP": (
+            "interventional (500 linhas de fundo)"
+            if resultado.get("shap_interventional")
+            else "tree_path_dependent — fundo ausente"
+        ),
         "Tempo de processamento": f"{duracao:.2f} s" if duracao else None,
     })
 
