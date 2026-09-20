@@ -1,0 +1,58 @@
+{
+  "gerado_em": "2026-09-17T22:10:09+00:00",
+  "tipo_do_modelo": "XGBClassifier",
+  "formato_do_modelo": "xgboost_nativo",
+  "arquivo_do_modelo": "modelo.json",
+  "versoes": {
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.0",
+    "xgboost": "3.0.5"
+  },
+  "hashes": {
+    "preprocessador.joblib": "f409932c8d376823fd40530a0a29e26a2b9e7079842645fc1cada4e90f450b53",
+    "modelo.json": "c770c6c073096b62cd9a5efb3737ed6871c472fa6c4c98e974aba00e7a7c0f6b"
+  },
+  "metadados": {
+    "tarefa": "m3_p1_4",
+    "origem": "reconstrucao do modelo final para SHAP; Optuna nao repetido",
+    "hiperparametros": {
+      "learning_rate": 0.23079135592662034,
+      "max_depth": 8,
+      "min_child_weight": 14.537130636078968,
+      "subsample": 0.8712330049838402,
+      "colsample_bytree": 0.9159088242279116,
+      "gamma": 1.6854282637500935,
+      "reg_alpha": 0.1130499784071629,
+      "reg_lambda": 1.2326957979415551
+    },
+    "n_arvores": 300,
+    "scale_pos_weight": 27.434310083918007,
+    "linhas_treino": 413378,
+    "colunas": 460,
+    "split": "temporal 70/15/15",
+    "metricas_validacao": {
+      "auc_roc": 0.9067240161181116,
+      "auc_pr": 0.5719491001065327,
+      "recall": 0.5548980933596318,
+      "precisao": 0.5211485026242667,
+      "f1": 0.537494029613119,
+      "limiar": 0.5,
+      "n": 88581,
+      "n_fraudes": 3042,
+      "taxa_base": 0.03434145019812375,
+      "auc_pr_relativo": 16.654774239492692
+    },
+    "metricas_validacao_reconstrucao": {
+      "auc_roc": 0.9067240161181116,
+      "auc_pr": 0.5719491001065327,
+      "recall": 0.5548980933596318,
+      "precisao": 0.5211485026242667,
+      "f1": 0.537494029613119,
+      "limiar": 0.5,
+      "n": 88581,
+      "n_fraudes": 3042,
+      "taxa_base": 0.03434145019812375,
+      "auc_pr_relativo": 16.654774239492692
+    }
+  }
+}

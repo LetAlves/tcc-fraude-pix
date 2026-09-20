@@ -26,7 +26,9 @@ def main() -> None:
 
     store = FaissVectorStore.load(args.index_dir)
     model_name = store.model_name or DEFAULT_EMBEDDING_MODEL
-    embedder = MultilingualEmbedder(model_name, local_files_only=True)
+    embedder = MultilingualEmbedder(
+        model_name, local_files_only=True, revision=store.model_revision,
+    )
     results = store.search(embedder.encode_query(args.query), k=args.k)
     for rank, result in enumerate(results, start=1):
         metadata = result.document.metadata

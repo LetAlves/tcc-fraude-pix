@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-09-18T23:43:39.763312+00:00",
+  "hashes_modelo": {
+    "modelo.json": "c770c6c073096b62cd9a5efb3737ed6871c472fa6c4c98e974aba00e7a7c0f6b",
+    "preprocessador.joblib": "f409932c8d376823fd40530a0a29e26a2b9e7079842645fc1cada4e90f450b53"
+  },
+  "hashes_dataset": {
+    "train_transaction.csv": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+    "train_identity.csv": "b63c725d8377be90a995268d97f347c17d456b95db45807adcf9f59cd603c37c"
+  },
+  "criterio": "f1",
+  "particao_selecao": "validacao",
+  "desempate": "menor limiar entre os máximos de F1, conforme escolher_limiar",
+  "limiar": 0.6834220290184021,
+  "alvo": null,
+  "metricas": {
+    "auc_roc": 0.9067240161181116,
+    "auc_pr": 0.5719491001065327,
+    "recall": 0.4829059829059829,
+    "precisao": 0.668030923146885,
+    "f1": 0.560580041976722,
+    "limiar": 0.6834220290184021,
+    "n": 88581,
+    "n_fraudes": 3042,
+    "taxa_base": 0.03434145019812375,
+    "auc_pr_relativo": 16.654774239492692
+  },
+  "metricas_no_padrao": {
+    "auc_roc": 0.9067240161181116,
+    "auc_pr": 0.5719491001065327,
+    "recall": 0.5548980933596318,
+    "precisao": 0.5211485026242667,
+    "f1": 0.537494029613119,
+    "limiar": 0.5,
+    "n": 88581,
+    "n_fraudes": 3042,
+    "taxa_base": 0.03434145019812375,
+    "auc_pr_relativo": 16.654774239492692
+  }
+}
