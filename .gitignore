@@ -69,3 +69,12 @@ notebooks/Untitled*.ipynb
 !/models/xgboost/preprocessador.joblib
 !/models/xgboost/manifest.json
 !/models/xgboost/politica_decisao.json
+
+# Exemplos exportados para a interface (linhas do IEEE-CIS; a competicao
+# nao autoriza redistribuicao). Regenere com scripts/exportar_exemplos_interface.py
+data/exemplos_interface.json
+
+# Dados de cobertura (gerados a cada execucao)
+.coverage
+htmlcov/
+data/fundo_shap.npy
