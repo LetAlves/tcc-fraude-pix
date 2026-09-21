@@ -144,6 +144,7 @@ def main() -> None:
                 "linhas_treino": int(matriz_treino.shape[0]),
                 "colunas": int(matriz_treino.shape[1]),
                 "split": "temporal 70/15/15",
+                "metricas_validacao": metricas,
                 "metricas_validacao_reconstrucao": metricas,
             },
         )

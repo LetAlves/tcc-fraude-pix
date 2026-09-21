@@ -40,4 +40,5 @@ python-dotenv>=1.0.0          # .env para credenciais Kaggle e Claude API
 tqdm>=4.66.0                  # barras de progresso
 optuna>=3.6.0                 # hyperparameter tuning do XGBoost
 psutil>=5.9.0                 # medição de memória nos scripts de treino
+coverage>=7.0                 # cobertura dos testes (meta declarada: 60%)
 pytest>=8.0.0                 # executa testes unittest e testes funcionais do SHAP

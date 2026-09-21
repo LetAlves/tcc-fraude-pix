@@ -79,11 +79,14 @@ SHAP 0.52, marca incorretamente matrizes já codificadas como categóricas e
 recusa `TreeExplainer` interventional. A execução SHAP foi validada com XGBoost
 3.0.5, e `requirements.txt` impede instalar a combinação incompatível. O modelo
 final foi reconstruído com os parâmetros já selecionados, sem repetir ou
-consultar o Optuna, e obteve AUC-PR 0,5719; para a comparação acadêmica continua
-valendo o número canônico do tuning, **0,5703**.
+consultar o Optuna, e obteve AUC-PR 0,5719. Esse é o artefato congelado usado no
+SHAP e na avaliação final. O valor **0,5703** permanece identificado como
+resultado histórico do retreino do tuning, sem ser atribuído ao modelo entregue.
 
-Os modelos binários e os CSVs permanecem fora do Git. O relatório registra os
-hashes locais do modelo e do pré-processador usados nas explicações.
+O XGBoost aprovado, seu pré-processador, manifesto e política de decisão são
+versionados em `models/xgboost/`. O Random Forest e os CSVs permanecem fora do
+Git. O manifesto registra os hashes do modelo e do pré-processador usados nas
+explicações.
 
 ## Limitações
 
@@ -91,5 +94,5 @@ hashes locais do modelo e do pré-processador usados nas explicações.
 - SHAP explica o comportamento do classificador, não a correção da decisão.
 - Features `V*`, `C*`, `D*` e identificadores mascarados não recebem significado
   semântico por aparecerem no ranking.
-- A escolha do limiar e a avaliação única no teste continuam como etapas
-  separadas.
+- O limiar 0,6834220290 foi escolhido por F1 na validação e congelado antes da
+  avaliação única no teste.

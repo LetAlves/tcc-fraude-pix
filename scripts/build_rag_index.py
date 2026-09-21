@@ -32,12 +32,17 @@ def build_index(
     parent_chunks_path: Path = DEFAULT_CHUNKS,
     index_dir: Path = DEFAULT_INDEX_DIR,
     model_name: str = DEFAULT_EMBEDDING_MODEL,
+    model_revision: str | None = None,
     batch_size: int = 32,
     local_files_only: bool = False,
 ) -> dict[str, object]:
     """Executa o pipeline e devolve um resumo verificável da construção."""
 
-    embedder = MultilingualEmbedder(model_name, local_files_only=local_files_only)
+    embedder = MultilingualEmbedder(
+        model_name,
+        local_files_only=local_files_only,
+        revision=model_revision,
+    )
     pages = load_corpus_pages(manifest_path, raw_dir)
     parents = chunk_documents(
         pages,
@@ -59,6 +64,7 @@ def build_index(
         vectors,
         embedding_documents,
         model_name=model_name,
+        model_revision=model_revision,
     )
     index_manifest = store.save(index_dir)
     return {
@@ -80,6 +86,10 @@ def main() -> None:
     parser.add_argument("--parent-chunks", type=Path, default=DEFAULT_CHUNKS)
     parser.add_argument("--index-dir", type=Path, default=DEFAULT_INDEX_DIR)
     parser.add_argument("--model", default=DEFAULT_EMBEDDING_MODEL)
+    parser.add_argument(
+        "--model-revision",
+        help="Revisão imutável do modelo Hugging Face usada no índice.",
+    )
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument(
         "--offline",
@@ -96,6 +106,7 @@ def main() -> None:
         parent_chunks_path=args.parent_chunks,
         index_dir=args.index_dir,
         model_name=args.model,
+        model_revision=args.model_revision,
         batch_size=args.batch_size,
         local_files_only=args.offline,
     )

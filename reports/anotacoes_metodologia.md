@@ -493,3 +493,17 @@ O laboratório de junho usa `Document`, um retriever lexical e composição por 
 ### Frase-chave para o Capítulo 3
 
 O protocolo separa três evidências: o classificador estima risco; SHAP registra influências locais; o RAG recupera contexto documental. A geração em linguagem natural deve permanecer subordinada às duas evidências e se abster quando o suporte for insuficiente.
+
+### Artefato entregue, limiar e avaliação final
+
+Em 18/09/2026, o artefato XGBoost que gerou o SHAP foi carregado sem retreino e sem reajuste do pré-processador. Os hashes do modelo e do pré-processador coincidiram com o relatório SHAP. O manifesto passou a registrar explicitamente as métricas de validação do próprio artefato: AUC-PR 0,5719 e AUC-ROC 0,9067. O valor 0,5703 continua sendo o resultado histórico do retreino do tuning, não o desempenho atribuído ao arquivo entregue.
+
+O limiar 0,6834220290 foi selecionado por maximização de F1 exclusivamente na validação e persistido antes da inferência sobre o teste. No teste temporal preservado, o artefato obteve AUC-PR 0,4833, AUC-ROC 0,8700, precisão 0,5852, recall 0,4324 e F1 0,4973. A matriz de confusão foi `[[84553, 945], [1750, 1333]]`. A queda de 0,0887 na AUC-PR em relação à validação é evidência de degradação temporal neste dataset; não autoriza extrapolação para Pix real.
+
+Aplicar o mesmo limiar numérico a algoritmos diferentes não torna precisão, recall e F1 comparáveis, pois cada modelo possui uma distribuição de escores própria. Como os artefatos ou vetores de probabilidade dos outros classificadores não estavam disponíveis, a comparação principal continua usando AUC-PR, independente de limiar. Uma comparação operacional futura deve selecionar o ponto de operação de cada modelo na validação sob o mesmo critério.
+
+### Reconstrução versionada do índice RAG
+
+Em 20/09/2026 foi criada uma nova reconstrução do índice, porque a cópia histórica não estava disponível. A execução fixou a revisão `e8f8c211226b894fcb81acc59f3b34ba3efd5f42` do MiniLM multilíngue e produziu 1.195 vetores de 384 dimensões, preservando 290 chunks pais. Três dos quatro hashes de fonte coincidem com o snapshot de 10/09/2026; o JSON consolidado do Regulamento do Pix diverge. Por isso, o manifesto identifica o artefato como nova construção e não afirma identidade com o índice histórico.
+
+O índice FAISS, os metadados e o manifesto totalizam menos de 4 MB e passaram a ser versionados. Os documentos baixados e os chunks intermediários continuam fora do Git. Duas consultas de fumaça comprovaram carregamento e recuperação sem medir qualidade; relevância, fidelidade e ausência de alucinação permanecem `{{RESULTADO}}` até avaliação humana.

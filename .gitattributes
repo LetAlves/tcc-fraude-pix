@@ -1,0 +1,12 @@
+# Artefatos cujo hash precisa sobreviver ao checkout sem conversão de bytes.
+data/rag/index/index.faiss binary
+data/rag/index/metadata.jsonl text eol=lf
+data/rag/index/manifest.json text eol=lf
+models/xgboost/modelo.json binary
+models/xgboost/preprocessador.joblib binary
+models/xgboost/manifest.json text eol=lf
+models/xgboost/politica_decisao.json text eol=lf
+
+# Entregáveis compilados.
+*.docx binary
+*.pdf binary

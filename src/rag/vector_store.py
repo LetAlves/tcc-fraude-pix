@@ -64,12 +64,14 @@ class FaissVectorStore:
         documents: list[Document],
         *,
         model_name: str,
+        model_revision: str | None = None,
     ) -> None:
         if int(index.ntotal) != len(documents):
             raise ValueError("Quantidade de vetores difere da quantidade de documentos.")
         self.index = index
         self.documents = documents
         self.model_name = model_name
+        self.model_revision = model_revision
 
     @classmethod
     def from_embeddings(
@@ -78,6 +80,7 @@ class FaissVectorStore:
         documents: list[Document],
         *,
         model_name: str,
+        model_revision: str | None = None,
     ) -> "FaissVectorStore":
         matrix = _normalize_matrix(embeddings)
         if matrix.shape[0] != len(documents):
@@ -85,7 +88,12 @@ class FaissVectorStore:
         faiss = _import_faiss()
         index = faiss.IndexFlatIP(matrix.shape[1])
         index.add(matrix)
-        return cls(index, list(documents), model_name=model_name)
+        return cls(
+            index,
+            list(documents),
+            model_name=model_name,
+            model_revision=model_revision,
+        )
 
     @property
     def dimension(self) -> int:
@@ -134,6 +142,7 @@ class FaissVectorStore:
             "schema_version": "1.0",
             "created_at": datetime.now(UTC).isoformat(),
             "model_name": self.model_name,
+            "model_revision": self.model_revision,
             "metric": "cosine_via_normalized_inner_product",
             "index_type": "IndexFlatIP",
             "dimension": self.dimension,
@@ -188,4 +197,9 @@ class FaissVectorStore:
             or len(documents) != manifest.get("document_count")
         ):
             raise ValueError("Índice e manifesto estão inconsistentes.")
-        return cls(index, documents, model_name=str(manifest.get("model_name", "")))
+        return cls(
+            index,
+            documents,
+            model_name=str(manifest.get("model_name", "")),
+            model_revision=manifest.get("model_revision"),
+        )

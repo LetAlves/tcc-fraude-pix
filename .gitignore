@@ -17,7 +17,10 @@ data/raw/
 data/processed/
 data/rag/raw/
 data/rag/processed/
-data/rag/index/
+data/rag/index/*
+!data/rag/index/index.faiss
+!data/rag/index/metadata.jsonl
+!data/rag/index/manifest.json
 data/rag/manifest.json
 
 # Outputs de notebooks
@@ -57,7 +60,21 @@ jupyter_out.log
 jupyter_err.log
 notebooks/Untitled*.ipynb
 
-# Modelos treinados (binários grandes, reproduzíveis pelos scripts).
-# A barra inicial ancora na raiz: sem ela, o padrão casaria também com
-# src/models/, tornando invisível todo arquivo novo do pacote de modelos.
-/models/
+# Versionar somente o artefato principal aprovado; RF, ZIPs e experimentos locais
+# continuam ignorados. Não excluir o diretório pai: Git precisa percorrê-lo.
+/models/*
+!/models/xgboost/
+/models/xgboost/*
+!/models/xgboost/modelo.json
+!/models/xgboost/preprocessador.joblib
+!/models/xgboost/manifest.json
+!/models/xgboost/politica_decisao.json
+
+# Exemplos exportados para a interface (linhas do IEEE-CIS; a competicao
+# nao autoriza redistribuicao). Regenere com scripts/exportar_exemplos_interface.py
+data/exemplos_interface.json
+
+# Dados de cobertura (gerados a cada execucao)
+.coverage
+htmlcov/
+data/fundo_shap.npy
