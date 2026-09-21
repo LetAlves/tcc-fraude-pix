@@ -8,25 +8,35 @@
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern}
+\usepackage{newtxtext,newtxmath}
 \usepackage{microtype}
+\usepackage{indentfirst}
 \usepackage{graphicx}
 \usepackage[alf]{abntex2cite}
 \usepackage[hidelinks]{hyperref}
 
+\setlrmarginsandblock{3cm}{2cm}{*}
+\setulmarginsandblock{3cm}{2cm}{*}
+\checkandfixthelayout
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0cm}
+
 \titulo{Detecção e Explicação de Risco de Fraude em Contexto Pix com Machine Learning, SHAP e RAG}
 \autor{Letícia Alves \\ Lucas Nogueira}
-\local{Cidade}
+\local{\texttt{\{\{PREENCHER\}\}}}
 \data{2026}
 \instituicao{%
-  Instituição de Ensino \\
+  \texttt{\{\{PREENCHER\}\}} \\
   Curso de Ciência da Computação}
 \tipotrabalho{Trabalho de Conclusão de Curso}
 \preambulo{Trabalho de Conclusão de Curso apresentado como requisito parcial para obtenção do grau de Bacharel em Ciência da Computação.}
+\orientador{\texttt{\{\{PREENCHER\}\}}}
 
 \begin{document}
 \frenchspacing
+\OnehalfSpacing
 
+\pretextual
 \imprimircapa
 \imprimirfolhaderosto*
 
@@ -38,6 +48,8 @@
 \include{capitulos/01_introducao}
 \include{capitulos/02_revisao_bibliografica}
 \include{capitulos/03_metodologia}
+\include{capitulos/04_resultados}
+\include{capitulos/05_conclusao}
 
 \postextual
 \bibliography{referencias}

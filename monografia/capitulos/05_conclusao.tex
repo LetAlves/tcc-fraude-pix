@@ -1,0 +1,39 @@
+\chapter{Conclusão}
+
+\section{Síntese do trabalho}
+
+Este trabalho investigou a integração de aprendizado de máquina, explicabilidade por SHAP e recuperação documental em uma prova de conceito voltada à explicação de risco de fraude. O desenvolvimento foi realizado sobre o conjunto IEEE-CIS Fraud Detection, cuja natureza de comércio eletrônico e cujos atributos parcialmente anonimizados impedem a extrapolação direta dos resultados para transações Pix. Assim, a contribuição deve ser interpretada como demonstração técnica e metodológica, não como validação de um sistema antifraude para uso financeiro real.
+
+O pipeline de dados preservou a ordem definida por \texttt{TransactionDT} e separou treino, validação e teste na proporção aproximada de 70/15/15, mantendo valores temporais empatados na mesma partição. O XGBoost foi adotado como classificador principal e comparado com a regressão logística e o Random Forest. Para o artefato final versionado, o limiar de 0,6834 foi selecionado exclusivamente na validação pela maximização do F1. Nessa partição, a AUC-PR foi 0,5719. No teste temporal preservado, o modelo obteve AUC-PR de 0,4833, AUC-ROC de 0,8700, precisão de 0,5852, revocação de 0,4324 e F1 de 0,4973. A redução de 0,0887 na AUC-PR entre validação e teste evidencia degradação temporal no próprio conjunto estudado e reforça a necessidade de monitoramento e revalidação antes de qualquer uso externo.
+
+A camada SHAP foi aplicada ao XGBoost com \texttt{TreeExplainer}, fundo de 500 observações do treino, perturbação interventional e saída na escala de probabilidade. A verificação de fidelidade apresentou erro máximo de reconstrução de aproximadamente $3{,}04 \times 10^{-7}$. Na análise global registrada, \texttt{TransactionAmt}, \texttt{C13}, \texttt{C1}, \texttt{C14} e \texttt{card1} ocuparam as cinco primeiras posições por média do valor SHAP absoluto. Esses resultados descrevem o comportamento do classificador; não atribuem causalidade nem autorizam inferir o significado de colunas anônimas.
+
+A camada documental reuniu quatro fontes normativas, operacionais e setoriais. A reconstrução versionada produziu 290 \emph{chunks} pais e 1.195 janelas vetoriais de 384 dimensões em um índice FAISS exato. O recuperador, o construtor de prompt, o orquestrador do pipeline e a interface Streamlit foram implementados. A interface recebe uma transação, apresenta a predição, os principais fatores SHAP e os documentos recuperados e informa a indisponibilidade de componentes ausentes. O cliente do modelo de linguagem, contudo, permanece \texttt{\{\{PREENCHER\}\}}. Por essa razão, não foram produzidas explicações reais de LLM nem resultados experimentais de coerência, fidelidade, alucinação ou clareza. As consultas executadas sobre o índice foram testes de fumaça e não constituem avaliação de relevância.
+
+\section{Atendimento aos objetivos}
+
+Os objetivos de preparação e caracterização do IEEE-CIS, comparação de modelos, explicação por SHAP, registro de atributos e organização da base documental foram atendidos nos limites da prova de conceito. Também foram implementadas a recuperação semântica, a montagem controlada do prompt e a exposição das camadas na interface.
+
+O objetivo relativo à geração de explicações foi atendido apenas quanto ao contrato do cliente, à preparação do contexto e às salvaguardas do prompt. A chamada a um LLM não foi implementada. De modo semelhante, foi definido um protocolo objetivo para avaliar recuperação e geração, mas sua execução permanece \texttt{\{\{RESULTADO\}\}} por falta do cliente LLM e de um conjunto anotado. O objetivo de reprodutibilidade foi parcialmente atendido: código, modelo principal e índice vetorial foram versionados, enquanto os dados brutos, os exemplos da interface e a matriz de fundo do SHAP permanecem externos por licença, tamanho ou método de geração documentado.
+
+Também subsiste uma divergência operacional. O modelo final foi avaliado com limiar de 0,6834, mas o pipeline usado pela interface mantém 0,5 como valor padrão. Até que a aplicação carregue explicitamente o limiar persistido do artefato, suas classificações não devem ser apresentadas como reprodução do ponto de operação avaliado no teste.
+
+\section{Contribuições}
+
+A principal contribuição do trabalho é uma arquitetura modular na qual previsão, atribuição local e recuperação documental permanecem distinguíveis. Essa separação favorece a auditoria: a probabilidade e a classe pertencem ao classificador; as contribuições pertencem ao explicador; e as afirmações contextuais devem ser sustentadas pelas fontes recuperadas. O projeto também contribui ao preservar a ausência de significado das variáveis anonimizadas, tratar a versão dos documentos como parte da evidência e declarar indisponibilidade em vez de gerar uma saída simulada.
+
+No plano experimental, o uso de divisão temporal, métricas adequadas à classe rara e escolha do limiar somente na validação permitiu observar perda de desempenho em dados posteriores. No plano de reprodutibilidade, a disponibilização do artefato XGBoost e do índice FAISS reduz a dependência de retreinamentos e reconstruções potencialmente divergentes.
+
+\section{Limitações}
+
+As limitações centrais são a diferença entre os domínios IEEE-CIS e Pix, a anonimização das variáveis, a ausência de dados transacionais reais de instituições financeiras e a falta de validação por especialistas do domínio. O rótulo do conjunto não elimina problemas de atraso ou imperfeição de confirmação, e a queda de desempenho no teste indica sensibilidade à mudança temporal.
+
+Na camada explicativa, SHAP descreve o modelo, não a realidade causal da fraude. A matriz de fundo necessária à configuração interventional não é versionada e precisa ser reproduzida pelo script indicado no projeto. Na camada RAG, a consulta atual usa os nomes dos fatores mais influentes, inclusive nomes anônimos, sem aplicar limiar de similaridade ou filtro automático de vigência. Um dos documentos da reconstrução atual também possui hash diferente do registro histórico. Por fim, a ausência do cliente LLM impede verificar empiricamente se as restrições do prompt são suficientes para evitar alucinações ou contradições.
+
+\section{Trabalhos futuros}
+
+Como continuação imediata, recomenda-se carregar no pipeline o limiar de 0,6834 associado ao artefato avaliado e registrar essa informação em seu manifesto. Em seguida, deve-se implementar o cliente de LLM escolhido, com credenciais externas ao código, limites de custo, registro de versão e tratamento de indisponibilidade. A integração deve encaminhar ao prompt os valores observados, as versões do modelo e do registro de atributos e os metadados completos de cada fonte.
+
+Também é necessário construir um conjunto de consultas e trechos relevantes anotados, executar o protocolo de recuperação e submeter as explicações a avaliação humana quanto à coerência com SHAP, fidelidade à transação, suporte documental, ausência de alucinações e clareza em português. Recomenda-se acrescentar filtros de vigência, critérios de abstenção baseados na qualidade da recuperação e testes adversariais contra instruções maliciosas presentes nos documentos.
+
+Por fim, a evolução para um cenário aplicado exige dados Pix devidamente governados, revisão jurídica e de privacidade, validação com analistas de fraude, calibração do modelo, definição de custos de erro e monitoramento contínuo de desempenho e mudança de distribuição. Essas etapas pertencem a trabalhos futuros e não devem ser interpretadas como funcionalidades já entregues pelo protótipo.

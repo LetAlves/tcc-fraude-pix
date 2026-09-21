@@ -2,80 +2,81 @@
 
 \section{Contextualização}
 
-O Pix consolidou-se como infraestrutura relevante do sistema de pagamentos brasileiro por oferecer transferências e pagamentos instantâneos em disponibilidade contínua. Em 2024, foi o instrumento de pagamento com maior crescimento em quantidade de transações no país, com aumento de 52\%, e respondeu por 47\% das transações de pagamento sem uso de espécie no último trimestre do ano \cite{bcb_pagamentos_2024}. Essa escala amplia a importância de mecanismos capazes de identificar rapidamente comportamentos de risco sem comprometer de forma desnecessária operações legítimas.
+O Pix consolidou-se como infraestrutura relevante do sistema de pagamentos brasileiro ao permitir transferências e pagamentos instantâneos em disponibilidade contínua. Em 2024, foi o instrumento de pagamento com maior crescimento em quantidade de transações no país, com aumento de 52\%, e respondeu por 47\% das transações de pagamento sem uso de espécie no último trimestre do ano \cite{bcb_pagamentos_2024}. A ampliação desse uso torna necessária a identificação célere de comportamentos de risco, sem que operações legítimas sejam indevidamente interrompidas.
 
-Fraudes financeiras constituem um problema de classificação particularmente difícil. Os casos confirmados são raros em comparação às operações legítimas, os padrões mudam ao longo do tempo e a confirmação do rótulo pode ocorrer depois da transação. Assim, uma solução pode apresentar alta acurácia global e ainda falhar justamente na classe de maior interesse \cite{abdallah2016survey,dalpozzolo2018realistic}. Métricas voltadas ao desempenho na classe positiva, como precisão, revocação, F1 e área sob a curva precisão-revocação, são mais informativas nesse cenário do que a acurácia isolada \cite{saito2015precision}.
+A detecção de fraude financeira constitui um problema de classificação particularmente difícil. Os casos confirmados são raros em comparação às operações legítimas, os padrões podem mudar ao longo do tempo e a confirmação do rótulo pode ocorrer depois da transação. Nessas condições, uma solução pode apresentar alta acurácia global e, ainda assim, falhar na classe de maior interesse \cite{abdallah2016survey,dalpozzolo2018realistic}. Métricas orientadas à classe positiva, como precisão, revocação, F1 e área sob a curva precisão--revocação, são, portanto, mais informativas do que a acurácia isolada \cite{saito2015precision}.
 
-Além do desempenho preditivo, decisões automatizadas no domínio financeiro exigem rastreabilidade. Um escore alto, sem indicação dos fatores que o influenciaram, oferece pouco suporte a um analista e pode induzir confiança excessiva. SHAP fornece atribuições locais para mostrar como cada variável contribuiu para uma previsão \cite{lundberg2017unified}. Entretanto, a explicação matemática não contém, por si só, o contexto regulatório e operacional do Pix.
+O desempenho preditivo, contudo, não é suficiente em um domínio no qual decisões automatizadas precisam ser examinadas por pessoas. Um escore elevado, desacompanhado dos fatores que o influenciaram, oferece pouco apoio à análise e pode induzir confiança excessiva. O método SHAP permite atribuir a cada variável uma contribuição local para a previsão \cite{lundberg2017unified}. Essa explicação matemática descreve o comportamento do classificador, mas não contém, por si só, contexto normativo ou operacional sobre o Pix.
 
-\textit{Retrieval-Augmented Generation} (RAG) permite recuperar trechos de uma coleção documental e fornecê-los a um modelo de linguagem durante a geração da resposta \cite{lewis2020rag}. No presente trabalho, essa abordagem é investigada como complemento, e não substituto, da explicação SHAP: o modelo estima o risco, SHAP registra os fatores da decisão e o RAG busca documentos do Banco Central, literatura científica e fontes setoriais para produzir uma contextualização rastreável em português.
+A arquitetura de \emph{Retrieval-Augmented Generation} (RAG) complementa modelos de linguagem com trechos recuperados de uma coleção documental \cite{lewis2020rag}. Neste trabalho, a recuperação foi projetada como complemento, e não substituta, da explicação SHAP: o modelo estima o risco; SHAP identifica os fatores que influenciaram a saída; e o RAG recupera fontes normativas, operacionais e setoriais relacionadas ao contexto brasileiro. A geração textual, por sua vez, deve permanecer condicionada a essas evidências e declarar insuficiência de suporte quando necessário.
 
-O Banco Central instituiu o Mecanismo Especial de Devolução por meio da Resolução BCB nº 103/2021, posteriormente incorporada e alterada no Regulamento do Pix \cite{bcb_resolucao103_2021,bcb_resolucao1_2020}. Esse histórico ilustra uma exigência central para a base documental: toda explicação regulatória deve preservar fonte, versão e vigência. Um sistema que mistura regras de períodos diferentes pode apresentar uma resposta fluente, porém incorreta.
+O Banco Central instituiu o Mecanismo Especial de Devolução por meio da Resolução BCB nº 103/2021, posteriormente incorporada ao Regulamento do Pix \cite{bcb_resolucao103_2021,bcb_resolucao1_2020}. Esse histórico evidencia uma exigência para a base documental: preservar a identificação, a versão e a vigência das fontes. A mistura de regras de períodos distintos pode resultar em uma resposta linguisticamente plausível, porém documentalmente incorreta.
 
 \section{Problema de pesquisa}
 
-Modelos de aprendizado de máquina podem reconhecer padrões complexos em transações, mas sua saída costuma ser técnica e insuficiente para explicar o resultado em linguagem acessível. Em sentido oposto, um modelo de linguagem pode produzir uma narrativa convincente sem fidelidade ao classificador ou à norma aplicável. O desafio é integrar previsão, explicabilidade e recuperação documental sem transformar correlação em causalidade, sem inventar o significado de atributos anonimizados e sem ocultar as limitações do conjunto de dados.
+Modelos de aprendizado de máquina podem reconhecer padrões complexos em dados transacionais, mas sua saída costuma ser técnica e insuficiente para justificar o resultado em linguagem acessível. Em sentido oposto, um modelo de linguagem pode produzir uma narrativa convincente sem fidelidade ao classificador ou à fonte recuperada. O problema consiste em integrar previsão, explicabilidade e recuperação documental sem transformar correlação em causalidade, sem inventar o significado de atributos anonimizados e sem ocultar as limitações do conjunto de dados.
 
-Este projeto usa o conjunto IEEE-CIS Fraud Detection, composto por transações de comércio eletrônico fornecidas pela Vesta \cite{ieee_cis_2019}. Ele não contém transações Pix e parte de seus atributos é anonimizada. Portanto, o dataset serve como base para uma prova de conceito de classificação de risco e integração técnica; não permite afirmar que o desempenho obtido representa uma operação Pix real.
+O estudo utiliza o conjunto IEEE-CIS Fraud Detection, composto por transações de comércio eletrônico fornecidas pela Vesta \cite{ieee_cis_2019}. O conjunto não contém transações Pix e parte de seus atributos é anonimizada. Consequentemente, ele serve como base para uma prova de conceito de classificação de risco e integração técnica, mas não permite afirmar que o desempenho observado represente uma operação Pix real.
 
 \subsection{Questão de pesquisa}
 
-\textbf{Como integrar um modelo de detecção de fraude, explicações locais por SHAP e recuperação de documentos por RAG para produzir explicações rastreáveis em português, preservando a fidelidade ao modelo e explicitando as limitações de uma prova de conceito baseada no IEEE-CIS?}
+\textbf{Como integrar um modelo de detecção de fraude, explicações locais por SHAP e recuperação de documentos por RAG para apoiar explicações rastreáveis em português, preservando a fidelidade ao modelo e explicitando as limitações de uma prova de conceito baseada no IEEE-CIS?}
 
 \section{Objetivos}
 
 \subsection{Objetivo geral}
 
-Desenvolver e avaliar um protótipo híbrido que combine aprendizado de máquina, SHAP e RAG para classificar o risco de fraude em dados transacionais e gerar explicações em português sustentadas por evidências do modelo e por documentos verificáveis relacionados ao contexto Pix brasileiro.
+Desenvolver e analisar um protótipo híbrido que combine aprendizado de máquina, SHAP e RAG para classificar risco de fraude em dados transacionais e apoiar a produção de explicações em português fundamentadas em evidências do modelo e em documentos verificáveis relacionados ao contexto Pix brasileiro.
 
 \subsection{Objetivos específicos}
 
 \begin{enumerate}
-  \item preparar e caracterizar o dataset IEEE-CIS, documentando desbalanceamento, valores ausentes, anonimização e diferenças em relação ao domínio Pix;
-  \item treinar e comparar XGBoost, Random Forest e uma linha de base usando métricas adequadas à classe rara;
+  \item preparar e caracterizar o conjunto IEEE-CIS, documentando desbalanceamento, valores ausentes, anonimização e diferenças em relação ao domínio Pix;
+  \item treinar e comparar XGBoost, Random Forest e uma linha de base por meio de métricas adequadas à classe rara;
   \item aplicar SHAP para identificar, global e localmente, as variáveis que influenciam as previsões;
-  \item construir um registro de atributos semânticos que impeça a tradução indevida de colunas anônimas para conceitos Pix;
-  \item organizar uma base documental versionada com normas e materiais oficiais do Banco Central, literatura científica e fontes setoriais selecionadas;
-  \item implementar recuperação semântica e geração de explicações que citem os trechos utilizados;
-  \item avaliar a qualidade da recuperação, a coerência da resposta com SHAP, o suporte documental das afirmações e a clareza para usuários;
-  \item disponibilizar o código, as decisões metodológicas e instruções de reprodução, respeitando limites de licença e privacidade dos dados.
+  \item manter um registro de atributos semânticos que impeça a tradução indevida de colunas anônimas para conceitos Pix;
+  \item organizar uma base documental versionada com normas, materiais oficiais e fontes setoriais selecionadas;
+  \item implementar a recuperação semântica e preparar a geração de explicações com indicação das fontes utilizadas;
+  \item definir um protocolo para avaliar a qualidade da recuperação, a coerência da resposta com SHAP, o suporte documental e a clareza para usuários;
+  \item disponibilizar código, artefatos permitidos, decisões metodológicas e instruções de reprodução, respeitando limites de licença e privacidade dos dados.
 \end{enumerate}
 
 \section{Justificativa}
 
-A Pesquisa Febraban de Tecnologia Bancária 2024 mostra que 73\% dos 22 bancos participantes daquela questão declararam usar inteligência artificial em detecção de fraude e lavagem de dinheiro. O mesmo relatório registra estratégias de detecção e resposta entre prioridades de cibersegurança. Esses resultados não medem fraude Pix nem representam todo o sistema financeiro, mas evidenciam a pertinência prática de técnicas de IA no setor \cite{febraban2024}.
+A Pesquisa Febraban de Tecnologia Bancária 2024 informa que 73\% dos 22 bancos participantes da questão declararam utilizar inteligência artificial na detecção de fraude e lavagem de dinheiro. O relatório também registra estratégias de detecção e resposta entre as prioridades de cibersegurança. Esses resultados não mensuram especificamente fraude no Pix nem representam todo o sistema financeiro, mas evidenciam a pertinência prática de técnicas de inteligência artificial no setor \cite{febraban2024}.
 
-No plano acadêmico, a contribuição está na integração controlada de três tipos de evidência. O escore preditivo responde quanto o padrão se aproxima da classe aprendida; SHAP descreve quais entradas influenciaram a decisão; o RAG fornece contexto documental com fonte. A separação explícita dessas evidências pode reduzir explicações genéricas e facilitar a auditoria de cada afirmação.
+No plano acadêmico, a relevância da proposta está na integração controlada de três tipos de evidência. O escore preditivo indica quanto a observação se aproxima da classe aprendida pelo modelo; SHAP descreve quais entradas influenciaram essa saída; e o RAG acrescenta contexto documental rastreável. A separação explícita dessas evidências reduz o risco de apresentar uma narrativa do modelo de linguagem como se fosse previsão, causalidade ou conteúdo normativo.
 
-A proposta também é relevante por tratar limites frequentemente omitidos em protótipos: mudança de distribuição, vazamento de dados ao reamostrar, escolha de métricas, temporalidade das normas e risco de atribuir significado a variáveis anonimizadas. Ao registrar esses limites, o trabalho evita apresentar uma demonstração acadêmica como sistema pronto para decisão financeira em produção.
+O trabalho também discute limitações frequentemente omitidas em protótipos, entre elas a mudança de distribuição, o vazamento de dados durante a preparação, a seleção inadequada de métricas, a temporalidade das normas e o risco de atribuir significado a variáveis anonimizadas. Esse registro evita caracterizar uma demonstração acadêmica como sistema pronto para decisões financeiras em produção.
 
 \section{Delimitação do trabalho}
 
-O escopo compreende uma prova de conceito executada sobre o IEEE-CIS, com modelos tabulares, explicações SHAP, índice vetorial local e uma interface demonstrativa. Não fazem parte do escopo:
+O escopo compreende uma prova de conceito executada sobre o IEEE-CIS, com modelos tabulares, explicações SHAP, índice vetorial local e interface demonstrativa. Não fazem parte do escopo:
 
 \begin{itemize}
   \item implantação em uma instituição financeira;
   \item processamento de dados pessoais reais de clientes Pix;
   \item decisão automática de bloqueio, acusação ou devolução;
-  \item validação jurídica da elegibilidade ao MED;
+  \item validação jurídica da elegibilidade ao Mecanismo Especial de Devolução;
   \item comprovação de generalização para transações Pix reais;
   \item comparação exaustiva de todos os modelos de detecção de fraude.
 \end{itemize}
 
-Qualquer dado apresentado ao LLM deve ser anonimizado ou sintético. Documentos regulatórios devem ser recuperados com metadados de versão e vigência. A saída será descrita como apoio explicativo sujeito a revisão humana.
+Os exemplos destinados à interface devem ser anonimizados ou sintéticos. Os documentos regulatórios precisam ser recuperados com metadados de origem, versão e vigência. A saída é tratada como apoio explicativo sujeito à revisão humana. Enquanto não houver cliente de modelo de linguagem configurado, o protótipo deve declarar a indisponibilidade da geração textual, em vez de simular uma explicação.
 
-\section{Contribuições esperadas}
+\section{Contribuições do trabalho}
 
-Espera-se entregar:
+As contribuições pretendidas são:
 
 \begin{enumerate}
-  \item um pipeline reproduzível de preparação, classificação e explicação;
-  \item um esquema de evidências que conecte SHAP ao RAG sem inventar semântica;
-  \item um corpus documental rastreável e temporalmente versionado;
+  \item um pipeline reproduzível de preparação, classificação e explicação local;
+  \item um esquema de evidências que conecte SHAP à recuperação documental sem inventar semântica para atributos anônimos;
+  \item um corpus documental rastreável, com metadados e controle de integridade;
   \item um protocolo de avaliação separado para desempenho preditivo, recuperação e fidelidade das explicações;
+  \item uma interface demonstrativa capaz de expor resultados e indisponibilidades de cada camada;
   \item uma discussão transparente sobre a transferência limitada do IEEE-CIS para o contexto Pix.
 \end{enumerate}
 
 \section{Organização do trabalho}
 
-Além desta introdução, o Capítulo 2 apresentará os fundamentos de fraude financeira, Pix, aprendizado de máquina, explicabilidade e RAG. O Capítulo 3 descreverá dados, preparação, modelos, protocolo experimental, corpus e integração das três camadas. O Capítulo 4 reunirá resultados preditivos, explicações locais, avaliação da recuperação e análise de erros. Por fim, o Capítulo 5 discutirá conclusões, limitações e trabalhos futuros.
+Além desta introdução, o Capítulo 2 apresenta os fundamentos de fraude financeira, Pix, aprendizado de máquina, explicabilidade e RAG. O Capítulo 3 descreve os dados, a preparação, os modelos, o protocolo experimental, o corpus e a integração das três camadas. O Capítulo 4 reúne os resultados preditivos e os resultados disponíveis de explicabilidade e recuperação, com suas restrições. Por fim, o Capítulo 5 sintetiza as conclusões, confronta os objetivos com o que foi efetivamente desenvolvido, registra as limitações e indica trabalhos futuros.
