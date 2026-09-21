@@ -114,14 +114,17 @@ class MultilingualEmbedder:
         *,
         model: Any | None = None,
         local_files_only: bool = False,
+        revision: str | None = None,
     ) -> None:
         self.model_name = model_name
+        self.revision = revision
         if model is None:
             try:
                 from sentence_transformers import SentenceTransformer
             except ImportError as error:  # pragma: no cover - mensagem de ambiente
                 raise RuntimeError("Instale sentence-transformers para gerar embeddings.") from error
-            model = SentenceTransformer(model_name, local_files_only=local_files_only)
+            options = {"revision": revision} if revision else {}
+            model = SentenceTransformer(model_name, local_files_only=local_files_only, **options)
         self.model = model
         self.tokenizer = model.tokenizer
         self.max_sequence_length = int(model.max_seq_length)

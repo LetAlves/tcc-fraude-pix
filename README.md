@@ -23,7 +23,7 @@ O [registro de features proposto no PR #2](https://github.com/LetAlves/tcc-fraud
 
 ## Estado do projeto
 
-Situação verificada localmente em **18/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4. A interface de demonstração foi implementada, mas a integração final SHAP → RAG → LLM ainda depende do orquestrador marcado com `{{PREENCHER}}`. Dependências instaladas não significam que todas as camadas já estejam implementadas.
+Situação verificada localmente em **20/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4 e o índice foi reconstruído com 1.195 vetores. A interface e o orquestrador foram implementados. A geração real ainda depende do cliente LLM marcado com `{{PREENCHER}}`; testes com cliente simulado não equivalem a uma avaliação do modelo de linguagem.
 
 | Componente | Situação | Evidência |
 |---|---|---|
@@ -36,13 +36,13 @@ Situação verificada localmente em **18/09/2026**. As camadas de modelagem de j
 | SMOTE e ponderação de classe | Comparados em quatro medições; empate, adotada a ponderação | [Anotações de metodologia](reports/anotacoes_metodologia.md) |
 | Baseline (regressão logística) | Executado no dataset completo; AUC-PR 0,3930 na validação e 0,1850 no teste | [Notebook 02 executado](notebooks/02_preprocessing.ipynb) |
 | Random Forest (modelo comparativo) | Treinado em duas configurações; AUC-PR 0,5298 | [Script](scripts/treinar_random_forest.py) |
-| XGBoost (modelo principal) | 50 tentativas executadas; AUC-PR 0,5703 após retreino completo | [Resultado da busca](reports/tuning_xgboost.json) |
+| XGBoost (modelo principal) | Artefato congelado: AUC-PR 0,5719 na validação e 0,4833 no teste | [Entrega parcial 2](reports/entrega_parcial_2.md) |
 | Comparação dos três modelos | Notebook executado com tabela e análise | [Notebook 03](notebooks/03_models.ipynb) |
 | Avaliação e escolha de limiar | Implementadas em módulo único, usado por todos os modelos | [Evaluator](src/models/evaluator.py) |
 | Persistência de modelos | Implementada, com manifesto, hashes e compressão | [Persistência](src/models/persistencia.py) |
 | RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |
 | SHAP no XGBoost | Executado: importância global, VP/FP/FN/VN e fidelidade aditiva aprovada | [Entrega de julho da Pessoa 1](reports/pessoa_1/julho/README.md) |
-| Interface de demonstração | Implementada como camada de apresentação; orquestrador final pendente | [Aplicação Streamlit](app.py) |
+| Interface de demonstração | Implementada como camada de apresentação; cliente LLM pendente | [Aplicação Streamlit](app.py) |
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
 
@@ -69,10 +69,10 @@ As dependências diretas estão em [requirements.txt](requirements.txt), com lim
 
 Fixar as versões não torna a execução reprodutível bit a bit — o caminho de modelagem usa `float32` e as operações matriciais são paralelas, então a ordem das somas varia e os resultados mudam a partir da terceira casa decimal. O lockfile elimina a outra fonte de variação: não saber com que versões os números foram produzidos.
 
-O lockfile preserva o ambiente histórico do tuning (XGBoost 3.4.1). Para gerar
-os artefatos SHAP, use `requirements.txt`, que mantém XGBoost abaixo de 3.4 por
-compatibilidade com o modo interventional do SHAP 0.52; a decisão está
-documentada na [entrega de julho da Pessoa 1](reports/pessoa_1/julho/README.md).
+O lockfile reproduz o ambiente aprovado do artefato entregue, com XGBoost 3.0.5,
+e mantém a compatibilidade com o modo interventional do SHAP 0.52. A execução
+histórica do tuning com XGBoost 3.4.1 permanece documentada, mas não define o
+ambiente operacional atual.
 
 ## Dataset e autenticação Kaggle
 
@@ -106,7 +106,7 @@ O diretório deve conter `train_transaction.csv` e `train_identity.csv`.
 
 ### Dados e segredos não vão para o Git
 
-- O [.gitignore](.gitignore) exclui `data/raw/`, `data/processed/`, os artefatos de `data/rag/`, `.venv/` e `.env`.
+- O [.gitignore](.gitignore) exclui `data/raw/`, `data/processed/`, os documentos e chunks de `data/rag/`, `.venv/` e `.env`. Somente o índice RAG aprovado e seus manifestos são exceções explícitas.
 - Não faça commit dos CSVs, de tokens ou de credenciais; não use `git add -f` para contornar essas exclusões.
 - Cada integrante pode obter os dados com sua própria conta Kaggle. Google Drive e DVC **não estão configurados** neste projeto; qualquer compartilhamento externo deve respeitar as regras da fonte.
 - Código, testes, documentação e estatísticas agregadas podem ser versionados sem incluir o dataset bruto.
@@ -187,21 +187,21 @@ Lê colunas selecionadas dos CSVs completos e **atualiza** [a entrega parcial de
 .\.venv\Scripts\python.exe scripts\query_rag_index.py "Como funciona o MED?" --k 5
 ```
 
-Os documentos oficiais, chunks e vetores são artefatos locais ignorados pelo Git. O catálogo de fontes, o código, os testes e o snapshot de hashes são versionáveis. Depois do primeiro download do modelo, use `scripts\build_rag_index.py --offline` para reconstruir sem acesso ao Hugging Face.
+Os documentos oficiais e chunks intermediários são artefatos locais ignorados pelo Git. A reconstrução aprovada de 20/09/2026 versiona `index.faiss`, `metadata.jsonl` e `manifest.json`, permitindo consultar o índice sem refazer embeddings. Para produzir uma versão nova, use `scripts\reconstruir_rag_versionado.py`; o script fixa a revisão local do modelo, registra hashes e se recusa a sobrescrever o índice existente.
 
 O catálogo atual usa o Guia MED 4.4 e registra separadamente as vigências de 01/09/2026 e 26/10/2026. Até a segunda data, respostas sobre alterações futuras devem conferir os metadados de vigência.
 
 ### Executar a interface Streamlit
 
-O `app.py` não duplica o ML, o SHAP ou o RAG. Ele espera uma função de orquestração existente, configurada pelo nome do módulo e da função:
+O `app.py` não duplica o ML, o SHAP ou o RAG. Ele recebe a função de orquestração existente por configuração:
 
 ```powershell
-$env:TCC_PIPELINE_MODULE = "{{PREENCHER}}"
-$env:TCC_PIPELINE_FUNCTION = "{{PREENCHER}}"
+$env:TCC_PIPELINE_MODULE = "src.pipeline"
+$env:TCC_PIPELINE_FUNCTION = "explicar_transacao"
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-O contrato de retorno esperado está documentado em `validar_resultado_pipeline`, no próprio arquivo. Enquanto o orquestrador não estiver consolidado, a interface exibe a pendência explicitamente e não fabrica predições ou explicações.
+O contrato de retorno esperado está documentado em `validar_resultado_pipeline`, no próprio arquivo. A geração textual requer a implementação do cliente LLM indicado no pipeline; a aplicação informa essa pendência sem fabricar uma explicação.
 
 ## Testes e protocolo experimental
 
@@ -212,7 +212,7 @@ Execute a suíte na raiz do projeto:
 git diff --check
 ```
 
-Na revalidação de 18/09/2026, **88 testes** foram aprovados. Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação final do modelo no conjunto de teste.
+Na verificação de 20/09/2026, **130 testes** foram aprovados. Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação experimental do LLM.
 
 Para os próximos experimentos:
 

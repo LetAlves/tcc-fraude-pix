@@ -45,12 +45,15 @@ class JulyDeliverablesTest(unittest.TestCase):
         self.assertEqual(guide["effective_from"], "2026-09-01")
         self.assertEqual(guide["future_effective_from"], "2026-10-26")
 
-    def test_large_rag_artifacts_are_ignored(self) -> None:
+    def test_raw_rag_artifacts_are_ignored_and_approved_index_is_versionable(self) -> None:
         gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
 
         self.assertIn("data/rag/raw/", gitignore)
         self.assertIn("data/rag/processed/", gitignore)
-        self.assertIn("data/rag/index/", gitignore)
+        self.assertIn("data/rag/index/*", gitignore)
+        self.assertIn("!data/rag/index/index.faiss", gitignore)
+        self.assertIn("!data/rag/index/metadata.jsonl", gitignore)
+        self.assertIn("!data/rag/index/manifest.json", gitignore)
         self.assertIn("data/rag/manifest.json", gitignore)
 
     def test_shap_methodology_records_scale_and_anonymous_feature_limit(self) -> None:

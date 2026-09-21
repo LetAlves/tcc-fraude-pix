@@ -83,7 +83,9 @@ class RecuperadorDocumentos:
         if embedder is None:
             from src.rag.embeddings import MultilingualEmbedder
 
-            embedder = MultilingualEmbedder()
+            embedder = MultilingualEmbedder(
+                indice.model_name, revision=indice.model_revision,
+            )
         return cls(embedder, indice)
 
     def recuperar(self, consulta: str, top_k: int = TOP_K_PADRAO) -> list[DocumentoRecuperado]:

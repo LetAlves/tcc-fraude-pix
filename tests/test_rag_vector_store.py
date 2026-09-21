@@ -18,7 +18,10 @@ class VectorStoreTest(unittest.TestCase):
 
     def test_cosine_search_returns_most_similar_document(self) -> None:
         store = FaissVectorStore.from_embeddings(
-            self.vectors, self.documents, model_name="modelo-teste"
+            self.vectors,
+            self.documents,
+            model_name="modelo-teste",
+            model_revision="revisao-imutavel",
         )
 
         results = store.search([0.9, 0.1], k=2)
@@ -28,7 +31,10 @@ class VectorStoreTest(unittest.TestCase):
 
     def test_persistence_round_trip_validates_counts_and_hashes(self) -> None:
         store = FaissVectorStore.from_embeddings(
-            self.vectors, self.documents, model_name="modelo-teste"
+            self.vectors,
+            self.documents,
+            model_name="modelo-teste",
+            model_revision="revisao-imutavel",
         )
         with tempfile.TemporaryDirectory() as temporary_directory:
             directory = Path(temporary_directory)
@@ -36,6 +42,8 @@ class VectorStoreTest(unittest.TestCase):
             restored = FaissVectorStore.load(directory)
 
             self.assertEqual(manifest["index_type"], "IndexFlatIP")
+            self.assertEqual(manifest["model_revision"], "revisao-imutavel")
+            self.assertEqual(restored.model_revision, "revisao-imutavel")
             self.assertEqual(restored.dimension, 2)
             self.assertEqual(len(restored.documents), 2)
 
