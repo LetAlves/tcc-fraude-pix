@@ -3,7 +3,6 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlparse
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -65,7 +64,8 @@ class JulyDeliverablesTest(unittest.TestCase):
         self.assertIn("feature\\_perturbation=interventional", methodology)
         self.assertIn("model\\_output=probability", methodology)
         self.assertIn("log-odds", methodology)
-        self.assertIn("atributo anonimizado de alta influência", methodology)
+        self.assertIn("nomes anônimos", methodology)
+        self.assertIn("sem lhes atribuir significado Pix", methodology)
         self.assertIn("não como causalidade", methodology)
 
     def test_joint_llm_decision_is_not_marked_complete(self) -> None:

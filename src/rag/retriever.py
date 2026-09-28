@@ -19,6 +19,7 @@ RAG em vez de só pedir a explicação ao modelo de linguagem.
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,7 @@ from src.rag.vector_store import DEFAULT_INDEX_DIR, FaissVectorStore
 logger = logging.getLogger(__name__)
 
 TOP_K_PADRAO = 5
+MAX_CONSULTA_CARACTERES = 4_000
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,8 @@ class DocumentoRecuperado:
 
     def resumo(self, limite: int = 400) -> str:
         """Trecho do texto, para caber no prompt sem estourar o contexto."""
+        if isinstance(limite, bool) or not isinstance(limite, int) or limite <= 0:
+            raise ValueError("o limite do resumo deve ser um inteiro positivo")
         texto = " ".join(self.texto.split())
         return texto if len(texto) <= limite else texto[: limite - 1] + "…"
 
@@ -72,7 +76,7 @@ class RecuperadorDocumentos:
         cls,
         diretorio_indice: Path | str = DEFAULT_INDEX_DIR,
         embedder: Any | None = None,
-    ) -> "RecuperadorDocumentos":
+    ) -> RecuperadorDocumentos:
         """
         Carrega o índice persistido e, se necessário, constrói o embedder.
 
@@ -98,8 +102,13 @@ class RecuperadorDocumentos:
         """
         if not isinstance(consulta, str) or not consulta.strip():
             raise ValueError("a consulta não pode ser vazia")
-        if top_k <= 0:
-            raise ValueError("top_k deve ser positivo")
+        consulta = consulta.strip()
+        if len(consulta) > MAX_CONSULTA_CARACTERES:
+            raise ValueError(
+                f"a consulta deve ter no máximo {MAX_CONSULTA_CARACTERES} caracteres"
+            )
+        if isinstance(top_k, bool) or not isinstance(top_k, int) or top_k <= 0:
+            raise ValueError("top_k deve ser um inteiro positivo")
 
         if len(self.indice.documents) == 0:
             logger.warning("índice vetorial vazio: nenhuma recuperação possível")
@@ -107,15 +116,26 @@ class RecuperadorDocumentos:
 
         vetor = self.embedder.encode_query(consulta)
         resultados = self.indice.search(vetor, k=top_k)
-
-        return [
-            DocumentoRecuperado(
-                texto=resultado.document.page_content,
-                score=float(resultado.score),
-                metadados=dict(resultado.document.metadata or {}),
+        recuperados: list[DocumentoRecuperado] = []
+        for resultado in resultados:
+            texto = getattr(resultado.document, "page_content", None)
+            score = float(resultado.score)
+            if not isinstance(texto, str) or not texto.strip():
+                raise RuntimeError("o índice devolveu um documento sem texto")
+            if not math.isfinite(score):
+                raise RuntimeError("o índice devolveu um score não finito")
+            recuperados.append(
+                DocumentoRecuperado(
+                    texto=texto,
+                    score=score,
+                    metadados=dict(resultado.document.metadata or {}),
+                )
             )
-            for resultado in resultados
-        ]
+
+        # FAISS já ordena a saída, mas ordenar novamente mantém o contrato caso
+        # outra implementação de índice seja injetada no futuro.
+        recuperados.sort(key=lambda documento: documento.score, reverse=True)
+        return recuperados
 
 
 def consulta_a_partir_dos_fatores(fatores: list[dict[str, Any]], transacao_suspeita: bool) -> str:

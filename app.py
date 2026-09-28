@@ -395,12 +395,20 @@ def _mostrar_resultado(resultado: Mapping[str, Any]) -> None:
         ui.explicacao(resultado["explicacao_rag"])
         ui.fechar_card()
     else:
-        ui.aviso(
-            "<b>Explicação em linguagem natural indisponível.</b> Nenhum cliente "
-            "de modelo de linguagem está configurado. A probabilidade e os "
-            "fatores acima são resultados reais do modelo; apenas o texto final "
-            "não pôde ser gerado."
-        )
+        if resultado.get("erro_llm"):
+            mensagem = (
+                "<b>Explicação em linguagem natural temporariamente "
+                "indisponível.</b> O provedor não concluiu a solicitação. A "
+                "probabilidade, os fatores e as evidências continuam válidos."
+            )
+        else:
+            mensagem = (
+                "<b>Explicação em linguagem natural indisponível.</b> Nenhum "
+                "cliente de modelo de linguagem está configurado. A "
+                "probabilidade e os fatores acima são resultados reais; apenas "
+                "o texto final não pôde ser gerado."
+            )
+        ui.aviso(mensagem)
         if resultado.get("prompt_montado"):
             with st.expander("Ver o conteúdo que seria enviado ao modelo de linguagem"):
                 st.caption(

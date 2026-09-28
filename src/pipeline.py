@@ -32,22 +32,32 @@ DataFrame cru não levanta exceção: devolve números errados.
 
 from __future__ import annotations
 
+import json
 import logging
+import math
+from collections.abc import Callable
 from dataclasses import dataclass
+from numbers import Real
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from src.models.persistencia import carregar
-from src.rag.explainer import explicar
+from src.rag.explainer import (
+    ErroLLM,
+    criar_cliente_llm_de_ambiente,
+    explicar,
+    montar_prompt,
+)
 from src.rag.retriever import RecuperadorDocumentos, consulta_a_partir_dos_fatores
 
 logger = logging.getLogger(__name__)
 
 RAIZ = Path(__file__).resolve().parent.parent
 DIRETORIO_MODELO_PADRAO = RAIZ / "models" / "xgboost"
+ARQUIVO_POLITICA_DECISAO = "politica_decisao.json"
 LIMIAR_PADRAO = 0.5
 TOP_FATORES = 3
 TOP_DOCUMENTOS = 5
@@ -70,12 +80,27 @@ class Pipeline:
     limiar: float = LIMIAR_PADRAO
     cliente_llm: Callable[[str], str] | None = None
 
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.limiar, bool)
+            or not isinstance(self.limiar, Real)
+            or not math.isfinite(float(self.limiar))
+            or not 0.0 <= float(self.limiar) <= 1.0
+        ):
+            raise ValueError("o limiar deve ser um número finito entre 0 e 1")
+        self.limiar = float(self.limiar)
+
     def processar(self, transacao: dict[str, Any] | pd.DataFrame) -> dict[str, Any]:
         """Executa as três camadas para uma transação e devolve o resultado."""
         quadro = _como_quadro(transacao)
         matriz = self.preprocessador.transform(quadro)
 
-        probabilidade = float(self.modelo.predict_proba(matriz)[0, 1])
+        probabilidades = np.asarray(self.modelo.predict_proba(matriz), dtype=float)
+        if probabilidades.ndim != 2 or probabilidades.shape[0] != 1 or probabilidades.shape[1] < 2:
+            raise ValueError("predict_proba deve devolver uma linha com duas classes")
+        probabilidade = float(probabilidades[0, 1])
+        if not math.isfinite(probabilidade) or not 0.0 <= probabilidade <= 1.0:
+            raise ValueError("o modelo devolveu uma probabilidade inválida")
         sinalizada = probabilidade >= self.limiar
 
         fatores = self._fatores_shap(matriz)
@@ -85,15 +110,33 @@ class Pipeline:
             consulta = consulta_a_partir_dos_fatores(fatores, sinalizada)
             documentos = self.recuperador.recuperar(consulta, top_k=TOP_DOCUMENTOS)
 
-        explicacao = explicar(
-            fatores_shap=fatores,
-            documentos=documentos,
-            probabilidade=probabilidade,
-            sinalizada=sinalizada,
-            cliente=self.cliente_llm,
-        )
+        explicacao_disponivel = self.cliente_llm is not None
+        prompt_montado: str | None = None
+        erro_llm: str | None = None
+        if self.cliente_llm is None:
+            prompt_montado = montar_prompt(
+                fatores, documentos, probabilidade, sinalizada
+            )
+            explicacao = _mensagem_sem_llm()
+        else:
+            try:
+                explicacao = explicar(
+                    fatores_shap=fatores,
+                    documentos=documentos,
+                    probabilidade=probabilidade,
+                    sinalizada=sinalizada,
+                    cliente=self.cliente_llm,
+                )
+            except ErroLLM as erro:
+                logger.warning("explicação por LLM indisponível: %s", erro)
+                explicacao_disponivel = False
+                erro_llm = str(erro)
+                prompt_montado = montar_prompt(
+                    fatores, documentos, probabilidade, sinalizada
+                )
+                explicacao = _mensagem_erro_llm()
 
-        return {
+        resultado = {
             "predicao": {
                 "classe": "suspeita" if sinalizada else "não suspeita",
                 "probabilidade": probabilidade,
@@ -111,7 +154,14 @@ class Pipeline:
                 for documento in documentos
             ],
             "explicacao_rag": explicacao,
+            "explicacao_disponivel": explicacao_disponivel,
+            "rag_disponivel": self.recuperador is not None,
         }
+        if prompt_montado is not None:
+            resultado["prompt_montado"] = prompt_montado
+        if erro_llm is not None:
+            resultado["erro_llm"] = erro_llm
+        return resultado
 
     def _fatores_shap(self, matriz: Any) -> list[dict[str, Any]]:
         """
@@ -120,21 +170,49 @@ class Pipeline:
         O formato de cada fator — `feature`, `valor`, `contribuicao`, `direcao` —
         é o que `app.py` renderiza na tabela; alterá-lo muda a interface.
         """
-        valores = np.asarray(self.explicador_shap.shap_values(matriz), dtype=float)
-        if valores.ndim == 3:  # (linhas, features, classes) — usa a classe positiva
-            valores = valores[..., -1]
-        contribuicoes = valores[0]
+        valores_brutos = self.explicador_shap.shap_values(matriz)
+        if isinstance(valores_brutos, (list, tuple)):
+            valores = np.asarray(valores_brutos[-1], dtype=float)
+        else:
+            valores = np.asarray(valores_brutos, dtype=float)
+
+        valores_entrada = _primeira_linha_densa(matriz)
+        if valores.ndim == 1:
+            contribuicoes = valores
+        elif valores.ndim == 2 and valores.shape[0] == 1:
+            contribuicoes = valores[0]
+        elif valores.ndim == 3 and valores.shape[0] == 1:
+            # SHAP recente: (linhas, features, classes).
+            contribuicoes = valores[0, :, -1]
+        elif valores.ndim == 3 and valores.shape[1] == 1:
+            # Formato legado: (classes, linhas, features).
+            contribuicoes = valores[-1, 0, :]
+        else:
+            raise ValueError(f"formato de saída SHAP não suportado: {valores.shape}")
+
+        contribuicoes = np.asarray(contribuicoes, dtype=float).reshape(-1)
+        if len(contribuicoes) != len(valores_entrada):
+            raise ValueError("o SHAP devolveu quantidade de features incompatível")
+        if not np.isfinite(contribuicoes).all():
+            raise ValueError("o SHAP devolveu contribuição não finita")
 
         nomes = self.nomes_features or [f"feature_{i}" for i in range(len(contribuicoes))]
+        if len(nomes) != len(contribuicoes):
+            raise ValueError("a lista de nomes não corresponde às features do SHAP")
         ordem = np.argsort(np.abs(contribuicoes))[::-1][:TOP_FATORES]
 
-        valores_entrada = np.asarray(matriz)[0]
         return [
             {
                 "feature": nomes[int(indice)],
                 "valor": float(valores_entrada[int(indice)]),
                 "contribuicao": float(contribuicoes[int(indice)]),
-                "direcao": "aumenta" if contribuicoes[int(indice)] > 0 else "reduz",
+                "direcao": (
+                    "aumenta"
+                    if contribuicoes[int(indice)] > 0
+                    else "reduz"
+                    if contribuicoes[int(indice)] < 0
+                    else "neutro"
+                ),
             }
             for indice in ordem
         ]
@@ -153,12 +231,55 @@ def _como_quadro(transacao: dict[str, Any] | pd.DataFrame) -> pd.DataFrame:
     raise TypeError("a transação deve ser um dicionário ou um DataFrame de uma linha")
 
 
+def _primeira_linha_densa(matriz: Any) -> np.ndarray:
+    """Extrai uma linha numérica tanto de matrizes densas quanto esparsas."""
+    linha = matriz[0]
+    if hasattr(linha, "toarray"):
+        linha = linha.toarray()
+    valores = np.asarray(linha, dtype=float).reshape(-1)
+    if not np.isfinite(valores).all():
+        raise ValueError("o pré-processador devolveu valores não finitos")
+    return valores
+
+
+def carregar_limiar_politica(
+    diretorio_modelo: Path | str,
+    manifesto_modelo: dict[str, Any],
+) -> float:
+    """Lê a política versionada e verifica se ela pertence ao modelo carregado."""
+    caminho = Path(diretorio_modelo) / ARQUIVO_POLITICA_DECISAO
+    if not caminho.exists():
+        logger.warning("política de decisão ausente; usando limiar padrão %.3f", LIMIAR_PADRAO)
+        return LIMIAR_PADRAO
+    try:
+        politica = json.loads(caminho.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as erro:
+        raise ValueError("não foi possível ler a política de decisão") from erro
+    if not isinstance(politica, dict):
+        raise TypeError("política de decisão inválida")
+
+    hashes_esperados = politica.get("hashes_modelo")
+    hashes_atuais = manifesto_modelo.get("hashes")
+    if hashes_esperados != hashes_atuais:
+        raise ValueError("a política de decisão não corresponde ao modelo carregado")
+
+    limiar = politica.get("limiar")
+    if (
+        isinstance(limiar, bool)
+        or not isinstance(limiar, Real)
+        or not math.isfinite(float(limiar))
+        or not 0.0 <= float(limiar) <= 1.0
+    ):
+        raise ValueError("o limiar da política de decisão é inválido")
+    return float(limiar)
+
+
 def construir_pipeline(
     diretorio_modelo: Path | str = DIRETORIO_MODELO_PADRAO,
     matriz_fundo: Any | None = None,
     recuperador: RecuperadorDocumentos | None = None,
     cliente_llm: Callable[[str], str] | None = None,
-    limiar: float = LIMIAR_PADRAO,
+    limiar: float | None = None,
 ) -> Pipeline:
     """
     Carrega os componentes do disco e monta o pipeline.
@@ -175,6 +296,11 @@ def construir_pipeline(
 
     preprocessador, modelo, manifesto = carregar(Path(diretorio_modelo))
     logger.info("modelo carregado: %s", manifesto.get("tipo_do_modelo"))
+    limiar_efetivo = (
+        carregar_limiar_politica(diretorio_modelo, manifesto)
+        if limiar is None
+        else limiar
+    )
 
     if matriz_fundo is not None:
         masker = shap.maskers.Independent(matriz_fundo, max_samples=len(matriz_fundo))
@@ -200,7 +326,7 @@ def construir_pipeline(
         explicador_shap=explicador_shap,
         recuperador=recuperador,
         nomes_features=nomes,
-        limiar=limiar,
+        limiar=limiar_efetivo,
         cliente_llm=cliente_llm,
     )
 
@@ -221,6 +347,14 @@ def _mensagem_sem_llm() -> str:
         "Explicação em linguagem natural indisponível: nenhum cliente de modelo "
         "de linguagem está configurado. Os fatores do SHAP e a probabilidade "
         "acima foram calculados normalmente e são resultados reais do modelo."
+    )
+
+
+def _mensagem_erro_llm() -> str:
+    return (
+        "Explicação em linguagem natural temporariamente indisponível: o modelo "
+        "de linguagem não concluiu a solicitação. A predição, os fatores SHAP e "
+        "os documentos recuperados continuam disponíveis para inspeção."
     )
 
 
@@ -245,6 +379,9 @@ def obter_pipeline(
     if _PIPELINE_EM_CACHE is not None:
         return _PIPELINE_EM_CACHE
 
+    if cliente_llm is None:
+        cliente_llm = criar_cliente_llm_de_ambiente()
+
     fundo = None
     if ARQUIVO_FUNDO_SHAP.exists():
         fundo = np.load(ARQUIVO_FUNDO_SHAP)
@@ -259,7 +396,7 @@ def obter_pipeline(
     recuperador = None
     try:
         recuperador = RecuperadorDocumentos.a_partir_do_disco()
-    except Exception as erro:  # índice ausente ou corrompido
+    except (FileNotFoundError, OSError, RuntimeError, ValueError) as erro:
         logger.warning("recuperação documental indisponível: %s", erro)
 
     _PIPELINE_EM_CACHE = construir_pipeline(
@@ -284,19 +421,6 @@ def explicar_transacao(transacao: dict[str, Any]) -> dict[str, Any]:
     """
     pipeline = obter_pipeline()
 
-    sem_llm = pipeline.cliente_llm is None
-    if sem_llm:
-        # Cliente que devolve o próprio prompt: preserva o que seria enviado ao
-        # modelo, sem inventar a resposta que ele daria.
-        pipeline.cliente_llm = lambda prompt: prompt
-
     resultado = pipeline.processar(transacao)
-
-    if sem_llm:
-        resultado["prompt_montado"] = resultado["explicacao_rag"]
-        resultado["explicacao_rag"] = _mensagem_sem_llm()
-
-    resultado["explicacao_disponivel"] = not sem_llm
-    resultado["rag_disponivel"] = pipeline.recuperador is not None
     resultado["shap_interventional"] = ARQUIVO_FUNDO_SHAP.exists()
     return resultado

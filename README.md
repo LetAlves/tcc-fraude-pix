@@ -23,7 +23,7 @@ O [registro de features proposto no PR #2](https://github.com/LetAlves/tcc-fraud
 
 ## Estado do projeto
 
-Situação verificada localmente em **20/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4 e o índice foi reconstruído com 1.195 vetores. A interface e o orquestrador foram implementados. A geração real ainda depende do cliente LLM marcado com `{{PREENCHER}}`; testes com cliente simulado não equivalem a uma avaliação do modelo de linguagem.
+Situação verificada localmente em **28/09/2026**. As camadas de modelagem de junho/julho e o SHAP do XGBoost estão executados; o corpus RAG foi revalidado com o Guia MED 4.4 e o índice foi reconstruído com 1.195 vetores. Retriever, orquestrador, interface e cliente Claude foram implementados. A geração real exige uma credencial Anthropic e continua dependendo de avaliação humana; testes com cliente simulado não equivalem a uma avaliação do modelo de linguagem.
 
 | Componente | Situação | Evidência |
 |---|---|---|
@@ -42,7 +42,7 @@ Situação verificada localmente em **20/09/2026**. As camadas de modelagem de j
 | Persistência de modelos | Implementada, com manifesto, hashes e compressão | [Persistência](src/models/persistencia.py) |
 | RAG vetorial | Implementado, integrado e revalidado com 1.195 vetores | [Revalidação de setembro](reports/pessoa_2/setembro/README.md) |
 | SHAP no XGBoost | Executado: importância global, VP/FP/FN/VN e fidelidade aditiva aprovada | [Entrega de julho da Pessoa 1](reports/pessoa_1/julho/README.md) |
-| Interface de demonstração | Implementada como camada de apresentação; cliente LLM pendente | [Aplicação Streamlit](app.py) |
+| Interface de demonstração | Integrada ao pipeline; sem chave, exibe resultado parcial sem fabricar explicação | [Aplicação Streamlit](app.py) |
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
 
@@ -196,12 +196,23 @@ O catálogo atual usa o Guia MED 4.4 e registra separadamente as vigências de 0
 O `app.py` não duplica o ML, o SHAP ou o RAG. Ele recebe a função de orquestração existente por configuração:
 
 ```powershell
+$env:ANTHROPIC_API_KEY = "sua-chave-local"
 $env:TCC_PIPELINE_MODULE = "src.pipeline"
 $env:TCC_PIPELINE_FUNCTION = "explicar_transacao"
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-O contrato de retorno esperado está documentado em `validar_resultado_pipeline`, no próprio arquivo. A geração textual requer a implementação do cliente LLM indicado no pipeline; a aplicação informa essa pendência sem fabricar uma explicação.
+O contrato de retorno esperado está documentado em `validar_resultado_pipeline`, no próprio arquivo. O cliente usa por padrão o snapshot `claude-haiku-4-5-20251001`, com timeout e limite de saída configuráveis pelas variáveis mostradas em `.env.example`. Sem `ANTHROPIC_API_KEY`, a aplicação informa a ausência e mantém ML, SHAP e recuperação disponíveis, sem fabricar uma explicação.
+
+### Executar o notebook ponta a ponta
+
+O notebook seleciona dez transações sinalizadas no conjunto de teste e realiza dez chamadas ao LLM. Ele exige os CSVs locais da competição, acesso ao modelo de embeddings e a chave Anthropic:
+
+```powershell
+.\.venv\Scripts\python.exe -m jupyter notebook notebooks/04_rag_pipeline.ipynb
+```
+
+As saídas só devem ser usadas no TCC depois da revisão de fidelidade e do registro da execução.
 
 ## Testes e protocolo experimental
 
@@ -212,7 +223,7 @@ Execute a suíte na raiz do projeto:
 git diff --check
 ```
 
-Na verificação de 20/09/2026, **130 testes** foram aprovados. Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação experimental do LLM.
+Na verificação de 28/09/2026, **146 testes** foram aprovados, com **66% de cobertura** sobre `src` e `app.py`. Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, integração do cliente LLM com mocks, pipeline, notebook, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação experimental do LLM real.
 
 Para os próximos experimentos:
 
