@@ -12,8 +12,11 @@ from unittest.mock import Mock
 import numpy as np
 from langchain_core.documents import Document
 
-from src.rag.retriever import (DocumentoRecuperado, RecuperadorDocumentos,
-                               consulta_a_partir_dos_fatores)
+from src.rag.retriever import (
+    DocumentoRecuperado,
+    RecuperadorDocumentos,
+    consulta_a_partir_dos_fatores,
+)
 from src.rag.vector_store import SearchResult
 
 
@@ -68,9 +71,29 @@ class RecuperadorTest(unittest.TestCase):
                 self.recuperador.recuperar(invalida)
 
     def test_top_k_nao_positivo_e_recusado(self):
-        for invalido in (0, -1):
+        for invalido in (0, -1, 1.5, "2", True):
             with self.assertRaises(ValueError):
                 self.recuperador.recuperar("consulta", top_k=invalido)
+
+    def test_ordena_por_relevancia_mesmo_se_indice_nao_ordenar(self):
+        indice = _indice_falso(DOCUMENTOS)
+        indice.search.return_value = [
+            SearchResult(DOCUMENTOS[0], 0.2),
+            SearchResult(DOCUMENTOS[1], 0.8),
+        ]
+
+        resultados = RecuperadorDocumentos(_embedder_falso(), indice).recuperar(
+            "consulta"
+        )
+
+        self.assertEqual([item.score for item in resultados], [0.8, 0.2])
+
+    def test_recusa_score_nao_finito(self):
+        indice = _indice_falso(DOCUMENTOS)
+        indice.search.return_value = [SearchResult(DOCUMENTOS[0], float("nan"))]
+
+        with self.assertRaises(RuntimeError):
+            RecuperadorDocumentos(_embedder_falso(), indice).recuperar("consulta")
 
     def test_indice_vazio_devolve_lista_vazia_sem_consultar(self):
         recuperador = RecuperadorDocumentos(_embedder_falso(), _indice_falso([]))
@@ -106,6 +129,11 @@ class DocumentoRecuperadoTest(unittest.TestCase):
 
     def test_resumo_preserva_texto_curto(self):
         self.assertEqual(DocumentoRecuperado("curto", 1.0).resumo(), "curto")
+
+    def test_resumo_recusa_limite_invalido(self):
+        for limite in (0, -1, 1.5, True):
+            with self.assertRaises(ValueError):
+                DocumentoRecuperado("texto", 1.0).resumo(limite=limite)
 
 
 class ConsultaAPartirDosFatoresTest(unittest.TestCase):

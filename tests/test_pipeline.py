@@ -9,13 +9,21 @@ O teste mais importante é o do contrato: `app.py` valida o retorno do pipeline,
 e um campo renomeado aqui quebraria a interface sem aviso.
 """
 
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
 
-from src.pipeline import TOP_FATORES, Pipeline, _como_quadro
+from src.pipeline import (
+    TOP_FATORES,
+    Pipeline,
+    _como_quadro,
+    carregar_limiar_politica,
+)
 
 
 def _pipeline_falso(probabilidade=0.87, com_rag=True):
@@ -142,6 +150,35 @@ class SemRagTest(unittest.TestCase):
         self.assertTrue(resultado["explicacao_rag"])
 
 
+class IndisponibilidadeLLMTest(unittest.TestCase):
+
+    def test_sem_cliente_devolve_resultado_parcial_e_prompt_auditavel(self):
+        pipeline = _pipeline_falso()
+        pipeline.cliente_llm = None
+
+        resultado = pipeline.processar(TRANSACAO)
+
+        self.assertFalse(resultado["explicacao_disponivel"])
+        self.assertIn("indisponível", resultado["explicacao_rag"])
+        self.assertIn("FATORES DE MAIOR INFLUÊNCIA", resultado["prompt_montado"])
+
+    def test_erro_do_provedor_nao_descarta_ml_shap_e_rag(self):
+        pipeline = _pipeline_falso()
+
+        def falhar(_prompt):
+            raise TimeoutError("timeout controlado")
+
+        pipeline.cliente_llm = falhar
+        resultado = pipeline.processar(TRANSACAO)
+
+        self.assertFalse(resultado["explicacao_disponivel"])
+        self.assertEqual(
+            resultado["erro_llm"], "não foi possível consultar o modelo de linguagem"
+        )
+        self.assertEqual(len(resultado["fatores_shap"]), 3)
+        self.assertEqual(len(resultado["documentos_recuperados"]), 1)
+
+
 class EntradaTest(unittest.TestCase):
 
     def test_aceita_dicionario_e_dataframe_de_uma_linha(self):
@@ -169,6 +206,34 @@ class EntradaTest(unittest.TestCase):
         pipeline.preprocessador.transform.assert_called_once()
         matriz = pipeline.modelo.predict_proba.call_args[0][0]
         self.assertEqual(matriz.shape, (1, 5))
+
+
+class PoliticaDecisaoTest(unittest.TestCase):
+
+    def test_carrega_limiar_quando_hashes_correspondem(self):
+        manifesto = {"hashes": {"modelo.json": "abc"}}
+        politica = {
+            "hashes_modelo": manifesto["hashes"],
+            "limiar": 0.6834220290184021,
+        }
+        with tempfile.TemporaryDirectory() as diretorio:
+            Path(diretorio, "politica_decisao.json").write_text(
+                json.dumps(politica), encoding="utf-8"
+            )
+            limiar = carregar_limiar_politica(diretorio, manifesto)
+
+        self.assertAlmostEqual(limiar, 0.6834220290184021)
+
+    def test_recusa_politica_de_outro_modelo(self):
+        with tempfile.TemporaryDirectory() as diretorio:
+            Path(diretorio, "politica_decisao.json").write_text(
+                json.dumps({"hashes_modelo": {"modelo.json": "outro"}, "limiar": 0.6}),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "não corresponde"):
+                carregar_limiar_politica(
+                    diretorio, {"hashes": {"modelo.json": "atual"}}
+                )
 
 
 if __name__ == "__main__":
