@@ -65,6 +65,15 @@ ROTULO_QUADRANTE = {
     "verdadeiro_negativo": "legítima, não marcada",
 }
 
+ROTULO_CAMPO_INTERFACE = {
+    "TransactionAmt": "Valor da transação",
+    "TransactionDT": "Referência temporal relativa",
+    "valor_atipico_proxy": "Valor fora do padrão",
+    "frequencia_recente_proxy": "Frequência recente",
+    "dispositivo_raro_proxy": "Dispositivo pouco frequente",
+    "posicao_ciclo_diario_relativa": "Posição no ciclo diário",
+}
+
 
 class IntegracaoPendenteError(RuntimeError):
     """Indica que o ponto de integração ainda precisa ser configurado."""
@@ -191,6 +200,14 @@ def _formatar_proporcao(valor: Any) -> str:
         numero = float(valor)
         return f"{numero:.2%}" if 0.0 <= numero <= 1.0 else f"{numero:.6g}"
     return str(valor) if valor is not None else "não informado"
+
+
+def _classe_suspeita(classe: Any) -> bool:
+    """Normaliza rótulos textuais ou binários sem confundir 'não suspeita'."""
+    if isinstance(classe, Real) and not isinstance(classe, bool):
+        return float(classe) == 1.0
+    texto = str(classe).strip().casefold()
+    return texto in {"1", "fraude", "fraudulenta", "suspeita", "suspeito"}
 
 
 # ─── Dados de demonstração ──────────────────────────────────────────────────
@@ -331,8 +348,13 @@ def pagina_analisar(exemplos: dict[str, Any] | None) -> None:
         colunas = st.columns(3)
         for posicao, (campo, valor) in enumerate(resumo.items()):
             texto = f"{valor:.4g}" if isinstance(valor, float) else str(valor)
-            colunas[posicao % 3].text_input(campo, value=texto, disabled=True,
-                                            key=f"campo_{campo}")
+            rotulo = ROTULO_CAMPO_INTERFACE.get(campo, campo)
+            colunas[posicao % 3].text_input(
+                rotulo,
+                value=texto,
+                disabled=True,
+                key=f"campo_{campo}",
+            )
 
         transacao = exemplo["transacao"]
         with st.expander("Informar outra transação em JSON"):
@@ -357,8 +379,16 @@ def _entrada_json(chave: str = "json_principal") -> dict[str, Any] | None:
     conteudo = st.text_area(
         "Dados da transação (JSON)",
         height=160,
-        placeholder='{"TransactionAmt": 372.5, "ProductCD": "W", ...}',
-        help="Objeto JSON com as colunas da transação.",
+        placeholder=(
+            '{"valor_atipico_proxy": 2.7, '
+            '"frequencia_recente_proxy": 6, '
+            '"dispositivo_raro_proxy": 0.08, '
+            '"posicao_ciclo_diario_relativa": 0.91}'
+        ),
+        help=(
+            "Use um JSON exportado pelo pipeline. A interface apresenta somente "
+            "os indicadores explicativos documentados pela equipe."
+        ),
         key=chave,
     )
     if not conteudo or not conteudo.strip():
@@ -372,22 +402,15 @@ def _entrada_json(chave: str = "json_principal") -> dict[str, Any] | None:
 
 def _mostrar_resultado(resultado: Mapping[str, Any]) -> None:
     predicao = resultado["predicao"]
-    classe = str(predicao.get("classe", "")).lower()
-    suspeita = "suspeita" in classe and "não" not in classe
+    suspeita = _classe_suspeita(predicao.get("classe"))
 
     st.markdown("### Resultado da análise")
-    esquerda, direita = st.columns([1.15, 1])
-    with esquerda:
-        ui.veredito(suspeita)
-    with direita:
-        ui.abrir_card("Probabilidade do modelo")
-        ui.barra_probabilidade(predicao.get("probabilidade"), predicao.get("limiar"))
-        ui.fechar_card()
-
-    ui.abrir_card("Por que o modelo tomou essa decisão?",
-                  "Fatores de maior contribuição, segundo o SHAP")
-    ui.fatores_shap(resultado["fatores_shap"])
-    ui.fechar_card()
+    ui.metricas_resultado(
+        suspeita,
+        predicao.get("probabilidade"),
+        predicao.get("limiar"),
+    )
+    ui.painel_fatores_shap(resultado["fatores_shap"], chave="resultado")
 
     if resultado.get("explicacao_disponivel", True):
         ui.abrir_card("✦ Explicação da IA",
@@ -450,9 +473,7 @@ def pagina_explicacao() -> None:
     ui.abrir_card("✦ Explicação da IA")
     ui.explicacao(resultado["explicacao_rag"])
     ui.fechar_card()
-    ui.abrir_card("Fatores que sustentam a explicação")
-    ui.fatores_shap(resultado["fatores_shap"])
-    ui.fechar_card()
+    ui.painel_fatores_shap(resultado["fatores_shap"], chave="pagina_explicacao")
 
 
 def pagina_evidencias() -> None:
@@ -512,6 +533,8 @@ def main() -> None:
     exemplos = carregar_exemplos()
 
     with st.sidebar:
+        ui.marca_sidebar()
+        st.divider()
         st.markdown("#### Navegação")
         pagina = st.radio("Seções", PAGINAS, index=1, label_visibility="collapsed")
         st.divider()

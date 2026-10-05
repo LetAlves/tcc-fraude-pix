@@ -59,7 +59,13 @@ RAIZ = Path(__file__).resolve().parent.parent
 DIRETORIO_MODELO_PADRAO = RAIZ / "models" / "xgboost"
 ARQUIVO_POLITICA_DECISAO = "politica_decisao.json"
 LIMIAR_PADRAO = 0.5
-TOP_FATORES = 3
+FEATURES_EXPLICAVEIS = (
+    "valor_atipico_proxy",
+    "frequencia_recente_proxy",
+    "dispositivo_raro_proxy",
+    "posicao_ciclo_diario_relativa",
+)
+TOP_FATORES = len(FEATURES_EXPLICAVEIS)
 TOP_DOCUMENTOS = 5
 
 
@@ -165,7 +171,13 @@ class Pipeline:
 
     def _fatores_shap(self, matriz: Any) -> list[dict[str, Any]]:
         """
-        Os `TOP_FATORES` de maior contribuição absoluta, com sinal preservado.
+        Contribuições das quatro proxies explicáveis criadas no projeto.
+
+        O classificador continua usando a matriz completa. Para a camada de
+        explicação, porém, são selecionadas somente as features com semântica
+        documentada pela dupla. Isso impede que o dashboard ou o RAG atribuam
+        significado inventado a C1-C14, V1-V339, card1 e outros campos
+        mascarados do IEEE-CIS.
 
         O formato de cada fator — `feature`, `valor`, `contribuicao`, `direcao` —
         é o que `app.py` renderiza na tabela; alterá-lo muda a interface.
@@ -199,7 +211,24 @@ class Pipeline:
         nomes = self.nomes_features or [f"feature_{i}" for i in range(len(contribuicoes))]
         if len(nomes) != len(contribuicoes):
             raise ValueError("a lista de nomes não corresponde às features do SHAP")
-        ordem = np.argsort(np.abs(contribuicoes))[::-1][:TOP_FATORES]
+
+        indices_por_nome = {
+            str(nome).rsplit("__", maxsplit=1)[-1]: indice
+            for indice, nome in enumerate(nomes)
+        }
+        ausentes = [
+            nome for nome in FEATURES_EXPLICAVEIS if nome not in indices_por_nome
+        ]
+        if ausentes:
+            raise ValueError(
+                "o artefato não contém as features explicáveis do projeto: "
+                + ", ".join(ausentes)
+            )
+        ordem = sorted(
+            (indices_por_nome[nome] for nome in FEATURES_EXPLICAVEIS),
+            key=lambda indice: abs(contribuicoes[indice]),
+            reverse=True,
+        )
 
         return [
             {

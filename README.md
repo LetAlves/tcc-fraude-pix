@@ -204,6 +204,22 @@ $env:TCC_PIPELINE_FUNCTION = "explicar_transacao"
 
 O contrato de retorno esperado está documentado em `validar_resultado_pipeline`, no próprio arquivo. O cliente usa por padrão o snapshot `claude-haiku-4-5-20251001`, com timeout e limite de saída configuráveis pelas variáveis mostradas em `.env.example`. Sem `ANTHROPIC_API_KEY`, a aplicação informa a ausência e mantém ML, SHAP e recuperação disponíveis, sem fabricar uma explicação.
 
+#### Funcionalidade do dashboard
+
+O dashboard organiza a análise em camadas para atender tanto o público geral quanto a avaliação técnica:
+
+1. **Entrada controlada:** seleciona uma transação completa do conjunto de teste ou aceita um objeto JSON com todas as colunas. A interface não completa atributos ausentes com valores inventados.
+2. **Resultado do ML:** apresenta classificação, risco estimado e limiar em cartões separados, evitando tratar probabilidade como confirmação de fraude.
+3. **Explicabilidade SHAP:** destaca somente `valor_atipico_proxy`, `frequencia_recente_proxy`, `dispositivo_raro_proxy` e `posicao_ciclo_diario_relativa`, com barras divergentes — vermelho aumenta e azul reduz o risco estimado — e detalhes selecionáveis.
+4. **Glossário controlado:** explica as quatro proxies criadas e documentadas pela equipe. Variáveis anônimas do IEEE-CIS não são exibidas nem enviadas à camada de explicação textual.
+5. **Explicação RAG + LLM:** mostra o texto produzido a partir dos fatores e dos trechos recuperados. Se o LLM estiver indisponível, mantém os resultados determinísticos e informa a limitação.
+6. **Evidências:** lista título, trecho, fonte e similaridade dos documentos recuperados, permitindo conferir a sustentação documental da explicação.
+7. **Detalhes da análise:** registra configuração do SHAP, quantidade de fatores, documentos recuperados e tempo de processamento.
+
+Os valores SHAP indicam influência na saída do modelo; não são porcentagens, não estabelecem causalidade e não comprovam fraude. A descrição completa da interface e de seus estados de falha está em [`docs/dashboard.md`](docs/dashboard.md).
+
+![Mockup aprovado do dashboard](docs/dashboard-aprovado.png)
+
 ### Executar o notebook ponta a ponta
 
 O notebook seleciona dez transações sinalizadas no conjunto de teste e realiza dez chamadas ao LLM. Ele exige os CSVs locais da competição, acesso ao modelo de embeddings e a chave Anthropic:
