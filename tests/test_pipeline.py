@@ -51,7 +51,13 @@ def _pipeline_falso(probabilidade=0.87, com_rag=True):
         modelo=modelo,
         explicador_shap=explicador,
         recuperador=recuperador,
-        nomes_features=["f0", "f1", "f2", "f3", "f4"],
+        nomes_features=[
+            "valor_atipico_proxy",
+            "frequencia_recente_proxy",
+            "dispositivo_raro_proxy",
+            "posicao_ciclo_diario_relativa",
+            "C13",
+        ],
         cliente_llm=lambda prompt: "Explicação gerada.",
     )
 
@@ -108,11 +114,26 @@ class SelecaoDosFatoresTest(unittest.TestCase):
         fatores = _pipeline_falso().processar(TRANSACAO)["fatores_shap"]
 
         self.assertEqual(len(fatores), TOP_FATORES)
-        # |−0,30| > |0,10| > |0,05|
-        self.assertEqual([f["feature"] for f in fatores], ["f1", "f2", "f0"])
+        # As quatro proxies são mantidas; C13 é deliberadamente excluída.
+        self.assertEqual(
+            [f["feature"] for f in fatores],
+            [
+                "frequencia_recente_proxy",
+                "dispositivo_raro_proxy",
+                "valor_atipico_proxy",
+                "posicao_ciclo_diario_relativa",
+            ],
+        )
         self.assertLess(fatores[0]["contribuicao"], 0)
         self.assertEqual(fatores[0]["direcao"], "reduz")
         self.assertEqual(fatores[1]["direcao"], "aumenta")
+
+    def test_recusa_artefato_sem_as_proxies_explicaveis(self):
+        pipeline = _pipeline_falso()
+        pipeline.nomes_features = ["C13", "C14", "card1", "V258", "D1"]
+
+        with self.assertRaisesRegex(ValueError, "features explicáveis"):
+            pipeline.processar(TRANSACAO)
 
     def test_saida_tridimensional_usa_a_classe_positiva(self):
         pipeline = _pipeline_falso()
@@ -175,7 +196,7 @@ class IndisponibilidadeLLMTest(unittest.TestCase):
         self.assertEqual(
             resultado["erro_llm"], "não foi possível consultar o modelo de linguagem"
         )
-        self.assertEqual(len(resultado["fatores_shap"]), 3)
+        self.assertEqual(len(resultado["fatores_shap"]), TOP_FATORES)
         self.assertEqual(len(resultado["documentos_recuperados"]), 1)
 
 

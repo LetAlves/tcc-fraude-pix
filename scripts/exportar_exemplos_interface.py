@@ -34,8 +34,7 @@ if str(RAIZ) not in sys.path:
 
 from src.data_loader import carregar_dados
 from src.features.pix_features import criar_features_pix
-from src.features.preprocessor import (COLUNA_ALVO, dividir_temporal,
-                                       reduzir_precisao)
+from src.features.preprocessor import COLUNA_ALVO, dividir_temporal, reduzir_precisao
 from src.models.persistencia import carregar
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
@@ -48,11 +47,12 @@ TAMANHO_FUNDO = 500
 POR_QUADRANTE = 3
 SEMENTE = 42
 
-# Campos mostrados na interface. Os demais viajam junto porque o modelo precisa
-# deles, mas não são exibidos: não têm significado publicado.
+# Campos mostrados na interface. O valor e a referência temporal são conceitos
+# compreensíveis; os demais são as quatro proxies criadas e documentadas pela
+# equipe. As colunas anônimas continuam na transação completa para o modelo,
+# mas nunca aparecem no dashboard.
 CAMPOS_LEGIVEIS = [
-    "TransactionAmt", "ProductCD", "card4", "card6", "P_emaildomain",
-    "DeviceType", "DeviceInfo", "TransactionDT",
+    "TransactionAmt", "TransactionDT",
     "valor_atipico_proxy", "frequencia_recente_proxy",
     "dispositivo_raro_proxy", "posicao_ciclo_diario_relativa",
 ]

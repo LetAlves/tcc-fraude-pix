@@ -4,8 +4,13 @@ from __future__ import annotations
 
 import unittest
 
-from app import IntegracaoPendenteError, carregar_pipeline, ler_transacao_json
-from app import validar_resultado_pipeline
+from app import (
+    IntegracaoPendenteError,
+    _classe_suspeita,
+    carregar_pipeline,
+    ler_transacao_json,
+    validar_resultado_pipeline,
+)
 
 
 class EntradaTransacaoTest(unittest.TestCase):
@@ -60,6 +65,18 @@ class ContratoPipelineTest(unittest.TestCase):
         carregar_pipeline.clear()
         with self.assertRaisesRegex(IntegracaoPendenteError, "PREENCHER"):
             carregar_pipeline("{{PREENCHER}}", "{{PREENCHER}}")
+
+
+class ClassificacaoVisualTest(unittest.TestCase):
+    def test_reconhece_rotulos_suspeitos_textuais_e_binarios(self) -> None:
+        for classe in (1, 1.0, "1", "fraude", "suspeita"):
+            with self.subTest(classe=classe):
+                self.assertTrue(_classe_suspeita(classe))
+
+    def test_nao_confunde_rotulos_negativos(self) -> None:
+        for classe in (0, "0", "não suspeita", "legítima", None):
+            with self.subTest(classe=classe):
+                self.assertFalse(_classe_suspeita(classe))
 
 
 if __name__ == "__main__":
