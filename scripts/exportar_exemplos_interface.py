@@ -9,8 +9,10 @@ casos reais mantém a demonstração honesta.
 A seleção é estratificada por quadrante da matriz de confusão — verdadeiro
 positivo, falso positivo, falso negativo e verdadeiro negativo — porque uma
 demonstração que só mostra acertos esconde o comportamento real do sistema, e o
-falso positivo é o caso mais instrutivo: no conjunto de teste, cerca de 8 em
-cada 10 transações marcadas não eram fraude.
+falso positivo é o caso mais instrutivo: no conjunto de teste, com o limiar
+congelado de 0,6834, 945 das 2.278 transações marcadas (cerca de 4 em cada 10)
+não eram fraude. Os quadrantes usam esse mesmo limiar, lido da política de
+decisão do modelo, para coincidir com o ponto de operação avaliado.
 
 O arquivo gerado fica em `data/`, ignorado pelo Git: são linhas do IEEE-CIS, e
 as regras da competição não autorizam redistribuição.
@@ -82,6 +84,12 @@ def main(diretorio_modelo: Path = RAIZ / "models" / "xgboost") -> None:
 
     preprocessador, modelo, manifesto = carregar(diretorio_modelo)
     logger.info("modelo: %s", manifesto["tipo_do_modelo"])
+    # Importado só depois do modelo: no macOS, carregar o XGBoost depois das
+    # bibliotecas do RAG derruba o processo (ver src.pipeline.obter_pipeline).
+    from src.pipeline import carregar_limiar_politica
+
+    limiar = carregar_limiar_politica(diretorio_modelo, manifesto)
+    logger.info("limiar dos quadrantes: %.4f", limiar)
 
     # Matriz de fundo do SHAP: 500 linhas amostradas SOMENTE do treino, conforme
     # o protocolo em reports/pessoa_2/julho/04_metodologia_shap.md. Exportada
@@ -96,7 +104,7 @@ def main(diretorio_modelo: Path = RAIZ / "models" / "xgboost") -> None:
     del M_treino, X_treino
 
     probabilidades = modelo.predict_proba(preprocessador.transform(X_teste))[:, 1]
-    sinalizada = probabilidades >= 0.5
+    sinalizada = probabilidades >= limiar
     real = y_teste.to_numpy().astype(bool)
 
     quadrantes = {
@@ -137,6 +145,7 @@ def main(diretorio_modelo: Path = RAIZ / "models" / "xgboost") -> None:
                 "modelo": manifesto["tipo_do_modelo"],
                 "gerado_em": manifesto["gerado_em"],
                 "n_colunas": int(X_teste.shape[1]),
+                "limiar_quadrantes": limiar,
                 "campos_legiveis": CAMPOS_LEGIVEIS,
                 "exemplos": exemplos,
             },

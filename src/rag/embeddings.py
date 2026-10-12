@@ -138,6 +138,7 @@ class MultilingualEmbedder:
         *,
         overlap_tokens: int = DEFAULT_EMBEDDING_OVERLAP_TOKENS,
     ) -> list[Document]:
+        """Divide os chunks pais em janelas que cabem no limite de tokens do modelo."""
         return create_embedding_documents(
             parent_chunks,
             self.tokenizer,
@@ -152,6 +153,7 @@ class MultilingualEmbedder:
         batch_size: int = 32,
         show_progress_bar: bool = False,
     ) -> np.ndarray:
+        """Gera os embeddings dos documentos, normalizados em L2 (uma linha por documento)."""
         if not documents:
             raise ValueError("Não há documentos para gerar embeddings.")
         texts = [document.page_content for document in documents]
@@ -166,6 +168,7 @@ class MultilingualEmbedder:
         return _normalized_matrix(values)
 
     def encode_query(self, query: str) -> np.ndarray:
+        """Gera o embedding normalizado da consulta; recusa consulta vazia ou longa demais."""
         normalized_query = query.strip()
         if not normalized_query:
             raise ValueError("A consulta não pode ser vazia.")
