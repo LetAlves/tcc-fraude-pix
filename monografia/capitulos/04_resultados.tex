@@ -61,7 +61,26 @@ A Tabela~\ref{tab:modelos} compara os classificadores na validação. Todos usar
     \legend{Fonte: elaborada pelos autores (2026).}
 \end{table}
 
-Os modelos baseados em árvores superaram a linha de base com folga, o que justifica a complexidade adicional em relação a um modelo linear. Com hiperparâmetros padrão, porém, o XGBoost e o Random Forest com árvores completas ficaram empatados (0,5293 e 0,5298) \cite{chen2016xgboost,breiman2001random}. O XGBoost só se destacou após a busca de hiperparâmetros, que não foi aplicada ao Random Forest por seu papel de modelo comparativo. A evidência, portanto, não sustenta superioridade genérica do XGBoost: ela mostra que a configuração ajustada apresentou o melhor resultado entre as configurações avaliadas.
+Os modelos baseados em árvores superaram a linha de base com folga, o que justifica a complexidade adicional em relação a um modelo linear. Com hiperparâmetros padrão, porém, o XGBoost e o Random Forest com árvores completas ficaram empatados (0,5293 e 0,5298) \cite{chen2016xgboost,breiman2001random}. O XGBoost só se destacou após a busca de hiperparâmetros, que inicialmente não foi aplicada ao Random Forest por seu papel de modelo comparativo.
+
+Para eliminar essa assimetria, o mesmo protocolo de busca foi aplicado posteriormente ao Random Forest: AUC-PR na validação como objetivo, 30 tentativas sobre as 150 mil transações mais recentes do treino, ponderação de classe fixa e 100 árvores, sem uso do teste. A Tabela~\ref{tab:rfbusca} resume o resultado. Nesse experimento, executado em outro ambiente, o Random Forest com árvores completas obteve 0,5271, valor próximo ao registrado anteriormente; por isso, a comparação usa a referência medida na mesma execução.
+
+\begin{table}[htb]
+    \caption{AUC-PR na validação do Random Forest antes e depois da busca de hiperparâmetros}
+    \label{tab:rfbusca}
+    \centering
+    \begin{tabular}{lcc}
+        \hline
+        Configuração & Amostra da busca & Treino completo \\
+        \hline
+        Random Forest, árvores completas & 0,5019 & 0,5271 \\
+        Melhor configuração da busca & 0,5023 & 0,5133 \\
+        \hline
+    \end{tabular}
+    \legend{Fonte: elaborada pelos autores (2026).}
+\end{table}
+
+A busca não melhorou o Random Forest: na própria amostra, a melhor configuração empatou com a padrão e, retreinada no treino completo, ficou abaixo dela. O mesmo esforço de ajuste que elevou a AUC-PR do XGBoost de 0,5293 para 0,5719 não produziu ganho no Random Forest. A vantagem de cerca de 0,045 do XGBoost ajustado, portanto, não decorre apenas de só ele ter sido ajustado. Ainda assim, a conclusão vale para este conjunto, para o espaço de busca adotado e para a AUC-PR na validação, e não estabelece superioridade geral do algoritmo.
 
 Limitar a profundidade do Random Forest a 20 reduziu o custo de treinamento, mas diminuiu a AUC-PR em 0,07. Com árvores completas, a floresta atingiu profundidade média de 64 níveis, e a média entre as 100 árvores aproveitou essa capacidade adicional.
 
@@ -153,6 +172,6 @@ O pipeline carrega o modelo, o pré-processador e o limiar de 0,6834 persistido 
 
 Os resultados indicam que a combinação de um classificador baseado em árvores com explicações SHAP é tecnicamente viável no conjunto estudado. O XGBoost ajustado superou a linha de base com margem ampla e manteve, no teste, uma AUC-PR cerca de 14 vezes maior que a de um classificador aleatório. A explicação local foi numericamente fiel ao modelo e permitiu examinar tanto acertos quanto erros.
 
-Três ressalvas delimitam essas conclusões. A primeira é a degradação no período posterior, presente tanto na linha de base quanto no modelo final, que reforça a necessidade de avaliação temporal e de revalidação periódica antes de qualquer uso. A segunda é a assimetria na comparação entre modelos: como apenas o XGBoost passou por busca de hiperparâmetros, não é possível afirmar que ele seja superior ao Random Forest. A terceira é a natureza da base: o IEEE-CIS representa transações de comércio eletrônico com cartão, e as proxies inspiradas no Pix são aproximações experimentais. Tipos de chave, perfil do destinatário, idade da conta e outros elementos do arranjo Pix não estão representados.
+Três ressalvas delimitam essas conclusões. A primeira é a degradação no período posterior, presente tanto na linha de base quanto no modelo final, que reforça a necessidade de avaliação temporal e de revalidação periódica antes de qualquer uso. A segunda é o alcance da comparação entre modelos: a busca aplicada ao Random Forest não o aproximou do XGBoost, mas usou menos tentativas (30 contra 50) e número fixo de árvores, de modo que a vantagem observada se restringe às configurações avaliadas. A terceira é a natureza da base: o IEEE-CIS representa transações de comércio eletrônico com cartão, e as proxies inspiradas no Pix são aproximações experimentais. Tipos de chave, perfil do destinatário, idade da conta e outros elementos do arranjo Pix não estão representados.
 
 A anonimização das variáveis também conecta as limitações da segunda e da terceira camadas. Ela restringe a interpretação dos valores SHAP e, pelo mesmo motivo, oferece poucos termos úteis para a recuperação documental. A priorização das proxies com significado conhecido foi a alternativa adotada para que as consultas usem conceitos como valor atípico ou frequência recente, em vez de códigos sem interpretação direta. A contribuição da camada RAG, contudo, só poderá ser estabelecida após a execução do protocolo de avaliação com respostas reais do modelo de linguagem.
