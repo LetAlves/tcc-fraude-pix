@@ -63,13 +63,13 @@ Execute os comandos seguintes na raiz do repositório. Eles usam diretamente o P
 
 ## Instalação — macOS / Linux
 
-Validada em 12/10/2026 num clone limpo em macOS (Apple Silicon) com Python 3.13. No macOS, o XGBoost precisa da biblioteca OpenMP do Homebrew:
+Validada em 12/10/2026 num clone limpo em macOS (Apple Silicon). O lockfile exige **Python 3.13**; no macOS, o `python3` do sistema é a versão 3.9 e não serve. O XGBoost também precisa da biblioteca OpenMP:
 
 ```bash
-brew install libomp            # somente macOS
+brew install python@3.13 libomp   # somente macOS; no Linux, instale Python 3.13 pelo gerenciador da distribuição
 git clone https://github.com/LetAlves/tcc-fraude-pix.git
 cd tcc-fraude-pix
-python3 -m venv .venv
+python3.13 -m venv .venv
 .venv/bin/python -m pip install -r requirements-lock.txt
 .venv/bin/python -m pytest -q
 ```
