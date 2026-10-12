@@ -276,3 +276,7 @@ O organizador colaborativo de tarefas é um projeto separado; este repositório 
 A entrada LaTeX é [monografia/main.tex](monografia/main.tex), com fontes em [referencias.bib](monografia/referencias.bib). Siga o [guia do Overleaf](monografia/README.md), confirme o template da instituição e compile os capítulos antes da entrega final.
 
 Trabalhe em branches, faça commits focados e peça revisão da outra pessoa antes de integrar à `main`. As convenções e os critérios de revisão estão em [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Licença
+
+O código deste repositório é distribuído sob a [licença MIT](LICENSE). O dataset IEEE-CIS Fraud Detection não faz parte do repositório e segue as regras da competição no Kaggle; os documentos normativos usados na base RAG pertencem aos respectivos emissores.
