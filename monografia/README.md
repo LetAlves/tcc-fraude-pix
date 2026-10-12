@@ -8,7 +8,8 @@ Esta pasta atende à parte local e versionável da tarefa `m1_p2_2`. Ela pode se
 - `capitulos/01_introducao.tex`: versão final revisada do Capítulo 1;
 - `capitulos/02_revisao_bibliografica.tex`: rascunho do Capítulo 2;
 - `capitulos/03_metodologia.tex`: metodologia, com a Camada 3 atualizada conforme a implementação;
-- `capitulos/04_resultados.tex`: marcador explícito para o capítulo ainda não consolidado;
+- `capitulos/04_resultados.tex`: Capítulo 4, Resultados e Discussão (ML, SHAP e estado da camada RAG);
+- `figuras/`: figuras em 300 dpi usadas nos capítulos, geradas por `scripts/gerar_figuras_finais.py`;
 - `capitulos/05_conclusao.tex`: versão final revisada do Capítulo 5;
 - `referencias.bib`: 19 referências citadas no texto, sem entradas não utilizadas.
 
