@@ -1,0 +1,72 @@
+{
+  "tarefa": "m5_p1_3",
+  "dpi": 300,
+  "limiar": 0.6834220290184021,
+  "split": {
+    "treino": 413378,
+    "validacao": 88581,
+    "teste": 88581
+  },
+  "metricas_validacao": {
+    "auc_roc": 0.9067240161181116,
+    "auc_pr": 0.5719491001065327,
+    "recall": 0.4829059829059829,
+    "precisao": 0.668030923146885,
+    "f1": 0.560580041976722,
+    "limiar": 0.6834220290184021,
+    "n": 88581,
+    "n_fraudes": 3042,
+    "taxa_base": 0.03434145019812375,
+    "auc_pr_relativo": 16.654774239492692
+  },
+  "metricas_teste": {
+    "auc_roc": 0.8699725859446727,
+    "auc_pr": 0.4832629699263499,
+    "recall": 0.43237106714239376,
+    "precisao": 0.5851624231782265,
+    "f1": 0.4972952807312069,
+    "limiar": 0.6834220290184021,
+    "n": 88581,
+    "n_fraudes": 3083,
+    "taxa_base": 0.03480430340592226,
+    "auc_pr_relativo": 13.885149899139149
+  },
+  "matriz_confusao_teste": [
+    [
+      84553,
+      945
+    ],
+    [
+      1750,
+      1333
+    ]
+  ],
+  "confere_com": "reports/avaliacao_xgboost_entregue.json",
+  "shap_top10_igual_julho": true,
+  "shap_top10": [
+    "TransactionAmt",
+    "C13",
+    "C1",
+    "C14",
+    "card1",
+    "C5",
+    "valor_atipico_proxy",
+    "card2",
+    "D1",
+    "P_emaildomain"
+  ],
+  "figuras": [
+    "fig_arquitetura.png",
+    "fig_curva_pr.png",
+    "fig_distribuicao_alvo.png",
+    "fig_matriz_confusao_teste.png",
+    "fig_shap_casos.png",
+    "fig_top_correlacoes.png",
+    "shap/shap_force_falso_negativo.png",
+    "shap/shap_force_falso_positivo.png",
+    "shap/shap_force_verdadeiro_negativo.png",
+    "shap/shap_force_verdadeiro_positivo.png",
+    "shap/shap_summary_xgboost.png"
+  ],
+  "segundos_total": 87
+}

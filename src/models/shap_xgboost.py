@@ -155,6 +155,8 @@ def _salvar_summary_plot(
     dados: np.ndarray,
     nomes_features: list[str],
     destino: Path,
+    dpi: int = 180,
+    rotulos_pt: bool = False,
 ) -> None:
     import matplotlib
 
@@ -172,12 +174,24 @@ def _salvar_summary_plot(
         plot_size=(11, 8),
     )
     figura = plt.gcf()
-    figura.suptitle(
-        "XGBoost — importancia global SHAP na validacao",
-        fontsize=13,
-        y=1.01,
-    )
-    figura.savefig(destino, dpi=180, bbox_inches="tight")
+    if rotulos_pt:
+        # Versao para a monografia: titulo vai na legenda ABNT, nao na imagem.
+        from matplotlib.ticker import FuncFormatter
+
+        eixo_principal, barra_cores = figura.axes[0], figura.axes[-1]
+        eixo_principal.set_xlabel("Valor SHAP (impacto na probabilidade de fraude)")
+        eixo_principal.xaxis.set_major_formatter(
+            FuncFormatter(lambda v, _: f"{v:g}".replace(".", ",").replace("-", "\u2212"))
+        )
+        barra_cores.set_ylabel("Valor da variável")
+        barra_cores.set_yticklabels(["Baixo", "Alto"])
+    else:
+        figura.suptitle(
+            "XGBoost — importancia global SHAP na validacao",
+            fontsize=13,
+            y=1.01,
+        )
+    figura.savefig(destino, dpi=dpi, bbox_inches="tight")
     plt.close(figura)
 
 
@@ -188,6 +202,7 @@ def _salvar_force_plots(
     nomes_features: list[str],
     destino_png: Path,
     destino_html: Path,
+    dpi: int = 180,
 ) -> None:
     import matplotlib
 
@@ -222,7 +237,7 @@ def _salvar_force_plots(
         text_rotation=15,
     )
     figura = plt.gcf()
-    figura.savefig(destino_png, dpi=180, bbox_inches="tight")
+    figura.savefig(destino_png, dpi=dpi, bbox_inches="tight")
     plt.close(figura)
 
 
@@ -238,6 +253,8 @@ def gerar_relatorio_shap(
     tamanho_amostra_global: int = TAMANHO_AMOSTRA_GLOBAL,
     limiar: float = LIMIAR_PADRAO,
     semente: int = SEMENTE,
+    dpi: int = 180,
+    rotulos_pt: bool = False,
 ) -> dict[str, Any]:
     """Calcula SHAP e grava summary/force plots mais um relatorio JSON."""
     import shap
@@ -318,6 +335,8 @@ def gerar_relatorio_shap(
         matriz_exp[:quantidade_global],
         nomes_features,
         caminho_resumo,
+        dpi=dpi,
+        rotulos_pt=rotulos_pt,
     )
 
     posicao_por_indice = {
@@ -338,6 +357,7 @@ def gerar_relatorio_shap(
             nomes_features,
             caminho_png,
             caminho_html,
+            dpi=dpi,
         )
 
         ordem = np.argsort(-np.abs(valores_caso), kind="stable")[:10]
