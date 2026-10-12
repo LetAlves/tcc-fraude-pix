@@ -507,3 +507,29 @@ Aplicar o mesmo limiar numérico a algoritmos diferentes não torna precisão, r
 Em 20/09/2026 foi criada uma nova reconstrução do índice, porque a cópia histórica não estava disponível. A execução fixou a revisão `e8f8c211226b894fcb81acc59f3b34ba3efd5f42` do MiniLM multilíngue e produziu 1.195 vetores de 384 dimensões, preservando 290 chunks pais. Três dos quatro hashes de fonte coincidem com o snapshot de 10/09/2026; o JSON consolidado do Regulamento do Pix diverge. Por isso, o manifesto identifica o artefato como nova construção e não afirma identidade com o índice histórico.
 
 O índice FAISS, os metadados e o manifesto totalizam menos de 4 MB e passaram a ser versionados. Os documentos baixados e os chunks intermediários continuam fora do Git. Duas consultas de fumaça comprovaram carregamento e recuperação sem medir qualidade; relevância, fidelidade e ausência de alucinação permanecem `{{RESULTADO}}` até avaliação humana.
+
+## Outubro — Experimento complementar
+
+### Busca de hiperparâmetros do Random Forest
+
+Execução de 12/10/2026 em macOS (Apple Silicon, 8 GB), `scripts/tunar_random_forest.py`, resultado em `reports/tuning_random_forest.json`. Duas execuções seguidas produziram os mesmos números.
+
+**Motivação**: a comparação de julho era assimétrica. Com hiperparâmetros padrão, XGBoost e Random Forest empataram (0,5293 contra 0,5298), e só o XGBoost passou por busca. A Discussão do TCC registrava que, por isso, não era possível afirmar superioridade do XGBoost.
+
+**Protocolo**: o mesmo do XGBoost — AUC-PR na validação completa, busca nas 150 mil transações mais recentes do treino, `class_weight='balanced'` fixo, pré-processamento ajustado uma vez no treino, melhor configuração retreinada no treino completo. Número de árvores fixo em 100, como no comparativo. Espaço: profundidade livre ou 8–64, `min_samples_leaf` 1–50, `max_features` 0,02–0,5 e `max_samples` 0,3–1,0. Trinta tentativas TPE (semente 42), sem poda. **O teste não foi usado.**
+
+| AUC-PR na validação | Cauda de 150 mil | Treino completo |
+|---|---|---|
+| Random Forest padrão (árvores completas) | 0,5019 | **0,5271** |
+| Melhor da busca (tentativa 22) | 0,5023 | 0,5133 |
+| 2ª melhor (tentativa 28) | 0,5022 | 0,5173 |
+| 3ª melhor (tentativa 24) | 0,5022 | 0,5139 |
+| XGBoost entregue | — | **0,5719** |
+
+**Resultado**: a busca não melhorou o Random Forest. Na própria cauda, a melhor tentativa empatou com a configuração padrão (diferença de 0,0004), e no treino completo nenhuma das três melhores superou o padrão. As configurações escolhidas sorteiam menos atributos e menos linhas por árvore, o que não compensou com mais dados. O padrão do scikit-learn (`max_features='sqrt'`, cerca de 0,047 das 460 colunas, e `max_samples=1,0`) já estava perto do melhor desse espaço.
+
+**Leitura para o TCC**: o mesmo esforço de busca que levou o XGBoost de 0,5293 a 0,5719 não produziu ganho no Random Forest. O XGBoost entregue fica 0,045 acima do melhor Random Forest medido no mesmo ambiente, e essa diferença não se explica mais pela assimetria de ajuste. Ainda assim, a afirmação vale para este conjunto, este espaço de busca e esta métrica na validação; não é uma superioridade geral do algoritmo.
+
+**Reprodutibilidade**: o Random Forest padrão deu 0,5271 neste ambiente, contra 0,5298 no registro de julho (Windows). A diferença de 0,003 é da mesma natureza das divergências de terceira casa decimal já registradas para o `float32`. Por isso a comparação deste experimento usa a referência medida na mesma execução.
+
+**Ressalvas**: 30 tentativas contra 50 do XGBoost; número de árvores fixo; busca na cauda do treino, que neste caso transferiu mal para o treino completo.
