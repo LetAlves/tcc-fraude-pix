@@ -353,7 +353,9 @@ def pagina_analisar(exemplos: dict[str, Any] | None) -> None:
                 rotulo,
                 value=texto,
                 disabled=True,
-                key=f"campo_{campo}",
+                # A chave inclui o exemplo: com chave fixa, o Streamlit mantém o
+                # valor do primeiro exemplo exibido e o campo não se atualiza.
+                key=f"campo_{campo}_{opcoes[escolha]}",
             )
 
         transacao = exemplo["transacao"]
