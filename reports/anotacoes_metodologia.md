@@ -533,3 +533,29 @@ Execução de 12/10/2026 em macOS (Apple Silicon, 8 GB), `scripts/tunar_random_f
 **Reprodutibilidade**: o Random Forest padrão deu 0,5271 neste ambiente, contra 0,5298 no registro de julho (Windows). A diferença de 0,003 é da mesma natureza das divergências de terceira casa decimal já registradas para o `float32`. Por isso a comparação deste experimento usa a referência medida na mesma execução.
 
 **Ressalvas**: 30 tentativas contra 50 do XGBoost; número de árvores fixo; busca na cauda do treino, que neste caso transferiu mal para o treino completo.
+
+### Avaliação complementar dos comparativos no teste
+
+Execução de 12/10/2026, `scripts/avaliar_comparativos_teste.py`, resultado em `reports/avaliacao_comparativos_teste.json`. Duas execuções idênticas.
+
+**Natureza**: o teste foi reservado para avaliar uma vez o modelo escolhido, e essa avaliação já estava registrada (18/09/2026). Esta medição é **posterior à escolha**, feita só para completar a tabela de resultados. Ela não altera o modelo entregue nem o limiar, independentemente do resultado. Métricas de ordenação, sem limiar; validação e teste de cada modelo vêm da mesma execução.
+
+| AUC-PR | Validação | Teste | Queda |
+|---|---|---|---|
+| Random Forest, árvores completas | 0,5271 | **0,5085** | −0,019 |
+| Random Forest ajustado | 0,5133 | 0,4991 | −0,014 |
+| XGBoost padrão (100 árvores) | 0,5352 | 0,4901 | −0,045 |
+| **XGBoost entregue (ajustado)** | **0,5719** | 0,4833 | **−0,089** |
+
+AUC-ROC no teste: 0,8882, 0,8883, 0,8771 e 0,8700, respectivamente.
+
+**Resultado**: a ordem se inverte no teste. O XGBoost entregue, melhor na validação, tem a **menor AUC-PR de teste** entre os quatro, e a maior queda. O Random Forest padrão, que perdia na validação, é o melhor no teste. Os dois Random Forest perdem pouco entre os períodos; o XGBoost padrão perde mais, e o ajustado perde o dobro do padrão.
+
+**Leitura**: a busca de hiperparâmetros otimizou a AUC-PR **na validação**, e o ganho de 0,043 ali não se manteve no período seguinte — no teste, o XGBoost ajustado ficou abaixo do próprio XGBoost padrão. É compatível com sobreajuste da seleção ao período de validação, somado à degradação temporal já observada. Não prova a causa: há uma única partição de teste, sem intervalo de confiança.
+
+**Consequências para o texto**:
+- não se pode afirmar que o XGBoost ajustado generaliza melhor que o Random Forest; a vantagem vale só na validação, onde a seleção foi feita;
+- o protocolo continua correto (escolha pela validação, teste aberto uma vez); o achado é exatamente o tipo de informação que o teste preservado serve para revelar;
+- o modelo entregue **não** deve ser trocado com base neste resultado, porque isso usaria o teste para seleção.
+
+**Comparabilidade**: neste ambiente (macOS), o Random Forest padrão mede 0,5271 e o XGBoost padrão 0,5352 na validação, contra 0,5298 e 0,5293 no registro de julho (Windows). As linhas da tabela acima usam números de uma mesma execução.
