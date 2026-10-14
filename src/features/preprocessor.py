@@ -61,11 +61,13 @@ class CodificadorFrequencia(BaseEstimator, TransformerMixin):
     """
 
     def fit(self, X: pd.DataFrame, y=None) -> "CodificadorFrequencia":
+        """Aprende a frequência relativa de cada categoria, somente no treino."""
         X = pd.DataFrame(X)
         self.mapas_ = {coluna: X[coluna].value_counts(normalize=True) for coluna in X.columns}
         return self
 
     def transform(self, X: pd.DataFrame) -> np.ndarray:
+        """Troca cada categoria pela frequência do treino; desconhecidas viram 0,0."""
         X = pd.DataFrame(X).copy()
         for coluna in X.columns:
             X[coluna] = X[coluna].map(self.mapas_[coluna]).fillna(0.0)

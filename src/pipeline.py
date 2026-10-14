@@ -98,7 +98,7 @@ class Pipeline:
 
     def processar(self, transacao: dict[str, Any] | pd.DataFrame) -> dict[str, Any]:
         """Executa as três camadas para uma transação e devolve o resultado."""
-        quadro = _como_quadro(transacao)
+        quadro = _alinhar_ao_esquema_de_treino(_como_quadro(transacao), self.preprocessador)
         matriz = self.preprocessador.transform(quadro)
 
         probabilidades = np.asarray(self.modelo.predict_proba(matriz), dtype=float)
@@ -245,6 +245,44 @@ class Pipeline:
             }
             for indice in ordem
         ]
+
+
+GRUPOS_NUMERICOS = ("numericas",)
+GRUPOS_CATEGORICOS = ("categoricas_baixa", "categoricas_alta")
+
+
+def _alinhar_ao_esquema_de_treino(quadro: pd.DataFrame, preprocessador: Any) -> pd.DataFrame:
+    """
+    Converte a transação para os tipos com que o modelo foi treinado e avaliado.
+
+    O treino e a avaliação usam `reduzir_precisao`, que deixa as colunas
+    numéricas em `float32`. Uma transação reconstruída de JSON chega em
+    `float64`, e as colunas com ausentes chegam como `object` com `None`. O
+    XGBoost compara cada valor com cortes aprendidos em `float32`; em precisão
+    diferente, valores próximos do corte mudam de ramo, e a probabilidade
+    divergia muito da registrada (0,6059 virava 0,0872 num exemplo do teste).
+    Com os tipos do treino, a probabilidade reproduz a avaliação.
+
+    Sem os grupos de colunas esperados (por exemplo, um dublê de teste), o
+    quadro é devolvido sem alteração.
+    """
+    grupos = getattr(preprocessador, "transformers_", None)
+    if not isinstance(grupos, list):
+        return quadro
+    alinhado = quadro.copy()
+    for nome, _, colunas in grupos:
+        presentes = [c for c in colunas if c in alinhado.columns] if isinstance(colunas, list) else []
+        if not presentes:
+            continue
+        if nome in GRUPOS_NUMERICOS:
+            alinhado[presentes] = (
+                alinhado[presentes].apply(pd.to_numeric, errors="coerce").astype("float32")
+            )
+        elif nome in GRUPOS_CATEGORICOS:
+            for coluna in presentes:
+                serie = alinhado[coluna].astype(object)
+                alinhado[coluna] = serie.where(serie.notna(), np.nan)
+    return alinhado
 
 
 def _como_quadro(transacao: dict[str, Any] | pd.DataFrame) -> pd.DataFrame:
@@ -422,18 +460,22 @@ def obter_pipeline(
             ARQUIVO_FUNDO_SHAP,
         )
 
-    recuperador = None
+    # O modelo é carregado ANTES do recuperador. No macOS, PyTorch, FAISS e
+    # XGBoost trazem cópias distintas do OpenMP; carregar o XGBoost depois que o
+    # modelo de embeddings iniciou as threads do OpenMP derruba o processo
+    # (segmentation fault). A ordem inversa foi verificada em máquina limpa.
+    pipeline = construir_pipeline(
+        diretorio_modelo=diretorio_modelo,
+        matriz_fundo=fundo,
+        recuperador=None,
+        cliente_llm=cliente_llm,
+    )
     try:
-        recuperador = RecuperadorDocumentos.a_partir_do_disco()
+        pipeline.recuperador = RecuperadorDocumentos.a_partir_do_disco()
     except (FileNotFoundError, OSError, RuntimeError, ValueError) as erro:
         logger.warning("recuperação documental indisponível: %s", erro)
 
-    _PIPELINE_EM_CACHE = construir_pipeline(
-        diretorio_modelo=diretorio_modelo,
-        matriz_fundo=fundo,
-        recuperador=recuperador,
-        cliente_llm=cliente_llm,
-    )
+    _PIPELINE_EM_CACHE = pipeline
     return _PIPELINE_EM_CACHE
 
 

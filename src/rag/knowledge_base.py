@@ -304,6 +304,7 @@ def write_documents_jsonl(documents: Iterable[Document], path: Path) -> int:
 
 
 def read_documents_jsonl(path: Path) -> list[Document]:
+    """Lê documentos gravados em JSONL, validando texto e metadados de cada linha."""
     documents: list[Document] = []
     with path.open("r", encoding="utf-8") as file:
         for line_number, line in enumerate(file, start=1):

@@ -31,10 +31,10 @@ Situação verificada localmente em **28/09/2026**. As camadas de modelagem de j
 | Análise exploratória | Notebook executado | [EDA](notebooks/01_eda.ipynb) |
 | Features Pix simuladas | Quatro conceitos implementados, gerando seis colunas | [Módulo de features](src/features/pix_features.py) e [ata de aprovação](reports/reunioes/2026-08-16_mapeamento_ieee_cis_pix.md) |
 | Estudo de LangChain | Laboratório local integrado; sem chamada a LLM | [Guia prático](reports/pessoa_2/junho/01_estudo_langchain.md) |
-| Monografia | Capítulos 1, 2 e 3 versionados; revisão acadêmica ainda necessária | [Projeto de escrita](monografia/README.md) |
+| Monografia | Capítulos 1, 2, 3 e 5 versionados; Capítulo 4 em revisão; revisão acadêmica ainda necessária | [Projeto de escrita](monografia/README.md) |
 | Pré-processamento e split temporal | Implementados, com garantia de fronteira por instante e 13 testes | [Pré-processador](src/features/preprocessor.py) |
 | SMOTE e ponderação de classe | Comparados em quatro medições; empate, adotada a ponderação | [Anotações de metodologia](reports/anotacoes_metodologia.md) |
-| Baseline (regressão logística) | Executado no dataset completo; AUC-PR 0,3930 na validação e 0,1850 no teste | [Notebook 02 executado](notebooks/02_preprocessing.ipynb) |
+| Baseline (regressão logística) | Executado no dataset completo; AUC-PR 0,3936 na validação e 0,1858 no teste (ponderação de classe, execução de 10/09/2026) | [Anotações de metodologia](reports/anotacoes_metodologia.md) e [notebook 02](notebooks/02_preprocessing.ipynb) |
 | Random Forest (modelo comparativo) | Treinado em duas configurações; AUC-PR 0,5298 | [Script](scripts/treinar_random_forest.py) |
 | XGBoost (modelo principal) | Artefato congelado: AUC-PR 0,5719 na validação e 0,4833 no teste | [Entrega parcial 2](reports/entrega_parcial_2.md) |
 | Comparação dos três modelos | Notebook executado com tabela e análise | [Notebook 03](notebooks/03_models.ipynb) |
@@ -46,7 +46,7 @@ Situação verificada localmente em **28/09/2026**. As camadas de modelagem de j
 
 O laboratório de LangChain não é o RAG final. Os textos da monografia ainda exigem revisão da dupla e do orientador; um relatório preparado não comprova seu envio ao orientador.
 
-**Achado principal até aqui:** o desempenho cai pela metade entre validação e teste — AUC-PR de 0,3930 para 0,1850 — com taxas de fraude equivalentes nos dois conjuntos. É degradação temporal, e só é observável por causa do corte cronológico: um controle com divisão aleatória obteve 0,4243 no teste, 2,3× mais, sem mostrar queda alguma. O registro completo está nas [anotações de metodologia](reports/anotacoes_metodologia.md).
+**Achado principal até aqui:** o desempenho da linha de base cai pela metade entre validação e teste — AUC-PR de 0,3936 para 0,1858 — com taxas de fraude equivalentes nos dois conjuntos. É degradação no período posterior, e só é observável por causa do corte cronológico: na mesma execução, um controle com divisão aleatória obteve 0,4250 no teste, 2,3× mais, sem mostrar queda alguma. Parte dessa diferença vem de transações do mesmo `card1` aparecerem no treino e no teste da divisão aleatória, então o efeito não é atribuído só ao tempo. O registro completo está nas [anotações de metodologia](reports/anotacoes_metodologia.md).
 
 ## Instalação — Windows / PowerShell
 
@@ -59,7 +59,22 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Execute os comandos seguintes na raiz do repositório. Eles usam diretamente o Python da venv, sem exigir sua ativação ou alteração da política de execução do PowerShell. Em Linux/macOS, o executável equivalente é `.venv/bin/python`.
+Execute os comandos seguintes na raiz do repositório. Eles usam diretamente o Python da venv, sem exigir sua ativação ou alteração da política de execução do PowerShell.
+
+## Instalação — macOS / Linux
+
+Validada em 12/10/2026 num clone limpo em macOS (Apple Silicon). O lockfile exige **Python 3.13**; no macOS, o `python3` do sistema é a versão 3.9 e não serve. O XGBoost também precisa da biblioteca OpenMP:
+
+```bash
+brew install python@3.13 libomp   # somente macOS; no Linux, instale Python 3.13 pelo gerenciador da distribuição
+git clone https://github.com/LetAlves/tcc-fraude-pix.git
+cd tcc-fraude-pix
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r requirements-lock.txt
+.venv/bin/python -m pytest -q
+```
+
+Nos comandos das seções seguintes, troque `.\.venv\Scripts\python.exe` por `.venv/bin/python`, as barras invertidas dos caminhos por `/` e `$env:NOME = "valor"` por `export NOME="valor"`. O `pywinpty` do lockfile é instalado só no Windows.
 
 As dependências diretas estão em [requirements.txt](requirements.txt), com limites mínimos de versão. Para **reproduzir os números registrados no trabalho**, instale a partir de [requirements-lock.txt](requirements-lock.txt), que fixa as versões exatas do ambiente que os produziu:
 
@@ -148,18 +163,7 @@ O teste usa até 50.000 linhas de cada tabela, calcula as features e imprime um 
 
 Os quatro conceitos são `valor_atipico_proxy`, `frequencia_recente_proxy`, `dispositivo_raro_proxy` e `posicao_ciclo_diario_relativa`. O último inclui também codificações seno e cosseno. `card1` não é uma conta Pix, e o ciclo temporal não representa um horário local conhecido.
 
-### Acessar as entregas de junho em revisão
-
-O laboratório, o gerador de relatório e seus testes estão na branch do PR #2, não na `main`. Para executá-los com o clone criado na instalação acima, e sem alterações locais pendentes:
-
-```powershell
-git fetch origin
-git switch codex/junho-pessoa-2
-```
-
-Depois de consultar a entrega, `git switch main` retorna à branch principal. Essa troca local não aprova nem mescla o PR.
-
-### Executar o laboratório de LangChain — branch de junho
+### Executar o laboratório de LangChain
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.rag.langchain_basics
@@ -167,7 +171,7 @@ Depois de consultar a entrega, `git switch main` retorna à branch principal. Es
 
 Não exige dataset, download de embeddings ou chave de LLM. Recupera documentos didáticos e imprime o prompt montado; não gera uma resposta com modelo de linguagem.
 
-### Reproduzir o relatório de junho — branch de junho
+### Reproduzir o relatório de junho
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/gerar_entrega_junho.py
@@ -187,11 +191,21 @@ Lê colunas selecionadas dos CSVs completos e **atualiza** [a entrega parcial de
 .\.venv\Scripts\python.exe scripts\query_rag_index.py "Como funciona o MED?" --k 5
 ```
 
+Na primeira consulta numa máquina nova, o script baixa o modelo de embeddings na revisão fixada no manifesto do índice (cerca de 460 MB); as consultas seguintes usam o cache local.
+
 Os documentos oficiais e chunks intermediários são artefatos locais ignorados pelo Git. A reconstrução aprovada de 20/09/2026 versiona `index.faiss`, `metadata.jsonl` e `manifest.json`, permitindo consultar o índice sem refazer embeddings. Para produzir uma versão nova, use `scripts\reconstruir_rag_versionado.py`; o script fixa a revisão local do modelo, registra hashes e se recusa a sobrescrever o índice existente.
 
 O catálogo atual usa o Guia MED 4.4 e registra separadamente as vigências de 01/09/2026 e 26/10/2026. Até a segunda data, respostas sobre alterações futuras devem conferir os metadados de vigência.
 
 ### Executar a interface Streamlit
+
+Antes da primeira execução, exporte as transações de demonstração e a matriz de fundo do SHAP. O script lê o dataset completo (pico de cerca de 4,5 GB de RAM) e grava `data/exemplos_interface.json` e `data/fundo_shap.npy`, ambos ignorados pelo Git:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/exportar_exemplos_interface.py
+```
+
+Os exemplos são separados em verdadeiro positivo, falso positivo, falso negativo e verdadeiro negativo com o limiar congelado de 0,6834, o mesmo da avaliação.
 
 O `app.py` não duplica o ML, o SHAP ou o RAG. Ele recebe a função de orquestração existente por configuração:
 
@@ -239,7 +253,7 @@ Execute a suíte na raiz do projeto:
 git diff --check
 ```
 
-Na verificação de 28/09/2026, **146 testes** foram aprovados, com **66% de cobertura** sobre `src` e `app.py`. Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, integração do cliente LLM com mocks, pipeline, notebook, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação experimental do LLM real.
+Na verificação de 12/10/2026, num clone limpo em macOS, **160 testes** foram aprovados (a medição anterior, de 28/09/2026, registrou 66% de cobertura sobre `src` e `app.py`). Eles cobrem a interface, modelagem, avaliação, persistência, fidelidade SHAP, integração do cliente LLM com mocks, pipeline, notebook, laboratório LangChain, registro de features, corpus RAG, chunking, embeddings, FAISS e referências dos capítulos. Eles não substituem uma avaliação anotada da recuperação nem a avaliação experimental do LLM real.
 
 Para os próximos experimentos:
 
@@ -266,7 +280,7 @@ src/data_loader.py       Download, leitura e junção dos dados
 src/features/            Engenharia de features Pix simuladas
 src/models/              Modelos, avaliação, persistência e explicabilidade SHAP
 src/rag/                 Laboratório LangChain, ingestão, embeddings e FAISS
-tests/                   Testes das entregas de junho e julho
+tests/                   Testes de dados, modelos, SHAP, RAG, pipeline e interface
 ```
 
 O organizador colaborativo de tarefas é um projeto separado; este repositório reúne os artefatos acadêmicos e o código do TCC.

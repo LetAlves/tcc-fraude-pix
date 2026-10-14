@@ -51,6 +51,8 @@ def _normalize_matrix(values: Any) -> np.ndarray:
 
 @dataclass(frozen=True)
 class SearchResult:
+    """Documento recuperado e sua similaridade de cosseno com a consulta."""
+
     document: Document
     score: float
 
@@ -82,6 +84,7 @@ class FaissVectorStore:
         model_name: str,
         model_revision: str | None = None,
     ) -> "FaissVectorStore":
+        """Monta um índice exato ``IndexFlatIP`` a partir de embeddings já calculados."""
         matrix = _normalize_matrix(embeddings)
         if matrix.shape[0] != len(documents):
             raise ValueError("Cada documento deve possuir exatamente um embedding.")
@@ -97,9 +100,11 @@ class FaissVectorStore:
 
     @property
     def dimension(self) -> int:
+        """Número de dimensões dos vetores do índice (384 no modelo atual)."""
         return int(self.index.d)
 
     def search(self, query_embedding: Any, *, k: int = 5) -> list[SearchResult]:
+        """Devolve os ``k`` documentos mais similares, em ordem decrescente de score."""
         if k <= 0:
             raise ValueError("k deve ser positivo.")
         query = _normalize_matrix(query_embedding)

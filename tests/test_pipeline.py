@@ -21,6 +21,7 @@ import pandas as pd
 from src.pipeline import (
     TOP_FATORES,
     Pipeline,
+    _alinhar_ao_esquema_de_treino,
     _como_quadro,
     carregar_limiar_politica,
 )
@@ -255,6 +256,47 @@ class PoliticaDecisaoTest(unittest.TestCase):
                 carregar_limiar_politica(
                     diretorio, {"hashes": {"modelo.json": "atual"}}
                 )
+
+
+class EsquemaDeTreinoTest(unittest.TestCase):
+    """A transação vinda de JSON precisa chegar ao modelo com os tipos do treino."""
+
+    def _preprocessador(self):
+        from sklearn.compose import ColumnTransformer
+        from sklearn.impute import SimpleImputer
+        from sklearn.preprocessing import OneHotEncoder
+
+        treino = pd.DataFrame({
+            "TransactionAmt": np.array([10.1, 20.2, 30.3], dtype="float32"),
+            "ProductCD": ["W", "C", "W"],
+        })
+        return ColumnTransformer([
+            ("numericas", SimpleImputer(), ["TransactionAmt"]),
+            ("categoricas_baixa", OneHotEncoder(handle_unknown="ignore"), ["ProductCD"]),
+        ]).fit(treino)
+
+    def test_numericas_viram_float32_e_ausentes_viram_nan(self):
+        quadro = _como_quadro({"TransactionAmt": 0.1, "ProductCD": None})
+        alinhado = _alinhar_ao_esquema_de_treino(quadro, self._preprocessador())
+
+        self.assertEqual(alinhado["TransactionAmt"].dtype, np.dtype("float32"))
+        self.assertEqual(alinhado["TransactionAmt"].iloc[0], np.float32(0.1))
+        self.assertTrue(pd.isna(alinhado["ProductCD"].iloc[0]))
+
+    def test_texto_numerico_de_json_e_convertido(self):
+        quadro = _como_quadro({"TransactionAmt": "12.5", "ProductCD": "W"})
+        alinhado = _alinhar_ao_esquema_de_treino(quadro, self._preprocessador())
+
+        self.assertEqual(alinhado["TransactionAmt"].iloc[0], np.float32(12.5))
+
+    def test_dubles_sem_grupos_de_colunas_passam_intactos(self):
+        quadro = _como_quadro({"a": 1.0})
+        self.assertIs(_alinhar_ao_esquema_de_treino(quadro, Mock()), quadro)
+
+    def test_nao_altera_a_entrada_original(self):
+        quadro = _como_quadro({"TransactionAmt": 0.1, "ProductCD": "W"})
+        _alinhar_ao_esquema_de_treino(quadro, self._preprocessador())
+        self.assertEqual(quadro["TransactionAmt"].dtype, np.dtype("float64"))
 
 
 if __name__ == "__main__":
