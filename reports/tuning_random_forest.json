@@ -1,0 +1,481 @@
+{
+  "n_tentativas": 30,
+  "n_concluidas": 30,
+  "melhor_auc_pr_busca": 0.5023425477865564,
+  "melhores_parametros": {
+    "min_samples_leaf": 1,
+    "max_features": 0.02682273549105997,
+    "max_samples": 0.6918819128290951,
+    "max_depth": null
+  },
+  "auc_roc_da_melhor_busca": 0.9003277714870808,
+  "auc_pr_mediana": 0.4880905135002105,
+  "auc_pr_pior": 0.4186330627652444,
+  "tentativas": [
+    {
+      "numero": 0,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4685464286783429,
+      "parametros": {
+        "max_depth": 36,
+        "min_samples_leaf": 8,
+        "max_features": 0.033047202013078175,
+        "max_samples": 0.40919616423534183
+      },
+      "profundidade_media": 34.1,
+      "segundos": 2.876152
+    },
+    {
+      "numero": 1,
+      "estado": "COMPLETE",
+      "auc_pr": 0.45618842539977317,
+      "parametros": {
+        "max_depth": 27,
+        "min_samples_leaf": 13,
+        "max_features": 0.021370067001013647,
+        "max_samples": 0.978936896513396
+      },
+      "profundidade_media": 27.0,
+      "segundos": 3.968363
+    },
+    {
+      "numero": 2,
+      "estado": "COMPLETE",
+      "auc_pr": 0.5012894428220548,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.03609262736961699,
+        "max_samples": 0.5129695700716764,
+        "max_depth": null
+      },
+      "profundidade_media": 55.6,
+      "segundos": 3.600264
+    },
+    {
+      "numero": 3,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4971835983473201,
+      "parametros": {
+        "min_samples_leaf": 2,
+        "max_features": 0.14333875784756228,
+        "max_samples": 0.3976457024564293,
+        "max_depth": null
+      },
+      "profundidade_media": 40.47,
+      "segundos": 7.047266
+    },
+    {
+      "numero": 4,
+      "estado": "COMPLETE",
+      "auc_pr": 0.45646180812822446,
+      "parametros": {
+        "max_depth": 20,
+        "min_samples_leaf": 19,
+        "max_features": 0.03803312094071718,
+        "max_samples": 0.6599641068895281
+      },
+      "profundidade_media": 20.0,
+      "segundos": 4.000169
+    },
+    {
+      "numero": 5,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4680681811542743,
+      "parametros": {
+        "min_samples_leaf": 8,
+        "max_features": 0.0346268105311189,
+        "max_samples": 0.3455361150896957,
+        "max_depth": null
+      },
+      "profundidade_media": 35.91,
+      "segundos": 2.339626
+    },
+    {
+      "numero": 6,
+      "estado": "COMPLETE",
+      "auc_pr": 0.48700704835781755,
+      "parametros": {
+        "max_depth": 43,
+        "min_samples_leaf": 2,
+        "max_features": 0.027388594841887794,
+        "max_samples": 0.7789631185585097
+      },
+      "profundidade_media": 42.98,
+      "segundos": 4.102077
+    },
+    {
+      "numero": 7,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4738212129215066,
+      "parametros": {
+        "min_samples_leaf": 5,
+        "max_features": 0.022341024517655062,
+        "max_samples": 0.9365242814551474,
+        "max_depth": null
+      },
+      "profundidade_media": 42.94,
+      "segundos": 4.193999
+    },
+    {
+      "numero": 8,
+      "estado": "COMPLETE",
+      "auc_pr": 0.47427323945228245,
+      "parametros": {
+        "max_depth": 15,
+        "min_samples_leaf": 6,
+        "max_features": 0.11622462893628337,
+        "max_samples": 0.4293981188678689
+      },
+      "profundidade_media": 15.0,
+      "segundos": 5.849111
+    },
+    {
+      "numero": 9,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4646247991627527,
+      "parametros": {
+        "min_samples_leaf": 38,
+        "max_features": 0.35640595324118735,
+        "max_samples": 0.7185299851677596,
+        "max_depth": null
+      },
+      "profundidade_media": 27.82,
+      "segundos": 23.429984
+    },
+    {
+      "numero": 10,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4993244550130752,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.05535344743938669,
+        "max_samples": 0.7090195564372145,
+        "max_depth": null
+      },
+      "profundidade_media": 53.2,
+      "segundos": 6.20838
+    },
+    {
+      "numero": 11,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4991713431987252,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.0640721623247334,
+        "max_samples": 0.6087964351037958,
+        "max_depth": null
+      },
+      "profundidade_media": 50.43,
+      "segundos": 5.937039
+    },
+    {
+      "numero": 12,
+      "estado": "COMPLETE",
+      "auc_pr": 0.49685162742679806,
+      "parametros": {
+        "min_samples_leaf": 4,
+        "max_features": 0.07935158044452469,
+        "max_samples": 0.7469779367803504,
+        "max_depth": null
+      },
+      "profundidade_media": 42.3,
+      "segundos": 8.110454
+    },
+    {
+      "numero": 13,
+      "estado": "COMPLETE",
+      "auc_pr": 0.49748034393611285,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.024392651714305148,
+        "max_samples": 0.5666629497905917,
+        "max_depth": null
+      },
+      "profundidade_media": 61.4,
+      "segundos": 3.267462
+    },
+    {
+      "numero": 14,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4988933614021624,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.07638670299068537,
+        "max_samples": 0.9069501425507467,
+        "max_depth": null
+      },
+      "profundidade_media": 50.94,
+      "segundos": 9.424328
+    },
+    {
+      "numero": 15,
+      "estado": "COMPLETE",
+      "auc_pr": 0.48789262936627686,
+      "parametros": {
+        "min_samples_leaf": 3,
+        "max_features": 0.045255616603796296,
+        "max_samples": 0.5309596198932243,
+        "max_depth": null
+      },
+      "profundidade_media": 44.0,
+      "segundos": 4.178397
+    },
+    {
+      "numero": 16,
+      "estado": "COMPLETE",
+      "auc_pr": 0.48659399983788715,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.14626720748683653,
+        "max_samples": 0.7963594292281226,
+        "max_depth": null
+      },
+      "profundidade_media": 49.21,
+      "segundos": 14.025805
+    },
+    {
+      "numero": 17,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4186330627652444,
+      "parametros": {
+        "max_depth": 9,
+        "min_samples_leaf": 1,
+        "max_features": 0.08903708717514949,
+        "max_samples": 0.4584095578404464
+      },
+      "profundidade_media": 9.0,
+      "segundos": 4.310689
+    },
+    {
+      "numero": 18,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4878843068429599,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.04350754239267692,
+        "max_samples": 0.4290457944422723,
+        "max_depth": null
+      },
+      "profundidade_media": 52.45,
+      "segundos": 3.731922
+    },
+    {
+      "numero": 19,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4782256545075282,
+      "parametros": {
+        "min_samples_leaf": 2,
+        "max_features": 0.024424123635446476,
+        "max_samples": 0.3177564818665709,
+        "max_depth": null
+      },
+      "profundidade_media": 46.71,
+      "segundos": 2.1864
+    },
+    {
+      "numero": 20,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4940119205047576,
+      "parametros": {
+        "min_samples_leaf": 3,
+        "max_features": 0.14337562769313217,
+        "max_samples": 0.6958164084930977,
+        "max_depth": null
+      },
+      "profundidade_media": 40.34,
+      "segundos": 11.982796
+    },
+    {
+      "numero": 21,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4935548152770874,
+      "parametros": {
+        "max_depth": 58,
+        "min_samples_leaf": 2,
+        "max_features": 0.05376466587735244,
+        "max_samples": 0.5782959025576644
+      },
+      "profundidade_media": 46.38,
+      "segundos": 5.120136
+    },
+    {
+      "numero": 22,
+      "estado": "COMPLETE",
+      "auc_pr": 0.5023425477865564,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.02682273549105997,
+        "max_samples": 0.6918819128290951,
+        "max_depth": null
+      },
+      "profundidade_media": 60.12,
+      "segundos": 4.040419
+    },
+    {
+      "numero": 23,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4993433860281629,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.022286652302369456,
+        "max_samples": 0.6946236452385292,
+        "max_depth": null
+      },
+      "profundidade_media": 62.09,
+      "segundos": 3.709036
+    },
+    {
+      "numero": 24,
+      "estado": "COMPLETE",
+      "auc_pr": 0.5021726599324918,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.02476491736251202,
+        "max_samples": 0.688294324276618,
+        "max_depth": null
+      },
+      "profundidade_media": 62.23,
+      "segundos": 3.88897
+    },
+    {
+      "numero": 25,
+      "estado": "COMPLETE",
+      "auc_pr": 0.48828839763414417,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.042766712044667074,
+        "max_samples": 0.319915991754119,
+        "max_depth": null
+      },
+      "profundidade_media": 52.39,
+      "segundos": 2.931723
+    },
+    {
+      "numero": 26,
+      "estado": "COMPLETE",
+      "auc_pr": 0.47739327000622533,
+      "parametros": {
+        "min_samples_leaf": 3,
+        "max_features": 0.025252573753261447,
+        "max_samples": 0.7168103658927938,
+        "max_depth": null
+      },
+      "profundidade_media": 45.91,
+      "segundos": 3.73966
+    },
+    {
+      "numero": 27,
+      "estado": "COMPLETE",
+      "auc_pr": 0.47233361869517004,
+      "parametros": {
+        "min_samples_leaf": 4,
+        "max_features": 0.021669707284002606,
+        "max_samples": 0.5766604715604451,
+        "max_depth": null
+      },
+      "profundidade_media": 42.02,
+      "segundos": 2.906386
+    },
+    {
+      "numero": 28,
+      "estado": "COMPLETE",
+      "auc_pr": 0.502205814415661,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.03352100250123162,
+        "max_samples": 0.6646280670607048,
+        "max_depth": null
+      },
+      "profundidade_media": 56.86,
+      "segundos": 4.436099
+    },
+    {
+      "numero": 29,
+      "estado": "COMPLETE",
+      "auc_pr": 0.4884266181602194,
+      "parametros": {
+        "min_samples_leaf": 2,
+        "max_features": 0.03595964510914304,
+        "max_samples": 0.7287322527504911,
+        "max_depth": null
+      },
+      "profundidade_media": 50.03,
+      "segundos": 4.930773
+    }
+  ],
+  "referencia_arvores_completas_validacao": {
+    "auc_pr": 0.5271242879839781,
+    "auc_roc": 0.9057979781671269,
+    "recall": 0.31821170282708744,
+    "precisao": 0.8120805369127517,
+    "f1": 0.45725082664147376
+  },
+  "referencia_arvores_completas_estrutura": {
+    "n_arvores": 100,
+    "profundidade_media": 63.95,
+    "profundidade_maxima": 81,
+    "folhas_media": 16442.29
+  },
+  "referencia_segundos_treino": 27,
+  "referencia_arvores_completas_na_cauda_auc_pr": 0.5018529234441262,
+  "top3_da_cauda_no_treino_completo": [
+    {
+      "numero": 22,
+      "auc_pr_cauda": 0.5023425477865564,
+      "auc_pr_treino_completo": 0.513296811809134,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.02682273549105997,
+        "max_samples": 0.6918819128290951,
+        "max_depth": null
+      }
+    },
+    {
+      "numero": 28,
+      "auc_pr_cauda": 0.502205814415661,
+      "auc_pr_treino_completo": 0.5172805149434225,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.03352100250123162,
+        "max_samples": 0.6646280670607048,
+        "max_depth": null
+      }
+    },
+    {
+      "numero": 24,
+      "auc_pr_cauda": 0.5021726599324918,
+      "auc_pr_treino_completo": 0.5138654020516598,
+      "parametros": {
+        "min_samples_leaf": 1,
+        "max_features": 0.02476491736251202,
+        "max_samples": 0.688294324276618,
+        "max_depth": null
+      }
+    }
+  ],
+  "random_forest_ajustado_validacao": {
+    "auc_pr": 0.513296811809134,
+    "auc_roc": 0.9037332102971527,
+    "recall": 0.33859303090072324,
+    "precisao": 0.7518248175182481,
+    "f1": 0.4669084315503173
+  },
+  "random_forest_ajustado_estrutura": {
+    "n_arvores": 100,
+    "profundidade_media": 69.46,
+    "profundidade_maxima": 106,
+    "folhas_media": 17995.87
+  },
+  "random_forest_ajustado_segundos_treino": 16,
+  "xgboost_entregue_validacao_auc_pr": 0.5719491001065327,
+  "_meta": {
+    "protocolo": "AUC-PR na validação completa; busca na cauda de 150 mil linhas do treino; class_weight='balanced'; 100 árvores; sem uso do teste",
+    "linhas_treino": 413378,
+    "linhas_busca": 150000,
+    "linhas_validacao": 88581,
+    "colunas": 460,
+    "storage_optuna_local": "data/processed/optuna_random_forest_outubro.db",
+    "segundos_total": 129,
+    "pico_memoria_mb": 2755
+  }
+}

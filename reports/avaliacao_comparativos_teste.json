@@ -1,0 +1,51 @@
+{
+  "natureza": "avaliação complementar, posterior à escolha e à avaliação do modelo entregue; não altera o modelo entregue nem o limiar",
+  "metricas": "AUC-PR e AUC-ROC, independentes de limiar",
+  "modelos": {
+    "random_forest_arvores_completas": {
+      "validacao": {
+        "auc_pr": 0.5271242879839781,
+        "auc_roc": 0.9057979781671269
+      },
+      "teste": {
+        "auc_pr": 0.5085047850232061,
+        "auc_roc": 0.8882334945559879
+      }
+    },
+    "random_forest_ajustado": {
+      "validacao": {
+        "auc_pr": 0.513296811809134,
+        "auc_roc": 0.9037332102971527
+      },
+      "teste": {
+        "auc_pr": 0.4991136888626576,
+        "auc_roc": 0.8883142050269567
+      }
+    },
+    "xgboost_padrao": {
+      "validacao": {
+        "auc_pr": 0.5351953013290923,
+        "auc_roc": 0.9084815259610024
+      },
+      "teste": {
+        "auc_pr": 0.4901035954260337,
+        "auc_roc": 0.8771053664661316
+      }
+    }
+  },
+  "_meta": {
+    "linhas": {
+      "treino": 413378,
+      "validacao": 88581,
+      "teste": 88581
+    },
+    "parametros_random_forest_ajustado": {
+      "min_samples_leaf": 1,
+      "max_features": 0.02682273549105997,
+      "max_samples": 0.6918819128290951,
+      "max_depth": null
+    },
+    "segundos_total": 85,
+    "pico_memoria_mb": 2222
+  }
+}
